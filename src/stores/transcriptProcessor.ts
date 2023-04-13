@@ -1,4 +1,4 @@
-import { throttle } from "lodash";
+import throttle from "lodash/throttle";
 import { get, writable } from "svelte/store";
 
 type TranscriptProcessor = {
