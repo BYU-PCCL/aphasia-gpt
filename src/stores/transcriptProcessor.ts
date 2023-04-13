@@ -41,7 +41,11 @@ function createTranscriptProcessor() {
     subscribe,
     addTranscriptChunk: (text: string) => {
       update((transcriptProcessor) => {
-        transcriptProcessor.transcript += text;
+        let nextTranscript = transcriptProcessor.transcript + text;
+        // Fix the excessive periods
+        nextTranscript = nextTranscript.replace(".", " ");
+        nextTranscript = nextTranscript.replace(/\s+/g, " ");
+        transcriptProcessor.transcript = nextTranscript;
         return transcriptProcessor;
       });
       updateTransfromations();

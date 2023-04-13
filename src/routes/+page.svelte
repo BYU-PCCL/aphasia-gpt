@@ -26,6 +26,7 @@
   }
 
   function logout() {
+    transcriptProcessor.clear();
     $username = null;
   }
 
@@ -56,20 +57,26 @@
   {#if Mic !== null}
     <Mic {isRecording} {onFail} onChange={transcriptProcessor.addTranscriptChunk} />
   {/if}
-  <Controls
-    {isRecording}
-    {hasTranscript}
-    {toggleRecording}
-    onBack={transcriptProcessor.back}
-    onNew={transcriptProcessor.clear}
-  />
 
-  <section>
-    <h2>What we think you said:</h2>
-    <p>{$transcriptProcessor.transcript}</p>
-    <h2>What we think you are trying to say:</h2>
-    {#each $transcriptProcessor.transformations as transformation}
-      <p>{transformation}</p>
-    {/each}
+  <section class="max-w-2xl mx-auto px-4">
+    <Controls
+      {isRecording}
+      {hasTranscript}
+      {toggleRecording}
+      onBack={transcriptProcessor.back}
+      onNew={transcriptProcessor.clear}
+    />
+
+    <div class="mt-12">
+      <h2 class="font-semibold text-lg">What we think you said:</h2>
+      <p>{$transcriptProcessor.transcript}</p>
+      <br class="h-24" />
+      <h2 class="font-semibold text-lg">What we think you are trying to say:</h2>
+      <ul>
+        {#each $transcriptProcessor.transformations as transformation}
+        <li class="list-disc list-inside mb-2">{transformation}</li>
+      {/each}
+      </ul>
+    </div>
   </section>
 </main>
