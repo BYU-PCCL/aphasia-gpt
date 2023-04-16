@@ -2,12 +2,14 @@ import throttle from "lodash/throttle";
 import { get, writable } from "svelte/store";
 
 type TranscriptProcessor = {
+  isRecording: boolean;
   transcript: string;
   transformations: string[];
 };
 
 function createTranscriptProcessor() {
   const { subscribe, set, update } = writable<TranscriptProcessor>({
+    isRecording: false,
     transcript: "",
     transformations: [],
   });
@@ -40,6 +42,12 @@ function createTranscriptProcessor() {
   return {
     subscribe,
     addTranscriptChunk: (text: string) => {
+      // if we're not recording, don't update the transcript
+      const processor = get(transcriptProcessor);
+      if (!processor.isRecording) {
+        return;
+      }
+
       update((transcriptProcessor) => {
         let nextTranscript = transcriptProcessor.transcript + text;
         // Fix the excessive periods
@@ -50,22 +58,42 @@ function createTranscriptProcessor() {
       });
       updateTransfromations();
     },
+    stopRecording: () => {
+      update((transcriptProcessor) => {
+        transcriptProcessor.isRecording = false;
+        return transcriptProcessor;
+      });
+    },
+    toggleRecording: () => {
+      update((transcriptProcessor) => {
+        transcriptProcessor.isRecording = !transcriptProcessor.isRecording;
+        return transcriptProcessor;
+      });
+    },
     // stop: () => {
     //   const maxTrascriptTimestamp = getMaximumTranscriptTimestamp();
     //   timestampsToIgnore.add(maxTrascriptTimestamp);
     // },
     clear: () => {
-      set({
-        transcript: "",
-        transformations: [],
+      updateTransfromations.cancel();
+      update((transcriptProcessor) => {
+        transcriptProcessor.transcript = "";
+        transcriptProcessor.transformations = [];
+        return transcriptProcessor;
       });
     },
     back: () => {
-      console.log("back");
       update((transcriptProcessor) => {
-        const words = transcriptProcessor.transcript.split(" ");
-        const backedTranscript = words.slice(0, -1).join(" ");
-        transcriptProcessor.transcript = backedTranscript;
+        let nextTranscript = transcriptProcessor.transcript;
+        const endsWithSpace = nextTranscript.endsWith(" ");
+        if (endsWithSpace) {
+          nextTranscript = nextTranscript.slice(0, -1);
+        }
+        nextTranscript = nextTranscript.split(" ").slice(0, -1).join(" ");
+        if (endsWithSpace) {
+          nextTranscript += " ";
+        }
+        transcriptProcessor.transcript = nextTranscript;
         return transcriptProcessor;
       });
       updateTransfromations();

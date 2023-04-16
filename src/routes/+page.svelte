@@ -14,16 +14,10 @@
   });
 
   export let data: PageData;
-  let isRecording = false;
-  $: hasTranscript = $transcriptProcessor.transcript !== "";
-
   $: {
     $username = data.username;
   }
-
-  function toggleRecording() {
-    isRecording = !isRecording;
-  }
+  $: hasTranscript = $transcriptProcessor.transcript !== "";
 
   function logout() {
     transcriptProcessor.clear();
@@ -31,7 +25,7 @@
   }
 
   function onFail(message: string) {
-    isRecording = false;
+    transcriptProcessor.stopRecording();
     alert(message);
   }
 </script>
@@ -55,14 +49,18 @@
   </header>
 
   {#if Mic !== null}
-    <Mic {isRecording} {onFail} onChange={transcriptProcessor.addTranscriptChunk} />
+    <Mic
+      isRecording={$transcriptProcessor.isRecording}
+      {onFail}
+      onChange={transcriptProcessor.addTranscriptChunk}
+    />
   {/if}
 
   <section class="max-w-2xl mx-auto px-4">
     <Controls
-      {isRecording}
+      isRecording={$transcriptProcessor.isRecording}
       {hasTranscript}
-      {toggleRecording}
+      toggleRecording={transcriptProcessor.toggleRecording}
       onBack={transcriptProcessor.back}
       onNew={transcriptProcessor.clear}
     />
@@ -74,8 +72,8 @@
       <h2 class="font-semibold text-lg">What we think you are trying to say:</h2>
       <ul>
         {#each $transcriptProcessor.transformations as transformation}
-        <li class="list-disc list-inside mb-2">{transformation}</li>
-      {/each}
+          <li class="list-disc list-inside mb-2">{transformation}</li>
+        {/each}
       </ul>
     </div>
   </section>
