@@ -98,9 +98,13 @@
     }
 
     // TODO: Might need to split and join for word level rather than character level
-    const transcriptToSend = data.text.slice(nonfinalTranscript.length);
+    let transcriptToSend = data.text.slice(nonfinalTranscript.length);
+    transcriptToSend = transcriptToSend.replace(".", " ");
+    transcriptToSend = transcriptToSend.replace(/\s+/g, " ");
     nonfinalTranscript = data.message_type === "FinalTranscript" ? "" : data.text;
-    onChange(transcriptToSend);
+    if (transcriptToSend && transcriptToSend.length > 0) {
+      onChange(transcriptToSend);
+    }
   }
 
   function onSocketOpen(event: Event) {

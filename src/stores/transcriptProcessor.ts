@@ -57,9 +57,6 @@ function createTranscriptProcessor() {
       updateTransformations.cancel();
       update((transcriptProcessor) => {
         let nextTranscript = transcriptProcessor.transcript.text + text;
-        // Fix the excessive periods
-        // nextTranscript = nextTranscript.replace(".", " ");
-        // nextTranscript = nextTranscript.replace(/\s+/g, " ");
         transcriptProcessor.transcript.text = nextTranscript;
         transcriptProcessor.transcript.version += 1;
         return transcriptProcessor;
