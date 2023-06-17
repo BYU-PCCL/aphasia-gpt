@@ -14,13 +14,14 @@ function createTranscriptProcessor() {
     transformations: { texts: [], version: 0 }
   });
 
+  let abortController = new AbortController();
+  
   const updateTransformations = throttle(async () => {
-    console.log("updateTransforms gets called");
     const processor = get(transcriptProcessor);
     const transcript = processor.transcript;
     const processingVersion = transcript.version;
-
-    console.log(`processing transcript: "${transcript.text}", with version number: ${transcript.version}`);
+    console.log(`updateTransforms gets called. Processing transcript: 
+      "${transcript.text}", with version number: ${processingVersion}`);
 
     const words = transcript.text.split(" ");
     const minCleanWordCount = 2;
@@ -29,20 +30,33 @@ function createTranscriptProcessor() {
       return;
     }
     const recentTranscript = words.slice(-maxCleanWordCount).join(" ");
-    const response = await fetch("/api/gpt", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ utterance: recentTranscript }),
-    });
-    const data = await response.json();
-    const gptTransformations = data.texts;
-    update((transcriptProcessor) => {
-      transcriptProcessor.transformations.texts = gptTransformations;
-      transcriptProcessor.transformations.version = processingVersion;
-      return transcriptProcessor;
-    });
+
+    abortController = new AbortController();
+    const abortSignal = abortController.signal;
+
+    try {
+      const response = await fetch("/api/gpt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ utterance: recentTranscript }),
+        signal: abortSignal
+      });
+      const data = await response.json();
+      const gptTransformations = data.texts;
+      update((transcriptProcessor) => {
+        transcriptProcessor.transformations.texts = gptTransformations;
+        transcriptProcessor.transformations.version = processingVersion;
+        return transcriptProcessor;
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name == 'AbortError') {
+        console.log(`Aborted: proccessing transcript version ${processingVersion}`);
+      } else {
+        throw error;
+      }
+    }
   }, 250);
 
   return {
@@ -55,6 +69,7 @@ function createTranscriptProcessor() {
         return;
       }
       updateTransformations.cancel();
+      abortController.abort();
       update((transcriptProcessor) => {
         let nextTranscript = transcriptProcessor.transcript.text + text;
         transcriptProcessor.transcript.text = nextTranscript;
@@ -81,6 +96,7 @@ function createTranscriptProcessor() {
     // },
     clear: () => {
       updateTransformations.cancel();
+      abortController.abort();
       update((transcriptProcessor) => {
         transcriptProcessor.transcript = { text: "", version: 0 };
         transcriptProcessor.transformations = { texts: [], version: 0 };
@@ -89,6 +105,7 @@ function createTranscriptProcessor() {
     },
     back: () => {
       updateTransformations.cancel();
+      abortController.abort();
       update((transcriptProcessor) => {
         let nextTranscript = transcriptProcessor.transcript.text;
         const endsWithSpace = nextTranscript.endsWith(" ");
