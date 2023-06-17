@@ -67,11 +67,11 @@
 
     <div class="mt-12">
       <h2 class="font-semibold text-lg">What we think you said:</h2>
-      <p>{$transcriptProcessor.transcript}</p>
+      <p>{$transcriptProcessor.transcript.text}</p>
       <br class="h-24" />
-      <h2 class="font-semibold text-lg">What we think you are trying to say:</h2>
+      <h2 class="font-semibold text-lg">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
       <ul>
-        {#each $transcriptProcessor.transformations as transformation}
+        {#each $transcriptProcessor.transformations.texts as transformation}
           <li class="list-disc list-inside mb-2">{transformation}</li>
         {/each}
       </ul>

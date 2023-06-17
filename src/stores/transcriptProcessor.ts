@@ -3,23 +3,28 @@ import { get, writable } from "svelte/store";
 
 type TranscriptProcessor = {
   isRecording: boolean;
-  transcript: string;
-  transformations: string[];
+  transcript: { text: string; version: number; };
+  transformations: { texts: string[]; version: number };
 };
 
 function createTranscriptProcessor() {
   const { subscribe, set, update } = writable<TranscriptProcessor>({
     isRecording: false,
-    transcript: "",
-    transformations: [],
+    transcript: { text: "", version: 0 } ,
+    transformations: { texts: [], version: 0 }
   });
 
-  const updateTransfromations = throttle(async () => {
-    const transcript = get(transcriptProcessor).transcript;
-    const words = transcript.split(" ");
+  const updateTransformations = throttle(async () => {
+    console.log("updateTransforms gets called");
+    const processor = get(transcriptProcessor);
+    const transcript = processor.transcript;
+    const processingVersion = transcript.version;
+
+    console.log(`processing transcript: "${transcript.text}", with version number: ${transcript.version}`);
+
+    const words = transcript.text.split(" ");
     const minCleanWordCount = 2;
     const maxCleanWordCount = 10;
-    console.log(`transcript "${transcript}" words ${words.length}`);
     if (words.length < minCleanWordCount) {
       return;
     }
@@ -34,7 +39,8 @@ function createTranscriptProcessor() {
     const data = await response.json();
     const gptTransformations = data.texts;
     update((transcriptProcessor) => {
-      transcriptProcessor.transformations = gptTransformations;
+      transcriptProcessor.transformations.texts = gptTransformations;
+      transcriptProcessor.transformations.version = processingVersion;
       return transcriptProcessor;
     });
   }, 250);
@@ -42,21 +48,23 @@ function createTranscriptProcessor() {
   return {
     subscribe,
     addTranscriptChunk: (text: string) => {
+      console.log(`addTranscriptChunk gets called with input text: "${text}"`);
       // if we're not recording, don't update the transcript
       const processor = get(transcriptProcessor);
       if (!processor.isRecording) {
         return;
       }
-
+      updateTransformations.cancel();
       update((transcriptProcessor) => {
-        let nextTranscript = transcriptProcessor.transcript + text;
+        let nextTranscript = transcriptProcessor.transcript.text + text;
         // Fix the excessive periods
-        nextTranscript = nextTranscript.replace(".", " ");
-        nextTranscript = nextTranscript.replace(/\s+/g, " ");
-        transcriptProcessor.transcript = nextTranscript;
+        // nextTranscript = nextTranscript.replace(".", " ");
+        // nextTranscript = nextTranscript.replace(/\s+/g, " ");
+        transcriptProcessor.transcript.text = nextTranscript;
+        transcriptProcessor.transcript.version += 1;
         return transcriptProcessor;
       });
-      updateTransfromations();
+      updateTransformations();
     },
     stopRecording: () => {
       update((transcriptProcessor) => {
@@ -75,16 +83,17 @@ function createTranscriptProcessor() {
     //   timestampsToIgnore.add(maxTrascriptTimestamp);
     // },
     clear: () => {
-      updateTransfromations.cancel();
+      updateTransformations.cancel();
       update((transcriptProcessor) => {
-        transcriptProcessor.transcript = "";
-        transcriptProcessor.transformations = [];
+        transcriptProcessor.transcript = { text: "", version: 0 };
+        transcriptProcessor.transformations = { texts: [], version: 0 };
         return transcriptProcessor;
       });
     },
     back: () => {
+      updateTransformations.cancel();
       update((transcriptProcessor) => {
-        let nextTranscript = transcriptProcessor.transcript;
+        let nextTranscript = transcriptProcessor.transcript.text;
         const endsWithSpace = nextTranscript.endsWith(" ");
         if (endsWithSpace) {
           nextTranscript = nextTranscript.slice(0, -1);
@@ -93,10 +102,11 @@ function createTranscriptProcessor() {
         if (endsWithSpace) {
           nextTranscript += " ";
         }
-        transcriptProcessor.transcript = nextTranscript;
+        transcriptProcessor.transcript.text = nextTranscript;
+        transcriptProcessor.transcript.version += 1;
         return transcriptProcessor;
       });
-      updateTransfromations();
+      updateTransformations();
     },
   };
 }
