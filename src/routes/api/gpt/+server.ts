@@ -27,7 +27,7 @@ export const POST: RequestHandler = async ({ request }) => {
         5. "cat seems cat" => "The cat seems hungry"
         6. "i i need i need some" => "I need to get some sleep"
         
-        Do not wrap the output in quotes. Now, please transform and predict the following utterance: 
+        Do not wrap the output in quotes. Now, please provide one transformed and predicted sentence for the the following utterance: 
         `,
       },
       { role: "user", content: utterance.trim() },
