@@ -27,16 +27,17 @@ export const POST: RequestHandler = async ({ request }) => {
         5. "cat seems cat" => "The cat seems hungry"
         6. "i i need i need some" => "I need to get some sleep"
         
-        Do not wrap the output in quotes. Now, please provide one transformed and predicted sentence for the the following utterance: 
+        Now, please provide three transformed and predicted sentences (separated by line break) for the the following utterance: 
         `,
       },
       { role: "user", content: utterance.trim() },
     ],
     temperature: 1,
-    n: 3,
+    n: 1,
   });
 
-  const texts = chatResponse.data.choices.map((choice) => choice.message?.content);
+  const responseTexts = chatResponse.data.choices.map((choice) => choice.message?.content);
+  const texts = responseTexts[0]?.split('\n').filter((s) => s.length > 0).map((s) => s.replace(/['"]+/g, ''));
 
   return json({
     texts,
