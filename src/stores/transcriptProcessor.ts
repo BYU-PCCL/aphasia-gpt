@@ -122,6 +122,11 @@ function createTranscriptProcessor() {
       });
       updateTransformations();
     },
+    delete: () => {
+      updateTransformations.cancel();
+      abortController.abort();
+      updateTransformations();
+    },
   };
 }
 
