@@ -67,7 +67,9 @@
 
     <div class="mt-12">
       <h2 class="font-semibold text-lg">What we think you said:</h2>
-      <p>{$transcriptProcessor.transcript.text}</p>
+      {#each $transcriptProcessor.transcript.text as word}
+        <p>{word}</p>
+      {/each}
       <br class="h-24" />
       <h2 class="font-semibold text-lg">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
       <ul>
