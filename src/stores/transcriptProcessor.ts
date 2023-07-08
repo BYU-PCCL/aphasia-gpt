@@ -3,14 +3,14 @@ import { get, writable } from "svelte/store";
 
 type TranscriptProcessor = {
   isRecording: boolean;
-  transcript: { text: string; version: number; };
+  transcript: { text: string[]; version: number; };
   transformations: { texts: string[]; version: number };
 };
 
 function createTranscriptProcessor() {
   const { subscribe, set, update } = writable<TranscriptProcessor>({
     isRecording: false,
-    transcript: { text: "", version: 0 } ,
+    transcript: { text: [], version: 0 } ,
     transformations: { texts: [], version: 0 }
   });
 
@@ -23,7 +23,7 @@ function createTranscriptProcessor() {
     console.log(`updateTransforms gets called. Processing transcript: 
       "${transcript.text}", with version number: ${processingVersion}`);
 
-    const words = transcript.text.split(" ");
+    const words = transcript.text;
     const minCleanWordCount = 2;
     const maxCleanWordCount = 10;
     if (words.length < minCleanWordCount) {
@@ -65,14 +65,13 @@ function createTranscriptProcessor() {
       console.log(`addTranscriptChunk gets called with input text: "${text}"`);
       // if we're not recording, don't update the transcript
       const processor = get(transcriptProcessor);
-      if (!processor.isRecording) {
+      if (!processor.isRecording || text === " ") {
         return;
       }
       updateTransformations.cancel();
       abortController.abort();
       update((transcriptProcessor) => {
-        let nextTranscript = transcriptProcessor.transcript.text + text;
-        transcriptProcessor.transcript.text = nextTranscript;
+        transcriptProcessor.transcript.text.push(text);
         transcriptProcessor.transcript.version += 1;
         return transcriptProcessor;
       });
@@ -98,7 +97,7 @@ function createTranscriptProcessor() {
       updateTransformations.cancel();
       abortController.abort();
       update((transcriptProcessor) => {
-        transcriptProcessor.transcript = { text: "", version: 0 };
+        transcriptProcessor.transcript = { text: [], version: 0 };
         transcriptProcessor.transformations = { texts: [], version: 0 };
         return transcriptProcessor;
       });
@@ -107,19 +106,16 @@ function createTranscriptProcessor() {
       updateTransformations.cancel();
       abortController.abort();
       update((transcriptProcessor) => {
-        let nextTranscript = transcriptProcessor.transcript.text;
-        const endsWithSpace = nextTranscript.endsWith(" ");
-        if (endsWithSpace) {
-          nextTranscript = nextTranscript.slice(0, -1);
-        }
-        nextTranscript = nextTranscript.split(" ").slice(0, -1).join(" ");
-        if (endsWithSpace) {
-          nextTranscript += " ";
-        }
-        transcriptProcessor.transcript.text = nextTranscript;
+        transcriptProcessor.transcript.text.pop();
         transcriptProcessor.transcript.version += 1;
         return transcriptProcessor;
       });
+      updateTransformations();
+    },
+    delete: (wordIndex) => {
+      updateTransformations.cancel();
+      abortController.abort();
+      
       updateTransformations();
     },
   };
