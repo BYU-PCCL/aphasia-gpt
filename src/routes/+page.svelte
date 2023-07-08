@@ -17,7 +17,7 @@
   $: {
     $username = data.username;
   }
-  $: hasTranscript = $transcriptProcessor.transcript !== "";
+  $: hasTranscript = $transcriptProcessor.transcript !== " ";
 
   function logout() {
     transcriptProcessor.clear();
@@ -68,8 +68,27 @@
     <div class="mt-12">
       <h2 class="font-semibold text-lg">What we think you said:</h2>
       {#each $transcriptProcessor.transcript.text as word}
-        <p>{word}</p>
+        <p class="youSaid">{word}</p>
       {/each}
+
+      <style>
+        p.youSaid{
+          border: 3px solid rgb(240, 240, 240);
+          border-radius: 12px;
+          padding: 5px;
+	        width:fit-content;
+          background-color: rgb(222, 222, 222);
+		    }
+        .youSaid:hover{
+          border: 3px solid rgb(199, 199, 199);
+          border-radius: 12px;
+          padding: 5px;
+	        width:fit-content;
+          background-color: rgb(180, 180, 180);
+        }
+      </style>
+
+
       <br class="h-24" />
       <h2 class="font-semibold text-lg">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
       <ul>
