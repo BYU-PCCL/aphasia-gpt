@@ -28,7 +28,19 @@
     transcriptProcessor.stopRecording();
     alert(message);
   }
-</script>
+
+  //delete function
+  let hover = false;
+ let clicked = false;
+ let icon = "";
+
+ function onClick() {
+		clicked = true;	
+	}
+ 
+ </script>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
 {#if !$username}
   <LoginModel />
@@ -65,18 +77,60 @@
       onNew={transcriptProcessor.clear}
     />
 
+
     <div class="mt-12">
+      
       <h2 class="font-semibold text-lg">What we think you said:</h2>
+
+
+
       {#each $transcriptProcessor.transcript.text as word}
-        <p class="youSaid">{word}</p>
+
+      
+
+        <p style="display:inline-block; padding: 1px"  
+        class:hover 
+
+        on:mouseenter={()=>{
+          if(!clicked){
+            hover = true;
+          }
+          icon = "close";
+        }}
+
+        on:mouseleave={()=>{
+        if(!clicked){
+        hover = false;
+        }
+        icon = "";
+        }}>
+
+        {word} 
+
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <i class="material-icons" style="font-size: 15px; color: white"
+        on:click={onclick}>
+        {icon}
+      </i>
+      </p>
       {/each}
 
       <style>
+        .hover {
+                  border-radius: 10px;
+                  padding: 1px;
+                  width:fit-content;
+                  background-color: rgb(222, 222, 222);
+              }
+      </style>
+
+      
+      <!-- <style>
         p.youSaid{
           border: 3px solid rgb(240, 240, 240);
           border-radius: 12px;
           padding: 5px;
-	        width:fit-content;
+	        width:fit-content; 
           background-color: rgb(222, 222, 222);
 		    }
         .youSaid:hover{
@@ -86,7 +140,7 @@
 	        width:fit-content;
           background-color: rgb(180, 180, 180);
         }
-      </style>
+      </style> -->
 
 
       <br class="h-24" />
@@ -97,5 +151,8 @@
         {/each}
       </ul>
     </div>
+
+
+
   </section>
 </main>
