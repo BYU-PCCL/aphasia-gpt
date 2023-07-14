@@ -29,6 +29,8 @@
     alert(message);
   }
 
+  let wordsNumber = $transcriptProcessor.transcript.text.length;
+  console.log("wordsNumber is: ", wordsNumber);
   //delete function
   let hover = false;
  let clicked = false;
@@ -88,9 +90,9 @@
 
       
 
-        <p style="display:inline-block; padding: 1px"  
+        <li style="display:inline-block; padding: 1px"  
         class:hover 
-
+        class = "beforeHover"
         on:mouseenter={()=>{
           if(!clicked){
             hover = true;
@@ -112,16 +114,24 @@
         on:click={onclick}>
         {icon}
       </i>
-      </p>
+    </li>
       {/each}
 
       <style>
+        .beforeHover{
+                border-radius: 10px;
+                  padding: 1px;
+                  width:fit-content;
+                  background-color: rgb(222, 222, 222)
+                  
+              }
         .hover {
                   border-radius: 10px;
                   padding: 1px;
                   width:fit-content;
-                  background-color: rgb(222, 222, 222);
+                  background-color: rgb(180, 180, 180);;
               }
+              
       </style>
 
       
