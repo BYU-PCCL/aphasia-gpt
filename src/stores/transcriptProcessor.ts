@@ -3,16 +3,18 @@ import { get, writable } from "svelte/store";
 
 type TranscriptProcessor = {
   isRecording: boolean;
-  transcript: { text: string[]; version: number; };
+  transcript: { text: string[]; version: number;};
   transformations: { texts: string[]; version: number };
 };
 
 function createTranscriptProcessor() {
   const { subscribe, set, update } = writable<TranscriptProcessor>({
     isRecording: false,
-    transcript: { text: [], version: 0 } ,
+    transcript: { text: [], version: 0} ,
     transformations: { texts: [], version: 0 }
   });
+
+  
 
   let abortController = new AbortController();
   
@@ -34,6 +36,7 @@ function createTranscriptProcessor() {
     abortController = new AbortController();
     const abortSignal = abortController.signal;
 
+    
     try {
       const response = await fetch("/api/gpt", {
         method: "POST",
@@ -58,6 +61,12 @@ function createTranscriptProcessor() {
       }
     }
   }, 250);
+  //250 change it to see the time delay
+  //looking at throttle
+  //max work account
+  //post on vercel
+  //fix hover box
+  //fix delete function
 
   return {
     subscribe,
@@ -115,6 +124,11 @@ function createTranscriptProcessor() {
     delete: (wordIndex) => {
       updateTransformations.cancel();
       abortController.abort();
+      update((transcriptProcessor) => {
+        transcriptProcessor.transcript.text.splice(wordIndex, 1);
+        transcriptProcessor.transcript.version += 1;
+        return transcriptProcessor;
+      });
       
       updateTransformations();
     },

@@ -6,6 +6,7 @@
   import { transcriptProcessor } from "@/stores/transcriptProcessor";
   import { username } from "@/stores/user";
   import { onMount } from "svelte";
+  import { findIndex, indexOf, words } from "lodash";
 
   // Mic requires browser environment
   let Mic: null | typeof import("@/components/Mic.svelte").default = null;
@@ -29,18 +30,15 @@
     alert(message);
   }
 
-  let wordsNumber = $transcriptProcessor.transcript.text.length;
-  console.log("wordsNumber is: ", wordsNumber);
-  //delete function
-  let hover = false;
- let clicked = false;
- let icon = "";
+  function deleteFunction(wordIndex:number){
+  transcriptProcessor.delete(wordIndex);
+ }
 
- function onClick() {
-		clicked = true;	
-	}
  
- </script>
+//delete function
+let hover = false;
+let icon = "";
+</script>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
@@ -90,31 +88,29 @@
 
       
 
-        <li style="display:inline-block; padding: 1px"  
+        <p style="display:inline-block; padding: 1px"  
         class:hover 
         class = "beforeHover"
         on:mouseenter={()=>{
-          if(!clicked){
-            hover = true;
-          }
+          hover = true;
           icon = "close";
         }}
 
         on:mouseleave={()=>{
-        if(!clicked){
-        hover = false;
-        }
-        icon = "";
+          hover = false;
+          icon = "";
+          
         }}>
 
         {word} 
 
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <i class="material-icons" style="font-size: 15px; color: white"
-        on:click={onclick}>
+    
+     
+      <i class="material-icons" style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
         {icon}
       </i>
-    </li>
+    </p>
+    
       {/each}
 
       <style>
@@ -133,24 +129,6 @@
               }
               
       </style>
-
-      
-      <!-- <style>
-        p.youSaid{
-          border: 3px solid rgb(240, 240, 240);
-          border-radius: 12px;
-          padding: 5px;
-	        width:fit-content; 
-          background-color: rgb(222, 222, 222);
-		    }
-        .youSaid:hover{
-          border: 3px solid rgb(199, 199, 199);
-          border-radius: 12px;
-          padding: 5px;
-	        width:fit-content;
-          background-color: rgb(180, 180, 180);
-        }
-      </style> -->
 
 
       <br class="h-24" />
