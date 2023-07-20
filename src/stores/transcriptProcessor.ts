@@ -60,14 +60,13 @@ function createTranscriptProcessor() {
         throw error;
       }
     }
-  }, 250);
-  //250 change it to see the time delay
-  //looking at throttle
+  }, 1);
+  //this throttle did shorten the time
+  //some time if speak too quick need to separate the text;
+
   //max work account
   //post on vercel
-  //fix hover box
-  //fix delete function
-
+ 
   return {
     subscribe,
     addTranscriptChunk: (text: string) => {
@@ -80,7 +79,11 @@ function createTranscriptProcessor() {
       updateTransformations.cancel();
       abortController.abort();
       update((transcriptProcessor) => {
-        transcriptProcessor.transcript.text.push(text);
+        const texts = text.split(" ");
+        for(let i = 0; i < texts.length; i ++){
+          transcriptProcessor.transcript.text.push(texts[i]);
+        }
+        //transcriptProcessor.transcript.text.push(text);
         transcriptProcessor.transcript.version += 1;
         return transcriptProcessor;
       });
@@ -129,7 +132,6 @@ function createTranscriptProcessor() {
         transcriptProcessor.transcript.version += 1;
         return transcriptProcessor;
       });
-      
       updateTransformations();
     },
   };
