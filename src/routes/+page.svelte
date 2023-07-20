@@ -7,6 +7,8 @@
   import { username } from "@/stores/user";
   import { onMount } from "svelte";
   import { findIndex, indexOf, words } from "lodash";
+  // import {aphasiaType1} from "@/routes/api/gpt/+server"
+  // export {aphasiaType};
 
   // Mic requires browser environment
   let Mic: null | typeof import("@/components/Mic.svelte").default = null;
@@ -34,10 +36,6 @@
   transcriptProcessor.delete(wordIndex);
  }
 
- 
-//delete function
-let hover = false;
-let icon = "";
 </script>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -85,49 +83,37 @@ let icon = "";
 
 
       {#each $transcriptProcessor.transcript.text as word}
+        <p style="display:inline-block; padding: 2.5px"  class = "HoverBox">
+          {word} 
+            <i class="material-icons"  style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
+              close
+            </i>
+        </p> 
 
-      
-
-        <p style="display:inline-block; padding: 1px"  
-        class:hover 
-        class = "beforeHover"
-        on:mouseenter={()=>{
-          hover = true;
-          icon = "close";
-        }}
-
-        on:mouseleave={()=>{
-          hover = false;
-          icon = "";
-          
-        }}>
-
-        {word} 
-
-    
-     
-      <i class="material-icons" style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
-        {icon}
-      </i>
-    </p>
-    
       {/each}
 
       <style>
-        .beforeHover{
-                border-radius: 10px;
-                  padding: 1px;
-                  width:fit-content;
-                  background-color: rgb(222, 222, 222)
-                  
-              }
-        .hover {
-                  border-radius: 10px;
-                  padding: 1px;
-                  width:fit-content;
-                  background-color: rgb(180, 180, 180);;
-              }
-              
+        .HoverBox{
+          border-radius: 10px;
+          padding: 1px;
+          width:fit-content;
+          background-color: rgb(222, 222, 222);
+        }
+
+        .material-icons{
+          display: none;
+        }
+
+        p:hover .material-icons{
+          display:inline;
+        }
+        
+        p:hover{
+          border-radius: 10px;
+          padding: 1px;
+          width:fit-content;
+          background-color: rgb(180, 180, 180);
+        }       
       </style>
 
 
