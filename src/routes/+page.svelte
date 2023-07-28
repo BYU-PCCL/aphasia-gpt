@@ -22,6 +22,22 @@
   }
   $: hasTranscript = $transcriptProcessor.transcript !== " ";
 
+  let fontSize = 18;
+  const minFontSize = 10;
+  const maxFontSize = 26;
+
+  function fontSizeBigger(){
+    if(fontSize < maxFontSize){
+      fontSize ++;
+    }
+  }
+
+  function fontSizeSmaller(){
+    if(fontSize > minFontSize){
+      fontSize --;
+    }
+  }
+
   function logout() {
     transcriptProcessor.clear();
     $username = null;
@@ -83,7 +99,7 @@
 
 
       {#each $transcriptProcessor.transcript.text as word}
-        <p style="display:inline-block; padding: 2.5px"  class = "HoverBox">
+        <p style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" class = "HoverBox">
           {word} 
             <i class="material-icons"  style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
               close
@@ -92,9 +108,10 @@
 
       {/each}
 
+
       <style>
         .HoverBox{
-          border-radius: 10px;
+          border-radius: 5px;
           padding: 1px;
           width:fit-content;
           background-color: rgb(222, 222, 222);
@@ -121,7 +138,7 @@
       <h2 class="font-semibold text-lg">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
       <ul>
         {#each $transcriptProcessor.transformations.texts as transformation}
-          <li class="list-disc list-inside mb-2">{transformation}</li>
+          <li class="list-disc list-inside mb-2" style="font-size: {fontSize}px">{transformation}</li>
         {/each}
       </ul>
     </div>

@@ -61,11 +61,7 @@ function createTranscriptProcessor() {
       }
     }
   }, 1);
-  //this throttle did shorten the time
-  //some time if speak too quick need to separate the text;
-
-  //max work account
-  //post on vercel
+ 
  
   return {
     subscribe,
@@ -81,9 +77,10 @@ function createTranscriptProcessor() {
       update((transcriptProcessor) => {
         const texts = text.split(" ");
         for(let i = 0; i < texts.length; i ++){
-          transcriptProcessor.transcript.text.push(texts[i]);
+          if(texts[i]!== ""){
+            transcriptProcessor.transcript.text.push(texts[i]);
+          }
         }
-        //transcriptProcessor.transcript.text.push(text);
         transcriptProcessor.transcript.version += 1;
         return transcriptProcessor;
       });
