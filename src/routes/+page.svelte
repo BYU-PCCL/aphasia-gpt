@@ -7,6 +7,7 @@
   import { username } from "@/stores/user";
   import { onMount } from "svelte";
   import { findIndex, indexOf, words } from "lodash";
+  import { aphasiaType } from '../stores/user';
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   // export {aphasiaType};
 
@@ -51,6 +52,34 @@
   function deleteFunction(wordIndex:number){
   transcriptProcessor.delete(wordIndex);
  }
+ //drop down logic
+ let aphasiaStore;
+  function toggleDropdown(event: MouseEvent) {
+    event.preventDefault();
+    const dropdown = document.getElementById("dropdown");
+    if (dropdown) {
+      dropdown.classList.toggle("hidden");
+    }
+  }
+
+  $:aphasiaType.subscribe((value) => {
+    aphasiaStore = value;
+  })
+
+  function changeType(){
+    aphasiaType.set("Broca's Aphasia");
+  }
+	
+  
+  function changeType2(){
+    aphasiaType.set("vernickeies aphasia");
+  }
+  
+  function font(){
+    console.log("change font");
+	
+  }
+ 
 
 </script>
 
@@ -67,11 +96,28 @@
     {#if $username}
       <form method="POST" action="/?/logout" use:enhance={logout} class="flex items-baseline gap-4">
         <div>Hi {$username} 👋</div>
-        <button class="bg-neutral-800 text-white px-2 py-1 rounded-md block ml-auto mr-0 mt-1"
-          >Log Out</button
-        >
       </form>
     {/if}
+    <!-- This is the dropdown menu -->
+    <div class="relative">
+      <button class="bg-neutral-800 text-white px-2 py-1 rounded-md" on:click={toggleDropdown} aria-label="Select Aphasia Type">
+        
+        <i class="material-icons">menu</i>
+      </button>
+      <div id="dropdown" class="absolute right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md hidden">
+        <ul class="py-1">
+          <li><button on:click={changeType} class="block px-4 py-2 hover:bg-gray-100">Type 1 Aphasia</button></li>
+          <li><button on:click={changeType2} class="block px-4 py-2 hover:bg-gray-100">Type 2 Aphasia</button></li>
+          <li><button on:click={font} class="block px-4 py-2 hover:bg-gray-100">Font Size</button></li>
+          <li>{#if $username}
+            <form method="POST" action="/?/logout" use:enhance={logout} >
+              <button class="block px-4 py-2 hover:bg-gray-100">Log Out</button>
+            </form>
+          {/if}</li>
+          <!-- Add more options as needed -->
+        </ul>
+      </div>
+    </div>
   </header>
 
   {#if Mic !== null}
@@ -101,7 +147,7 @@
       {#each $transcriptProcessor.transcript.text as word}
         <p style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" class = "HoverBox">
           {word} 
-            <i class="material-icons"  style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
+            <i class="material-icons no-show"  style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
               close
             </i>
         </p> 
@@ -116,12 +162,11 @@
           width:fit-content;
           background-color: rgb(222, 222, 222);
         }
-
-        .material-icons{
+        .no-show{
           display: none;
         }
 
-        p:hover .material-icons{
+        p:hover .no-show{
           display:inline;
         }
         
