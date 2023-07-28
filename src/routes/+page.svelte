@@ -7,9 +7,9 @@
   import { username } from "@/stores/user";
   import { onMount } from "svelte";
   import { findIndex, indexOf, words } from "lodash";
-  import { aphasiaType } from '../stores/user';
+  
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
-  // export {aphasiaType};
+  
 
   // Mic requires browser environment
   let Mic: null | typeof import("@/components/Mic.svelte").default = null;
@@ -53,7 +53,7 @@
   transcriptProcessor.delete(wordIndex);
  }
  //drop down logic
- let aphasiaStore;
+  
   function toggleDropdown(event: MouseEvent) {
     event.preventDefault();
     const dropdown = document.getElementById("dropdown");
@@ -61,23 +61,43 @@
       dropdown.classList.toggle("hidden");
     }
   }
-
-  $:aphasiaType.subscribe((value) => {
-    aphasiaStore = value;
-  })
-
+  let aphasiaType = "broca's aphasia";
   function changeType(){
-    aphasiaType.set("Broca's Aphasia");
+    console.log("type1");
+    aphasiaType = "broca's aphasia";
+    sendDataToBackend();
   }
 	
   
   function changeType2(){
-    aphasiaType.set("vernickeies aphasia");
+    console.log("type2");
+    aphasiaType = "vernickeis aphasia";
+    sendDataToBackend();
   }
   
   function font(){
     console.log("change font");
-	
+  }
+
+  async function sendDataToBackend(){
+    try{
+      const response = await fetch("/api/gpt", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({aphasiaType}),
+      });
+      
+      if(!response.ok){
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Response from backend:', data);
+    }catch (error){
+      console.error('Error:', error);
+    }
   }
  
 
