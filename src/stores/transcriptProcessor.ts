@@ -121,7 +121,7 @@ function createTranscriptProcessor() {
       });
       updateTransformations();
     },
-    delete: (wordIndex) => {
+    delete: (wordIndex:number) => {
       updateTransformations.cancel();
       abortController.abort();
       update((transcriptProcessor) => {

@@ -7,6 +7,7 @@
   import { username } from "@/stores/user";
   import { onMount } from "svelte";
   import { findIndex, indexOf, words } from "lodash";
+
   
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   
@@ -55,22 +56,42 @@
  }
 
 
- const utterThis = new SpeechSynthesisUtterance()
- const synth = window.speechSynthesis
-  function textToSpeech(speechText:string){
-    transcriptProcessor.stopRecording()
-    utterThis.text = speechText;
-    utterThis.lang = "en-US";
-    synth.speak(utterThis)
+ 
 
-  }
- //drop down logic
+
+
+
+
+//  const synth = window.speechSynthesis
+//  console.log(speechSynthesis.getVoices())
+ 
+//  let voicesPromise = new Promise((resolve) => {
+//     speechSynthesis.addEventListener("voiceschanged", ev => {
+//       resolve(speechSynthesis.getVoices())
+//     })
+//   })
+
+let isPlaying = false;
+function textToSpeech(speechText:string){
+    transcriptProcessor.stopRecording();
+    isPlaying = !isPlaying;
+    let speech = new SpeechSynthesisUtterance();
+    speech.text =speechText;
+    speech.volume = 1;
+    speech.rate = 1;
+    speech.pitch = 1;
+    window.speechSynthesis.speak(speech);
+}
+
   
+ //drop down logic
+  let isMenuOpen = false;
   function toggleDropdown(event: MouseEvent) {
     event.preventDefault();
     const dropdown = document.getElementById("dropdown");
     if (dropdown) {
       dropdown.classList.toggle("hidden");
+      isMenuOpen = !isMenuOpen;
     }
   }
   let aphasiaType = "broca's aphasia";
@@ -133,8 +154,11 @@
     <!-- This is the dropdown menu -->
     <div class="relative">
       <button class="bg-neutral-800 text-white px-2 py-1 rounded-md" on:click={toggleDropdown} aria-label="Select Aphasia Type">
-        
-        <i class="material-icons">menu</i>
+        {#if isMenuOpen}
+      <i class="material-icons">close</i>
+        {:else}
+      <i class ="material-icons">menu</i>
+        {/if}
       </button>
       <div id="dropdown" class="absolute right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md hidden">
         <ul class="py-1">
@@ -207,7 +231,11 @@
           padding: 1px;
           width:fit-content;
           background-color: rgb(180, 180, 180);
-        }   
+        } 
+        .material-icons {
+          font-size: 20px;
+          cursor: pointer;
+  }  
         
         </style>
 
@@ -218,16 +246,19 @@
       <h2 class="font-semibold text-lg">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
       <ul>
         {#each $transcriptProcessor.transformations.texts as transformation}
-        <form id="form">
-          
-          <h1 class="list-disc list-inside mb-2" id="transformation" style="font-size: {fontSize}px">
-            <button on:click={()=>textToSpeech(transformation)}>Submit</button>
-           {transformation}
-          </h1>
-          </form>
+          <li style="font-size:{fontSize}px"><div on:click={()=>textToSpeech(transformation)} class="material-icons">
+            {#if isPlaying}
+              pause
+            {:else}
+              play_arrow
+            {/if}
+        </div>{transformation}</li>
         {/each}
+          
+        
+      
 
-        <script src="speech.js"></script>
+        
       </ul>
     </div>
 
