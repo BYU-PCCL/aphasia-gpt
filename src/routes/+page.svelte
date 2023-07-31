@@ -11,6 +11,7 @@
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   
 
+
   // Mic requires browser environment
   let Mic: null | typeof import("@/components/Mic.svelte").default = null;
   onMount(async () => {
@@ -52,6 +53,17 @@
   function deleteFunction(wordIndex:number){
   transcriptProcessor.delete(wordIndex);
  }
+
+
+ const utterThis = new SpeechSynthesisUtterance()
+ const synth = window.speechSynthesis
+  function textToSpeech(speechText:string){
+    transcriptProcessor.stopRecording()
+    utterThis.text = speechText;
+    utterThis.lang = "en-US";
+    synth.speak(utterThis)
+
+  }
  //drop down logic
   
   function toggleDropdown(event: MouseEvent) {
@@ -195,18 +207,31 @@
           padding: 1px;
           width:fit-content;
           background-color: rgb(180, 180, 180);
-        }       
-      </style>
+        }   
+        
+        </style>
 
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
       <br class="h-24" />
       <h2 class="font-semibold text-lg">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
       <ul>
         {#each $transcriptProcessor.transformations.texts as transformation}
-          <li class="list-disc list-inside mb-2" style="font-size: {fontSize}px">{transformation}</li>
+        <form id="form">
+          
+          <h1 class="list-disc list-inside mb-2" id="transformation" style="font-size: {fontSize}px">
+            <button on:click={()=>textToSpeech(transformation)}>Submit</button>
+           {transformation}
+          </h1>
+          </form>
         {/each}
+
+        <script src="speech.js"></script>
       </ul>
     </div>
+
+
 
 
 
