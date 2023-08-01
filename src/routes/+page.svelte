@@ -77,6 +77,7 @@ function textToSpeech(speechText:string){
     isPlaying = !isPlaying;
     let speech = new SpeechSynthesisUtterance();
     speech.text =speechText;
+    speech.lang = "en-US"
     speech.volume = 1;
     speech.rate = 1;
     speech.pitch = 1;
@@ -235,16 +236,15 @@ function textToSpeech(speechText:string){
         .material-icons {
           font-size: 20px;
           cursor: pointer;
-  }  
-        
-        </style>
+        }  
+       </style>
 
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
       <br class="h-24" />
       <h2 class="font-semibold text-lg">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
-      <ul>
+        <ul>
         {#each $transcriptProcessor.transformations.texts as transformation}
           <li style="font-size:{fontSize}px"><div on:click={()=>textToSpeech(transformation)} class="material-icons">
             {#if isPlaying}
@@ -254,17 +254,8 @@ function textToSpeech(speechText:string){
             {/if}
         </div>{transformation}</li>
         {/each}
-          
-        
       
-
-        
       </ul>
     </div>
-
-
-
-
-
   </section>
 </main>
