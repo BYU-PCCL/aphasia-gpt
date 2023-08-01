@@ -27,6 +27,6 @@
         <button class="bg-emerald-600 text-white px-2 py-1 rounded-[4px] m-1">Continue</button>
       </div>
     </form>
-    <p class="text-center">*we won't email you, any unique identifier will work</p>
+    <h1 class="text-center">*we won't email you, any unique identifier will work</h1>
   </section>
 </main>
