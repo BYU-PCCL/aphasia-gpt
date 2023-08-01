@@ -55,13 +55,6 @@
   transcriptProcessor.delete(wordIndex);
  }
 
-
- 
-
-
-
-
-
 //  const synth = window.speechSynthesis
 //  console.log(speechSynthesis.getVoices())
  
@@ -71,9 +64,10 @@
 //     })
 //   })
 
-let isPlaying = false;
-function textToSpeech(speechText:string){
+let isPlaying = -1;
+function textToSpeech(speechText:string, index: number){
     transcriptProcessor.stopRecording();
+<<<<<<< HEAD
     isPlaying = !isPlaying;
     let speech = new SpeechSynthesisUtterance();
     speech.text =speechText;
@@ -82,9 +76,32 @@ function textToSpeech(speechText:string){
     speech.rate = 1;
     speech.pitch = 1;
     window.speechSynthesis.speak(speech);
+=======
+    
+    if (isPlaying === index) {
+      // If the current element is already playing, pause it.
+      isPlaying = -1;
+      window.speechSynthesis.cancel();
+    } else {
+      // If a different element is playing, stop it first and then play the new one.
+      if (isPlaying !== -1) {
+        window.speechSynthesis.cancel();
+      }
+      isPlaying = index;
+      let speech = new SpeechSynthesisUtterance();
+      speech.text = speechText;
+      speech.lang = "en-US";
+      speech.volume = 1;
+      speech.rate = 1;
+      speech.pitch = 1;
+      speech.onend = () => {
+        isPlaying = -1; // Reset the isPlaying variable after the speech is completed.
+      };
+      window.speechSynthesis.speak(speech);
+    }
+>>>>>>> 28912da35de523485838e274136c4f2f46814ac2
 }
 
-  
  //drop down logic
   let isMenuOpen = false;
   function toggleDropdown(event: MouseEvent) {
@@ -244,18 +261,32 @@ function textToSpeech(speechText:string){
 
       <br class="h-24" />
       <h2 class="font-semibold text-lg">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
+<<<<<<< HEAD
         <ul>
         {#each $transcriptProcessor.transformations.texts as transformation}
           <li style="font-size:{fontSize}px"><div on:click={()=>textToSpeech(transformation)} class="material-icons">
             {#if isPlaying}
+=======
+      <ul>
+        {#each $transcriptProcessor.transformations.texts as transformation, i}
+          <li style="font-size:{fontSize}px"><div on:click={()=>textToSpeech(transformation, i)} class="material-icons">
+            {#if isPlaying === i}
+>>>>>>> 28912da35de523485838e274136c4f2f46814ac2
               pause
             {:else}
               play_arrow
             {/if}
         </div>{transformation}</li>
         {/each}
+<<<<<<< HEAD
       
       </ul>
     </div>
+=======
+          
+      </ul>
+    </div>
+
+>>>>>>> 28912da35de523485838e274136c4f2f46814ac2
   </section>
 </main>
