@@ -171,7 +171,11 @@ function textToSpeech(speechText:string, index: number){
         <ul class="py-1">
           <li><button on:click={changeType} class="block px-4 py-2 hover:bg-gray-100">Type 1 Aphasia</button></li>
           <li><button on:click={changeType2} class="block px-4 py-2 hover:bg-gray-100">Type 2 Aphasia</button></li>
-          <li><button on:click={font} class="block px-4 py-2 hover:bg-gray-100">Font Size</button></li>
+          <div class="slidecontainer">
+            <li><button on:click={font} class="block px-4 py-2 hover:bg-gray-100">Font Size</button></li>
+            <input type="range" min="10" max="26" value="18" class="slider" id="myRange">
+            
+          </div>
           <li>{#if $username}
             <form method="POST" action="/?/logout" use:enhance={logout} >
               <button class="block px-4 py-2 hover:bg-gray-100">Log Out</button>
@@ -184,7 +188,7 @@ function textToSpeech(speechText:string, index: number){
   </header>
 
   {#if Mic !== null}
-    <Mic
+    <svelte:component this={Mic}
       isRecording={$transcriptProcessor.isRecording}
       {onFail}
       onChange={transcriptProcessor.addTranscriptChunk}
@@ -220,7 +224,7 @@ function textToSpeech(speechText:string, index: number){
 
       <style>
         .HoverBox{
-          border-radius: 5px;
+          border-radius: 8px;
           padding: 1px;
           width:fit-content;
           background-color: rgb(222, 222, 222);
@@ -234,7 +238,7 @@ function textToSpeech(speechText:string, index: number){
         }
         
         p:hover{
-          border-radius: 10px;
+          border-radius: 8px;
           padding: 1px;
           width:fit-content;
           background-color: rgb(180, 180, 180);
@@ -243,13 +247,47 @@ function textToSpeech(speechText:string, index: number){
           font-size: 20px;
           cursor: pointer;
         }  
+
+        .slidecontainer {
+          width: 100%;
+        }
+
+        .slider {
+          -webkit-appearance: none;
+          width: 80%;
+          height: 15px;
+          border-radius: 5px;  
+          background: #d3d3d3;
+          outline: none;
+          opacity: 0.7;
+          -webkit-transition: .2s;
+          transition: opacity .2s;
+         }
+
+        .slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 25px;
+          height: 25px;
+          border-radius: 50%; 
+          background: #404040;
+          cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+          width: 25px;
+          height: 25px;
+          border-radius: 50%;
+          background: #404040;
+          cursor: pointer;
+        }
        </style>
 
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
       <br class="h-24" />
-      <h2 class="font-semibold text-lg">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
+      <h2 class="font-semibold text-lg" style="line-height:40px">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
       <ul>
         {#each $transcriptProcessor.transformations.texts as transformation, i}
           <li style="font-size:{fontSize}px;line-height:40px"><div on:click={()=>textToSpeech(transformation, i)} class="material-icons">
@@ -258,7 +296,9 @@ function textToSpeech(speechText:string, index: number){
             {:else}
               play_arrow
             {/if}
-        </div>{transformation}</li>
+             </div>
+           {transformation}
+          </li>
         {/each}
           
       </ul>
