@@ -25,21 +25,9 @@
   }
   $: hasTranscript = $transcriptProcessor.transcript !== " ";
 
-  let fontSize = 18;
-  const minFontSize = 10;
-  const maxFontSize = 26;
 
-  function fontSizeBigger(){
-    if(fontSize < maxFontSize){
-      fontSize ++;
-    }
-  }
-
-  function fontSizeSmaller(){
-    if(fontSize > minFontSize){
-      fontSize --;
-    }
-  }
+  // let fontSize = [18,26];
+  let fontSize = 19;
 
   function logout() {
     transcriptProcessor.clear();
@@ -171,10 +159,14 @@ function textToSpeech(speechText:string, index: number){
         <ul class="py-1">
           <li><button on:click={changeType} class="block px-4 py-2 hover:bg-gray-100">Type 1 Aphasia</button></li>
           <li><button on:click={changeType2} class="block px-4 py-2 hover:bg-gray-100">Type 2 Aphasia</button></li>
-          <div class="slidecontainer">
+          <div class="FontSizeFunction">
             <li><button on:click={font} class="block px-4 py-2 hover:bg-gray-100">Font Size</button></li>
-            <input type="range" min="10" max="26" value="18" class="slider" id="myRange">
             
+            <span class="minus" on:click={e => fontSize--}>-</span>
+              <!-- <p class="fontSizeExample" style="display:inline-block; font-size:{fontSize}px">
+                Hi!
+              </p> -->
+            <span class="plus" on:click={e => fontSize++}>+</span>
           </div>
           <li>{#if $username}
             <form method="POST" action="/?/logout" use:enhance={logout} >
@@ -233,11 +225,11 @@ function textToSpeech(speechText:string, index: number){
           display: none;
         }
 
-        p:hover .no-show{
+        p.HoverBox:hover .no-show{
           display:inline;
         }
         
-        p:hover{
+        p.HoverBox:hover{
           border-radius: 8px;
           padding: 1px;
           width:fit-content;
@@ -248,39 +240,23 @@ function textToSpeech(speechText:string, index: number){
           cursor: pointer;
         }  
 
-        .slidecontainer {
-          width: 100%;
-        }
 
-        .slider {
-          -webkit-appearance: none;
-          width: 80%;
-          height: 15px;
-          border-radius: 5px;  
-          background: #d3d3d3;
-          outline: none;
-          opacity: 0.7;
-          -webkit-transition: .2s;
-          transition: opacity .2s;
-         }
+        span {cursor:pointer; }
+		    .FontSizeFunction{
+			    margin:10px;
+		    }
+		    .minus, .plus{
+			    width:25px;
+			    height:25px;
+			    background:#f2f2f2;
+			    border-radius:4px;
+			    border:1px solid #ddd;
+          display: inline-block;
+          vertical-align: middle;
+          text-align: center;
+		   }
 
-        .slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 25px;
-          height: 25px;
-          border-radius: 50%; 
-          background: #404040;
-          cursor: pointer;
-        }
 
-        .slider::-moz-range-thumb {
-          width: 25px;
-          height: 25px;
-          border-radius: 50%;
-          background: #404040;
-          cursor: pointer;
-        }
        </style>
 
 
