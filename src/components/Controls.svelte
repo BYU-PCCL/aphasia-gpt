@@ -10,7 +10,7 @@
   $: showExtraControls = hasTranscript || isRecording;
 </script>
 
-<section class="flex gap-4 justify-center">
+<section class="flex gap-2 justify-center">
   {#if showExtraControls}
     <button
       on:click={onNew}
