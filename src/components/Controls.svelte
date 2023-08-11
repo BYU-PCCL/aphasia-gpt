@@ -10,19 +10,8 @@
   $: showExtraControls = hasTranscript || isRecording;
 </script>
 
-<style>
-  .threeButton{
-    display:flex;
-    align-items: center;
-    justify-content: center;
-    gap:10%;
 
-  }
-
-
-</style>
-
-<section class="threeButton">
+<section class="flex gap-9 justify-center">
   {#if showExtraControls}
     <button
       on:click={onNew}
@@ -33,7 +22,7 @@
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill="currentColor"
-        class="w-14 h-14"
+        class="w-10 h-10"
       >
         <path
           fill-rule="evenodd"
@@ -52,7 +41,7 @@
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill="currentColor"
-        class="w-14 h-14"
+        class="w-10 h-10"
       >
         <path d="M8.25 4.5a3.75 3.75 0 117.5 0v8.25a3.75 3.75 0 11-7.5 0V4.5z" />
         <path
@@ -71,7 +60,7 @@
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill="currentColor"
-        class="w-14 h-14"
+        class="w-10 h-10"
       >
         <path
           fill-rule="evenodd"
