@@ -60,7 +60,7 @@ function createTranscriptProcessor() {
         throw error;
       }
     }
-  }, 250);
+  }, 2500);
  
  
   return {
