@@ -9,21 +9,14 @@
 
   $: showExtraControls = hasTranscript || isRecording;
 </script>
-<style>
-  .threeButton{
-    display:flex;
-    align-items: center;
-    justify: center;
-  }
-
-</style>
 
 
-<section class="threeButton">
+<section class="flex gap justify-center">
   {#if showExtraControls}
     <button
       on:click={onNew}
       class="inline-block rounded-full bg-sky-100 text-sky-500 p-10"
+      style="margin-right: 4vw;"
       transition:fly={{ x: 160, duration: 250, opacity: 1 }}
     >
       <svg
@@ -31,7 +24,6 @@
         viewBox="0 0 24 24"
         fill="currentColor"
         class="w-14 h-14"
-        style="padding-right:50%"
       >
         <path
           fill-rule="evenodd"
@@ -42,7 +34,8 @@
     </button>
   {/if}
 
-  <button on:click={toggleRecording} class="inline-block rounded-full bg-red-100 text-red-500 p-10 z-10">
+  <button on:click={toggleRecording} class="inline-block rounded-full bg-red-100 text-red-500 p-10 z-10"
+  style="margin-right: 4vw;">
     {#if isRecording}
       <div class="w-10 h-10 m-2 rounded-md bg-red-500" />
     {:else}
