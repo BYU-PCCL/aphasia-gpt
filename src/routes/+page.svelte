@@ -255,6 +255,9 @@ function textToSpeech(speechText:string, index: number){
           vertical-align: middle;
           text-align: center;
 		   }
+       .minus{
+        margin-right:10px;
+       }
 
 
        </style>
