@@ -47,9 +47,9 @@
       stream = null;
     }
 
-    if (isRecording) {
-      onFail("recording stopped unexpectedly");
-    }
+    // if (isRecording) {
+    //   onFail("recording stopped unexpectedly");
+    // }
   }
 
   async function getToken() {
@@ -83,6 +83,9 @@
 
   function onSocketClose(event: CloseEvent) {
     console.log("socket closed", event);
+    console.log("socket closed with code:", event.code);
+    console.log("socket closed with reason:", event.reason);
+
     stopRecording();
   }
 
