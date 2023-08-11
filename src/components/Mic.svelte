@@ -47,9 +47,10 @@
       stream = null;
     }
 
-    // if (isRecording) {
-    //   onFail("recording stopped unexpectedly");
-    // }
+    if (isRecording) {
+      onFail("recording stopped unexpectedly");
+
+    }
   }
 
   async function getToken() {
