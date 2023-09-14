@@ -18,7 +18,7 @@ function createTranscriptProcessor() {
 
   let abortController = new AbortController();
   
-  const updateTransformations = throttle(async () => {
+  const updateTransformations = async () => {
     const processor = get(transcriptProcessor);
     const transcript = processor.transcript;
     const processingVersion = transcript.version;
@@ -60,7 +60,7 @@ function createTranscriptProcessor() {
         throw error;
       }
     }
-  }, 5000);
+  };
  
  
   return {
@@ -72,7 +72,7 @@ function createTranscriptProcessor() {
       if (!processor.isRecording || text === " ") {
         return;
       }
-      updateTransformations.cancel();
+      updateTransformations();
       abortController.abort();
       update((transcriptProcessor) => {
         const texts = text.split(" ");
@@ -103,7 +103,7 @@ function createTranscriptProcessor() {
     //   timestampsToIgnore.add(maxTrascriptTimestamp);
     // },
     clear: () => {
-      updateTransformations.cancel();
+      //updateTransformations.clear();
       abortController.abort();
       update((transcriptProcessor) => {
         transcriptProcessor.transcript = { text: [], version: 0 };
@@ -112,7 +112,7 @@ function createTranscriptProcessor() {
       });
     },
     back: () => {
-      updateTransformations.cancel();
+      //updateTransformations.clear();
       abortController.abort();
       update((transcriptProcessor) => {
         transcriptProcessor.transcript.text.pop();
@@ -122,7 +122,7 @@ function createTranscriptProcessor() {
       updateTransformations();
     },
     delete: (wordIndex:number) => {
-      updateTransformations.cancel();
+      //updateTransformations().clear;
       abortController.abort();
       update((transcriptProcessor) => {
         transcriptProcessor.transcript.text.splice(wordIndex, 1);

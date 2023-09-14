@@ -17,12 +17,14 @@
       <div
         class="flex justify-between border overflow-hidden border-neutral-200 rounded-md my-2 focus-within:border-neutral-300"
       >
+
         <input
           type="text"
           bind:value={inputValue}
           placeholder="grant@gmail.com"
           class="flex-1 focus:outline-none px-3 py-1"
         />
+      
         <input name="username" value={trimmedValue} hidden required />
         <button class="bg-emerald-600 text-white px-2 py-1 rounded-[4px] m-1">Continue</button>
       </div>
