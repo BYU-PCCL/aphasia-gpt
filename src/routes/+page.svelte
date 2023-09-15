@@ -27,7 +27,11 @@
 
 
   // let fontSize = [18,26];
-  let fontSize = 19;
+  let fontSize = 20;
+
+  function fontSizeIncrement(){
+    fontSize++;
+  }
 
   function logout() {
     transcriptProcessor.clear();
@@ -162,7 +166,7 @@ function textToSpeech(speechText:string, index: number){
           <div class="FontSizeFunction">
             <li><button on:click={font} class="block px-4 py-2 hover:bg-gray-100">Font Size</button></li>
             
-            <span class="minus" on:click={e => fontSize--}>-</span>
+            <span class="minus" on:click={fontSizeIncrement()}>-</span>
               <!-- <p class="fontSizeExample" style="display:inline-block; font-size:{fontSize}px">
                 Hi!
               </p> -->

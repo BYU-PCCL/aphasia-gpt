@@ -1,12 +1,20 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { username } from "@/stores/user";
+  import {goto} from '$app/navigation'
 
   let inputValue = "";
   $: trimmedValue = inputValue.trim();
 
   function login() {
     $username = trimmedValue;
+  }
+  function signin(){
+
+  }
+
+  function forget(){
+
   }
 </script>
 
@@ -24,35 +32,36 @@
           placeholder="grant@gmail.com"
           class="flex-1 focus:outline-none px-3 py-1"
         />
-        
-      
-        <input name="username" value={trimmedValue} hidden required />
+         <input name="username" value={trimmedValue} hidden required />
        
       </div>
       <div
         class="flex justify-between border overflow-hidden border-neutral-200 rounded-md my-2 focus-within:border-neutral-300"
       >
-
-        <input
-          type="text"
-         
+      <input
+          type="password"
           placeholder="password"
           class="flex-1 focus:outline-none px-3 py-1"
         />
-        
-      
         <input name="password" value={trimmedValue} hidden required />
       
       </div>
       <div class="text-center">
-      <button class="bg-emerald-600 text-white px-2 py-1 rounded-[4px] m-1">Log in</button>
-      <button class="bg-emerald-600 text-white px-2 py-1 rounded-[4px] m-1">Sign up</button>
-      <button class="text-black px-2 py-1 rounded-[4px] m-1">Forget your password ...?</button>
+        <button class="bg-emerald-600 text-white px-2 py-1 rounded-[4px] m-1">Log in</button>
       </div>
 </form>
 
-    <div>
-    <h3 class="text-center">*we won't email you, any unique identifier will work</h3>
-    <div>
+
+
+<div class = "text-center">
+  
+    <button on:click = {() => goto('/signin')} class="bg-neutral-600 text-white px-2 py-1 rounded-[4px] m-1">Sign up</button>
+    <button on:click = {() => goto('/forgetpassword')} class=" text-black px-2 py-1 rounded-[4px] m-1">Forget your password?</button>
+
+</div>
+
+
   </section>
 </main>
+
+
