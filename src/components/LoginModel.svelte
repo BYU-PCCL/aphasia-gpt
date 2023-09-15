@@ -12,7 +12,7 @@
 
 <main class="absolute w-[100vw] h-[100vh] top-0 z-50 flex justify-center items-center bg-black/30">
   <section class="w-full max-w-xl bg-white px-12 py-24 rounded-md">
-    <h2 class="font-medium text-lg">Log in with email</h2>
+    <h1 class="font-medium text-lg">Log in</h1>
     <form method="POST" action="/?/login" use:enhance={login}>
       <div
         class="flex justify-between border overflow-hidden border-neutral-200 rounded-md my-2 focus-within:border-neutral-300"
@@ -24,11 +24,35 @@
           placeholder="grant@gmail.com"
           class="flex-1 focus:outline-none px-3 py-1"
         />
+        
       
         <input name="username" value={trimmedValue} hidden required />
-        <button class="bg-emerald-600 text-white px-2 py-1 rounded-[4px] m-1">Continue</button>
+       
       </div>
-    </form>
-    <h1 class="text-center">*we won't email you, any unique identifier will work</h1>
+      <div
+        class="flex justify-between border overflow-hidden border-neutral-200 rounded-md my-2 focus-within:border-neutral-300"
+      >
+
+        <input
+          type="text"
+         
+          placeholder="password"
+          class="flex-1 focus:outline-none px-3 py-1"
+        />
+        
+      
+        <input name="password" value={trimmedValue} hidden required />
+      
+      </div>
+      <div class="text-center">
+      <button class="bg-emerald-600 text-white px-2 py-1 rounded-[4px] m-1">Log in</button>
+      <button class="bg-emerald-600 text-white px-2 py-1 rounded-[4px] m-1">Sign up</button>
+      <button class="text-black px-2 py-1 rounded-[4px] m-1">Forget your password ...?</button>
+      </div>
+</form>
+
+    <div>
+    <h3 class="text-center">*we won't email you, any unique identifier will work</h3>
+    <div>
   </section>
 </main>
