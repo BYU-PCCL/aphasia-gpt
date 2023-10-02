@@ -117,7 +117,7 @@ hr {
 
 .close:hover,
 .close:focus {
-  color: #f44336;
+  color: #36d1f4;
   cursor: pointer;
 }
 
