@@ -106,8 +106,12 @@ function createTranscriptProcessor() {
       //updateTransformations.clear();
       abortController.abort();
       update((transcriptProcessor) => {
-        transcriptProcessor.transcript = { text: [], version: 0 };
-        transcriptProcessor.transformations = { texts: [], version: 0 };
+        transcriptProcessor.transcript.text = [];
+        transcriptProcessor.transformations.texts = [];
+        transcriptProcessor.transcript.version += 1;
+
+        // transcriptProcessor.transcript = { text: [], version: 0 };
+        // transcriptProcessor.transformations = { texts: [], version: 0 };
         return transcriptProcessor;
       });
     },
