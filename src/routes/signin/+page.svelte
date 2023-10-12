@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {goto} from '$app/navigation'
 
 
 
@@ -19,7 +20,7 @@
 
       <div class="clearfix">
         <button type="button" class="cancelbtn">Cancel</button>
-        <button type="submit" class="signupbtn">Sign Up</button>
+        <button type="submit" on:click = {() => goto('/userInfoForm')} class="signupbtn">Sign Up</button>
       </div>
 </div>
 
