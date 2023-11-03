@@ -1,5 +1,6 @@
 
 <script lang="ts">
+   import {goto} from '$app/navigation'
   let email = '';
   let password = '';
   let repeatPassword = '';
@@ -76,8 +77,9 @@
       <textarea id="about" bind:value={about} rows="4"></textarea>
     </div>
   
-    <button type="submit">Submit</button>
-    <button class="bg-neutral-600 text-white px-2 py-1 rounded-[4px] m-1">Back</button>
+    <button type="submit" style="display: inline-block;">Submit</button>
+    <button on:click={() => goto('/')} class="bg-neutral-600 text-white px-2 py-1 rounded-[4px] m-1" style="display: inline-block;">Back</button>
+
 
   </form>
   
