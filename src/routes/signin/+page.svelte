@@ -47,17 +47,17 @@
   <form on:submit={handleSubmit}>
     <div class="form-group">
       <label for="email">Email:</label>
-      <input type="email" id="email" bind:value={email} required />
+      <input type="email" id="email" placeholder="Email" bind:value={email} required />
     </div>
 
     <div class="form-group">
       <label for="email">Password: </label>
-      <input type="password" id="password" bind:value={password} required />
+      <input type="password" id="password"placeholder="Password" bind:value={password} required />
     </div>
 
     <div class="form-group">
       <label for="email">Repeat password: </label>
-      <input type="password" id="repeatpassword" bind:value={repeatPassword} required />
+      <input type="password" id="repeatpassword" placeholder="Confirm Password" bind:value={repeatPassword} required />
     </div>
 
 
@@ -77,7 +77,7 @@
       <textarea id="about" bind:value={about} rows="4"></textarea>
     </div>
   
-    <button type="submit" style="display: inline-block;">Submit</button>
+    <button type="button" style="display: inline-block;">Submit</button>
     <button on:click={() => goto('/')} class="bg-neutral-600 text-white px-2 py-1 rounded-[4px] m-1" style="display: inline-block;">Back</button>
 
 

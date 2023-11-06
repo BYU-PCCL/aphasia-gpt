@@ -3,6 +3,23 @@
   import { username } from "@/stores/user";
   import {goto} from '$app/navigation'
 
+import {onMount} from 'svelte'
+import{auth, db}from '../firebase/Firebase'
+
+const nonAuthRoutes = ['/', 'product']
+onMount(()=>{
+  console.log('Mounting')
+  const unsubscribe = auth.onAuthStateChanged(async user =>{
+    const currentPath = 'signin'
+    if(!user && nonAuthRoutes.includes(currentPath)){
+      // window.location.href = "/";
+    }
+  })
+})
+
+
+
+
   let inputValue = "";
   $: trimmedValue = inputValue.trim();
 
@@ -16,6 +33,7 @@
   function forget(){
 
   }
+  
 </script>
 
 <main class="absolute w-[100vw] h-[100vh] top-0 z-50 flex justify-center items-center bg-black/30">
