@@ -1,13 +1,12 @@
 
 <script lang="ts">
    import {goto} from '$app/navigation'
-  let email = '';
+   let email = '';
   let password = '';
   let repeatPassword = '';
   let name = '';
   let age = '';
   let about = '';
-
   function handleSubmit() {
     // Here, you can send the form data to your backend or database using an HTTP request.
     // Example:
