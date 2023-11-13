@@ -5,7 +5,7 @@ import type { RequestHandler } from "./$types";
 import { initializeApp } from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
 import {getDatabase, ref, set, onValue} from "firebase/database";
-// const dotenv = require('dotenv')
+import {getAuth, connectAuthEmulator, signInWithEmailAndPassword, EmailAuthCredential} from 'firebase/auth'
 import {API_KEY, AUTH_DOMAIN, DATABASE_URL, PROJECT_ID, STORAGE_BUCKET,
     MESSAGING_SENDER_ID, APP_ID, MEASUREMENT_ID} from "$env/static/private";
 
@@ -22,11 +22,22 @@ const firebaseConfig = {
 
 // // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-// // const analytics = getAnalytics(app);
-function writeUserData(userId, password, name, age, about){
+// const auth = getAuth(app)
+
+
+
+
+// const loginEmailPassword = async()=>{
+//   const loginEmail = email;
+//   const loginPassword = password;
+
+// }
+
+
+function writeUserData(email, password, name, age, about){
 
   const db = getDatabase();
-  const reference = ref(db, 'users/'+ userId);
+  const reference = ref(db, 'users/'+ email);
   console.log("this is a test for write user data")
   set(reference,{
   password:password,
