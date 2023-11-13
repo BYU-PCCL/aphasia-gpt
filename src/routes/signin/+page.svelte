@@ -1,12 +1,17 @@
 
 <script lang="ts">
-   import {goto} from '$app/navigation'
-   let email = '';
+  import {goto} from '$app/navigation'
+  import { json } from "@sveltejs/kit";
+
+   
+  let email = '';
   let password = '';
   let repeatPassword = '';
   let name = '';
   let age = '';
   let about = '';
+
+
   function handleSubmit() {
     // Here, you can send the form data to your backend or database using an HTTP request.
     // Example:
@@ -17,27 +22,65 @@
       age: parseInt(age), // Convert age to a number
       about,
     };
-
+    // console.log(formData);
     // Send the formData to your backend for storage
-    fetch('/your-api-endpoint', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
-    })
-      .then(response => {
-        if (response.ok) {
-          // Handle success, e.g., show a success message
-          console.log('Data saved successfully.');
-        } else {
-          // Handle errors, e.g., display an error message
-          console.error('Error saving data.');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
+//     fetch('/api/firebase', {
+//   method: 'POST',
+//   headers: {
+//     'Content-Type': 'application/json',
+//   },
+//   body: JSON.stringify(formData),
+// })
+//   .then(response => response.json())
+//   .then(data => {
+//     console.log('Server Response:', data);
+//     if (data.ok) {
+//       console.log('Data saved successfully.');
+//     } else {
+//       console.error('Error saving data.');
+//     }
+//   })
+//   .catch(error => {
+//     console.error('Error:', error);
+//   });
+   sendDataToDatabase(formData)
+  }
+
+
+  async function sendDataToDatabase(formData){
+    try{
+  
+      const response = await fetch("/api/firebase", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body:JSON.stringify({content:"test"}),
       });
+
+      // const response = await fetch("/api/firebase", {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify(formData),
+      // });
+      
+      console.log(formData);
+      console.log('Full response from server:', response);
+
+      
+      if(!response.ok){
+        const errorData = await response.json();
+        console.error('Error data from server:', errorData);
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      console.log('Response from backend:', data);
+    }catch (error){
+      console.error('Error:', error);
+    }
   }
 </script>
 
@@ -50,12 +93,12 @@
     </div>
 
     <div class="form-group">
-      <label for="email">Password: </label>
+      <label for="password">Password: </label>
       <input type="password" id="password"placeholder="Password" bind:value={password} required />
     </div>
 
     <div class="form-group">
-      <label for="email">Repeat password: </label>
+      <label for="password">Repeat password: </label>
       <input type="password" id="repeatpassword" placeholder="Confirm Password" bind:value={repeatPassword} required />
     </div>
 
@@ -76,7 +119,7 @@
       <textarea id="about" bind:value={about} rows="4"></textarea>
     </div>
   
-    <button type="button" style="display: inline-block;">Submit</button>
+    <button  on:click={handleSubmit} type="button" style="display: inline-block;" >Submit</button>
     <button on:click={() => goto('/')} class="bg-neutral-600 text-white px-2 py-1 rounded-[4px] m-1" style="display: inline-block;">Back</button>
 
 
