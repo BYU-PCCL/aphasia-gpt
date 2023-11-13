@@ -34,12 +34,13 @@ const app = initializeApp(firebaseConfig);
 // }
 
 
-function writeUserData(email, password, name, age, about){
+function writeUserData(username, email, password, name, age, about){
 
   const db = getDatabase();
-  const reference = ref(db, 'users/'+ email);
+  const reference = ref(db, 'users/'+ username);
   console.log("this is a test for write user data")
   set(reference,{
+  email:email,
   password:password,
   name:name,
   age:age,
@@ -60,13 +61,14 @@ export const GET: RequestHandler = async () => {
 export const POST: RequestHandler = async ({ request }) => {
     console.log("fire base is called");
     try {
-       const {email, password, name, age, about} = await request.json();
+       const {username, email, password, name, age, about} = await request.json();
+       console.log('username from frontend:', username);
         console.log('email from frontend:', email);
         console.log('password from frontend:', password);
         console.log('name from frontend:', name);
         console.log('age from frontend:', age);
         console.log('about from frontend:', about);
-        writeUserData(email, password, name, age, about)
+        writeUserData(username,email, password, name, age, about)
       return json({
         status: 200,
         body: { message: 'Data received successfully.' },
