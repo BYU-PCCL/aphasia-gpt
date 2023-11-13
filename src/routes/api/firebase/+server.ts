@@ -9,9 +9,6 @@ import {getDatabase, ref, set, onValue} from "firebase/database";
 import {API_KEY, AUTH_DOMAIN, DATABASE_URL, PROJECT_ID, STORAGE_BUCKET,
     MESSAGING_SENDER_ID, APP_ID, MEASUREMENT_ID} from "$env/static/private";
 
-
-
-
 const firebaseConfig = {
   apiKey: API_KEY,
   authDomain: AUTH_DOMAIN,
@@ -26,13 +23,16 @@ const firebaseConfig = {
 // // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 // // const analytics = getAnalytics(app);
-function writeUserData(userId, password){
+function writeUserData(userId, password, name, age, about){
+
   const db = getDatabase();
   const reference = ref(db, 'users/'+ userId);
-  
+  console.log("this is a test for write user data")
   set(reference,{
-  password:password
-
+  password:password,
+  name:name,
+  age:age,
+  about:about
 });
 }
 
@@ -49,13 +49,13 @@ export const GET: RequestHandler = async () => {
 export const POST: RequestHandler = async ({ request }) => {
     console.log("fire base is called");
     try {
-        const  {dataform } = await request.json();
-        console.log('dataform from frontend:', dataform);
-    //   console.log('Received password from frontend:', password);
-  
-      // Other processing logic...
-  
-      // Send a success response
+       const {email, password, name, age, about} = await request.json();
+        console.log('email from frontend:', email);
+        console.log('password from frontend:', password);
+        console.log('name from frontend:', name);
+        console.log('age from frontend:', age);
+        console.log('about from frontend:', about);
+        writeUserData(email, password, name, age, about)
       return json({
         status: 200,
         body: { message: 'Data received successfully.' },

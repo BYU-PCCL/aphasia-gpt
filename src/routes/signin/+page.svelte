@@ -22,32 +22,11 @@
       age: parseInt(age), // Convert age to a number
       about,
     };
-    // console.log(formData);
-    // Send the formData to your backend for storage
-//     fetch('/api/firebase', {
-//   method: 'POST',
-//   headers: {
-//     'Content-Type': 'application/json',
-//   },
-//   body: JSON.stringify(formData),
-// })
-//   .then(response => response.json())
-//   .then(data => {
-//     console.log('Server Response:', data);
-//     if (data.ok) {
-//       console.log('Data saved successfully.');
-//     } else {
-//       console.error('Error saving data.');
-//     }
-//   })
-//   .catch(error => {
-//     console.error('Error:', error);
-//   });
-   sendDataToDatabase(formData)
+   sendDataToBackend(email, password, name, age, about)
   }
 
 
-  async function sendDataToDatabase(formData){
+  async function sendDataToBackend(email, password, name, age, about){
     try{
   
       const response = await fetch("/api/firebase", {
@@ -55,18 +34,10 @@
         headers: {
           'Content-Type': 'application/json',
         },
-        body:JSON.stringify({content:"test"}),
+        body: JSON.stringify({email, password, name, age, about}),
       });
-
-      // const response = await fetch("/api/firebase", {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(formData),
-      // });
       
-      console.log(formData);
+      console.log(password);
       console.log('Full response from server:', response);
 
       
