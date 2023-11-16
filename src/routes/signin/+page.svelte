@@ -2,31 +2,51 @@
 <script lang="ts">
   import {goto} from '$app/navigation'
   import { json } from "@sveltejs/kit";
+  import { username } from "@/stores/user";
 
-   
+  let signinusername = '';
   let email = '';
   let password = '';
   let repeatPassword = '';
   let name = '';
   let age = '';
   let about = '';
+  let passwordMatch = true;
+  let errorMessage = '';
+
+
+  function checkpassword(password, repeatPassword) {
+  passwordMatch = password === repeatPassword;
+  errorMessage = passwordMatch ? '' : 'Passwords do not match';
+}
+
 
 
   function handleSubmit() {
+    checkpassword(password, repeatPassword);
+    if (!passwordMatch) {
+    // Display an error message or handle the validation as needed
+    console.error(errorMessage);
+    return;
+  }
+
+    $username = signinusername
+    
     // Here, you can send the form data to your backend or database using an HTTP request.
     // Example:
-    const formData = {
-      email,
-      password,
-      name,
-      age: parseInt(age), // Convert age to a number
-      about,
-    };
-   sendDataToBackend(email, password, name, age, about)
+    // const formData = {
+    //   signinusername,
+    //   email,
+    //   password,
+    //   name,
+    //   age: parseInt(age), // Convert age to a number
+    //   about,
+    // };
+   sendDataToBackend(signinusername, email, password, name, age, about)
   }
 
 
-  async function sendDataToBackend(email, password, name, age, about){
+  async function sendDataToBackend(signinusername, email, password, name, age, about){
     try{
   
       const response = await fetch("/api/firebase", {
@@ -34,7 +54,7 @@
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({email, password, name, age, about}),
+        body: JSON.stringify({signinusername, email, password, name, age, about}),
       });
       
       console.log(password);
@@ -59,18 +79,40 @@
   
   <form on:submit={handleSubmit}>
     <div class="form-group">
+      <label for="username">Username:</label>
+      <input type="username" id="username" placeholder="Do Not include any special character" bind:value={signinusername} required />
+    </div>
+
+    <div class="form-group">
       <label for="email">Email:</label>
-      <input type="email" id="email" placeholder="Email" bind:value={email} required />
+      <input type="email" id="email" placeholder="Grand@email.com" bind:value={email} required />
     </div>
 
     <div class="form-group">
       <label for="password">Password: </label>
-      <input type="password" id="password"placeholder="Password" bind:value={password} required />
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+        bind:value={password}
+        required
+        on:input={() => checkpassword(password, repeatPassword)}
+      />
     </div>
 
     <div class="form-group">
-      <label for="password">Repeat password: </label>
-      <input type="password" id="repeatpassword" placeholder="Confirm Password" bind:value={repeatPassword} required />
+      <label for="repeatpassword">Repeat password: </label>
+      <input
+        type="password"
+        id="repeatpassword"
+        placeholder="Confirm Password"
+        bind:value={repeatPassword}
+        required
+        on:input={() => checkpassword(password, repeatPassword)}
+      />
+      {#if !passwordMatch}
+        <p class="error-message">{errorMessage}</p>
+      {/if}
     </div>
 
 
@@ -90,7 +132,7 @@
       <textarea id="about" bind:value={about} rows="4"></textarea>
     </div>
   
-    <button  on:click={handleSubmit} type="button" style="display: inline-block;" >Submit</button>
+    <button  on:click={handleSubmit}  on:click={() => goto('/')} type="button" style="display: inline-block;" >Submit</button>
     <button on:click={() => goto('/')} class="bg-neutral-600 text-white px-2 py-1 rounded-[4px] m-1" style="display: inline-block;">Back</button>
 
 
@@ -126,7 +168,8 @@
       text-align: left; /* Align labels to the left */
       margin-bottom: 5px; /* Add space below labels */
     }
-  
+
+    input[type="username"],
     input[type="text"],
     input[type="email"],
     input[type="number"],
