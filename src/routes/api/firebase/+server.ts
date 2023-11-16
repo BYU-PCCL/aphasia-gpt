@@ -1,31 +1,19 @@
 // Import the functions you need from the SDKs you need
+if (!import.meta.env.SSR) {
+  throw new Error("This module can only be imported on the server side.");
+}
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
+import 'server-only'
+import admin from "firebase-admin";
+import serviceAccount from "../../../../admin.config/admin.json";
 
-import { initializeApp } from "firebase/app";
-// import { getAnalytics } from "firebase/analytics";
-import {getDatabase, ref, set, onValue} from "firebase/database";
-import {getAuth, connectAuthEmulator, signInWithEmailAndPassword, EmailAuthCredential} from 'firebase/auth'
-import {API_KEY, AUTH_DOMAIN, DATABASE_URL, PROJECT_ID, STORAGE_BUCKET,
-    MESSAGING_SENDER_ID, APP_ID, MEASUREMENT_ID} from "$env/static/private";
-
-const firebaseConfig = {
-  apiKey: API_KEY,
-  authDomain: AUTH_DOMAIN,
-  databaseURL: DATABASE_URL,
-  projectId: PROJECT_ID,
-  storageBucket: STORAGE_BUCKET,
-  messagingSenderId: MESSAGING_SENDER_ID,
-  appId:APP_ID,
-  measurementId:MEASUREMENT_ID
-};
-
-// // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-// const auth = getAuth(app)
-
-
-
+if(!admin.apps.length){
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+    databaseURL: "https://brocas-userdb-default-rtdb.firebaseio.com"
+  });
+}
 
 // const loginEmailPassword = async()=>{
 //   const loginEmail = email;
@@ -33,19 +21,21 @@ const app = initializeApp(firebaseConfig);
 
 // }
 
+function writeUserData(username: string, email: string, password: string, name: string, age: string, about: string){
+  const db = admin.database();
+  const ref = db.ref('users');
+  const usersRef = ref.child(name);
+  
 
-function writeUserData(username, email, password, name, age, about){
-
-  const db = getDatabase();
-  const reference = ref(db, 'users/'+ username);
   console.log("this is a test for write user data")
-  set(reference,{
-  email:email,
-  password:password,
-  name:name,
-  age:age,
-  about:about
-});
+  const userData = {
+    email: email,
+    password: password,
+    name: name,
+    age: age,
+    about: about
+  }
+  usersRef.set(userData);
 }
 
 
