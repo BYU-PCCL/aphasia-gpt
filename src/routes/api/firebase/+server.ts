@@ -13,18 +13,17 @@ import type { RequestHandler } from "./$types";
 import admin from "firebase-admin";
 
 // this creates a dictionary from a string that's read from a run-time environment variable
-import FIREBASE_JSON_STRING from '$env/static/private';
-serviceAccount = JSON.parse( FIREBASE_JSON_STRING );
+//import FIREBASE_JSON_STRING from '$env/static/private';
+admin.database.enableLogging(true);
 
-
-// this creates a dictionary from a LOCAL json file
-//import serviceAccount from "../../../../admin.config/admin.json";
-
-// this creates a dictionary from inline code
-//serviceAccount = {
-//  projectId: "brocasdb",
-//  private_key_id: "880a3a4ced49562b3c71baca7bcbc3d3f6caed25",
-//}
+let serviceAccount = {
+  
+  project_id: FIREBASE_PROJECT_ID,
+  private_key: FIREBASE_API_KEY.replace(/\\n/g, '\n'),
+  client_email: FIREBASE_CLIENT_EMAIL
+  
+  
+}
 
 if(!admin.apps.length){
   
@@ -32,23 +31,14 @@ if(!admin.apps.length){
     credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
     databaseURL: "https://brocas-userdb-default-rtdb.firebaseio.com"
     });
-
-  //admin.initializeApp(),
-   // databaseURL: "https://brocas-userdb-default-rtdb.firebaseio.com"
- // });
-  
 }
-
-// const loginEmailPassword = async()=>{
-// const loginEmail = email;
-// const loginPassword = password;
-
-// }
 
 function writeUserData(username: string, email: string, password: string, name: string, age: string, about: string){
 const db = admin.database();
 const ref = db.ref('users');
 const usersRef = ref.child(username);
+
+
 
 console.log("this is a test for write user data")
 const userData = {
