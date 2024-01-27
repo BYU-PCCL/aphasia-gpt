@@ -6,13 +6,10 @@
   import { transcriptProcessor } from "@/stores/transcriptProcessor";
   import { username } from "@/stores/user";
   import { onMount } from "svelte";
-  import { findIndex, indexOf, words } from "lodash";
-
+  import TonePicker from "@/components/TonePicker.svelte";
   
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   
-
-
   // Mic requires browser environment
   let Mic: null | typeof import("@/components/Mic.svelte").default = null;
   onMount(async () => {
@@ -23,8 +20,9 @@
   $: {
     $username = data.username;
   }
-  $: hasTranscript = $transcriptProcessor.transcript !== " ";
+  $: hasTranscript = $transcriptProcessor.transcript .text.length > 0;
 
+  let selectedTone = $transcriptProcessor.tone; // get initial value from store
 
   // let fontSize = [18,26];
   let fontSize = 20;
@@ -132,7 +130,6 @@ function textToSpeech(speechText:string, index: number){
     }
   }
  
-
 </script>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -200,6 +197,7 @@ function textToSpeech(speechText:string, index: number){
       onNew={transcriptProcessor.clear}
     />
 
+    <TonePicker bind:selectedTone={selectedTone} setTone={transcriptProcessor.setTone} />
 
     <div class="mt-12">
       

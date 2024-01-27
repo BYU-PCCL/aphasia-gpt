@@ -1,3 +1,4 @@
+import { Tone } from "@/lib/types/Tone";
 import throttle from "lodash/throttle";
 import { get, writable } from "svelte/store";
 
@@ -5,13 +6,15 @@ type TranscriptProcessor = {
   isRecording: boolean;
   transcript: { text: string[]; version: number;};
   transformations: { texts: string[]; version: number };
+  tone: Tone;
 };
 
 function createTranscriptProcessor() {
   const { subscribe, set, update } = writable<TranscriptProcessor>({
     isRecording: false,
     transcript: { text: [], version: 0} ,
-    transformations: { texts: [], version: 0 }
+    transformations: { texts: [], version: 0 },
+    tone: Tone.Neutral,
   });
 
   
@@ -22,6 +25,7 @@ function createTranscriptProcessor() {
     const processor = get(transcriptProcessor);
     const transcript = processor.transcript;
     const processingVersion = transcript.version;
+    const tone = processor.tone;
     console.log(`updateTransforms gets called. Processing transcript: 
       "${transcript.text}", with version number: ${processingVersion}`);
 
@@ -43,7 +47,10 @@ function createTranscriptProcessor() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ utterance: recentTranscript }),
+        body: JSON.stringify({
+          utterance: recentTranscript,
+          tone: tone,
+        }),
         signal: abortSignal
       });
       const data = await response.json();
@@ -95,6 +102,12 @@ function createTranscriptProcessor() {
     toggleRecording: () => {
       update((transcriptProcessor) => {
         transcriptProcessor.isRecording = !transcriptProcessor.isRecording;
+        return transcriptProcessor;
+      });
+    },
+    setTone: (tone: Tone) => {
+      update((transcriptProcessor) => {
+        transcriptProcessor.tone = tone;
         return transcriptProcessor;
       });
     },
