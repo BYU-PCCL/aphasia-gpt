@@ -6,7 +6,8 @@
   import { transcriptProcessor } from "@/stores/transcriptProcessor";
   import { username } from "@/stores/user";
   import { onMount } from "svelte";
-  import TonePicker from "@/components/TonePicker.svelte";
+  import Picker from "@/components/Picker.svelte";
+  import { CONVERSATION_TYPE_OPTIONS, DEFAULT_CONVERSATION_TYPE, DEFAULT_SETTING, DEFAULT_TONE, SETTING_OPTIONS, TONE_OPTIONS } from "@/lib/constants";
   
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   
@@ -22,7 +23,10 @@
   }
   $: hasTranscript = $transcriptProcessor.transcript .text.length > 0;
 
-  let selectedTone = $transcriptProcessor.tone; // get initial value from store
+  // get initial context values from store
+  let selectedSetting = $transcriptProcessor.setting; 
+  let selectedConversationType = $transcriptProcessor.conversationType;
+  let selectedTone = $transcriptProcessor.tone;
 
   // let fontSize = [18,26];
   let fontSize = 20;
@@ -132,8 +136,6 @@ function textToSpeech(speechText:string, index: number){
  
 </script>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-
 {#if !$username}
   <LoginModel />
 {/if}
@@ -186,104 +188,109 @@ function textToSpeech(speechText:string, index: number){
       {onFail}
       onChange={transcriptProcessor.addTranscriptChunk}
     />
-  {/if}
-
-  <section class="max-w-2xl mx-auto px-4">
-    <Controls
-      isRecording={$transcriptProcessor.isRecording}
-      {hasTranscript}
-      toggleRecording={transcriptProcessor.toggleRecording}
-      onBack={transcriptProcessor.back}
-      onNew={transcriptProcessor.clear}
-    />
-
-    <TonePicker bind:selectedTone={selectedTone} setTone={transcriptProcessor.setTone} />
-
-    <div class="mt-12">
-      
-      <h2 class="font-semibold text-lg">What we think you said:</h2>
-
-
-
-      {#each $transcriptProcessor.transcript.text as word}
-        <p style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" class = "HoverBox">
-          {word} 
-            <i class="material-icons no-show"  style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
-              close
-            </i>
-        </p> 
-
-      {/each}
-
-
-      <style>
-        .HoverBox{
-          border-radius: 8px;
-          padding: 1px;
-          width:fit-content;
-          background-color: rgb(222, 222, 222);
-        }
-        .no-show{
-          display: none;
-        }
-
-        p.HoverBox:hover .no-show{
-          display:inline;
-        }
+    {/if}
+    
+    <section class="max-w-2xl mx-auto px-4">
+      <Controls
+        isRecording={$transcriptProcessor.isRecording}
+        {hasTranscript}
+        toggleRecording={transcriptProcessor.toggleRecording}
+        onBack={transcriptProcessor.back}
+        onNew={transcriptProcessor.clear}
+        />
         
-        p.HoverBox:hover{
-          border-radius: 8px;
-          padding: 1px;
-          width:fit-content;
-          background-color: rgb(180, 180, 180);
-        } 
-        .material-icons {
-          font-size: 20px;
-          cursor: pointer;
-        }  
+        <div class="flex justify-center mt-6">
+          <div class="w-1/3 flex justify-center">
+            <Picker title="Setting" bind:selectedItem={selectedSetting} options={SETTING_OPTIONS} setSelectedItem={transcriptProcessor.setSetting} />
+          </div>
+          <div class="w-1/3 flex justify-center">
+            <Picker title="Type" bind:selectedItem={selectedConversationType} options={CONVERSATION_TYPE_OPTIONS} setSelectedItem={transcriptProcessor.setConversationType} />
+          </div>
+          <div class="w-1/3 flex justify-center">
+            <Picker title="Tone" bind:selectedItem={selectedTone} options={TONE_OPTIONS} setSelectedItem={transcriptProcessor.setTone} />
+          </div>
+        </div>
 
+      <div class="mt-12">
+        
+        <h2 class="font-semibold text-lg">What we think you said:</h2>
 
-        span {cursor:pointer; }
-		    .FontSizeFunction{
-			    margin:10px;
-		    }
-		    .minus, .plus{
-			    width:25px;
-			    height:25px;
-			    background:#f2f2f2;
-			    border-radius:4px;
-			    border:1px solid #ddd;
-          display: inline-block;
-          vertical-align: middle;
-          text-align: center;
-		   }
-       .minus{
-        margin-right:10px;
-       }
-
-
-       </style>
-
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-      <br class="h-24" />
-      <h2 class="font-semibold text-lg" style="line-height:40px">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
-      <ul>
-        {#each $transcriptProcessor.transformations.texts as transformation, i}
-          <li style="font-size:{fontSize}px;line-height:40px"><div on:click={()=>textToSpeech(transformation, i)} class="material-icons">
-            {#if isPlaying === i}
-              pause
-            {:else}
-              play_arrow
-            {/if}
-             </div>
-           {transformation}
-          </li>
+        {#each $transcriptProcessor.transcript.text as word}
+          <p style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" class = "HoverBox">
+            {word} 
+              <i class="material-icons no-show"  style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
+                close
+              </i>
+          </p> 
         {/each}
-          
-      </ul>
-    </div>
 
-  </section>
+        <br class="h-24" />
+        <h2 class="font-semibold text-lg" style="line-height:40px">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
+        <ul>
+          {#each $transcriptProcessor.transformations.texts as transformation, i}
+            <li style="font-size:{fontSize}px;line-height:40px"><div on:click={()=>textToSpeech(transformation, i)} class="material-icons">
+              {#if isPlaying === i}
+                pause
+              {:else}
+                play_arrow
+              {/if}
+              </div>
+            {transformation}
+            </li>
+          {/each}
+        </ul>
+      </div>
+
+    </section>
+  
 </main>
+
+<style>
+  .HoverBox{
+    border-radius: 8px;
+    padding: 1px;
+    width:fit-content;
+    background-color: rgb(222, 222, 222);
+  }
+  .no-show{
+    display: none;
+  }
+
+  p.HoverBox:hover .no-show{
+    display:inline;
+  }
+  
+  p.HoverBox:hover{
+    border-radius: 8px;
+    padding: 1px;
+    width:fit-content;
+    background-color: rgb(180, 180, 180);
+  } 
+  .material-icons {
+    font-size: 20px;
+    cursor: pointer;
+  }  
+
+
+  span {cursor:pointer; }
+  .FontSizeFunction{
+    margin:10px;
+  }
+  .minus, .plus{
+    width:25px;
+    height:25px;
+    background:#f2f2f2;
+    border-radius:4px;
+    border:1px solid #ddd;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+  }
+  .minus{
+    margin-right:10px;
+  }
+
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />

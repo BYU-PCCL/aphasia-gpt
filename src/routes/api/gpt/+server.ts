@@ -11,9 +11,17 @@ const model = 'gpt-3.5-turbo-instruct'; // Use the GPT-3 model
 let value = "Broca's Aphasia";
 
 export const POST: RequestHandler = async ({ request }) => {
-  const { aphasiaType, utterance, tone } = await request.json();
+  const {
+    aphasiaType,
+    utterance,
+    setting,
+    conversationType,
+    tone,
+  } = await request.json();
   console.log('received aphasia type from frontend:', aphasiaType);
   console.log("received utterance from frontend:", utterance);
+  console.log("received setting from frontend:", setting);
+  console.log("received conversation type from frontend:", conversationType);
   console.log("received tone from frontend:", tone);
 
   if (aphasiaType) {
@@ -36,20 +44,24 @@ export const POST: RequestHandler = async ({ request }) => {
           5. "cat seems cat" => "The cat seems hungry"
           6. "i i need i need some" => "I need to get some sleep"
           
-          Now, please provide three transformed and predicted sentences (separated by line break) for the following utterance in a ${tone} tone of voice: 
+          Please consider the following about the speaker:
+            - current setting: ${setting}
+            - type of conversation they are having: ${conversationType}
+            - tone of voice they are trying to convey: ${tone}
+          Now, please provide three transformed and predicted sentences (separated by line break) for the following utterance: 
           ${utterance}`,
       temperature: .5,
       max_tokens: 400, // Set the desired maximum token length for the response
       n: 1,
     });
     const responseTexts = chatResponse.data.choices?.[0]?.text;
-
+    
     if (responseTexts) {
       console.log("generated text:", responseTexts);
     
       // Split the text into an array of sentences
       const texts = responseTexts.split('\n').filter((s: string) => s.length > 0).map((s) => s.replace(/['"]+/g, ''));
-    
+      
       return json({
         texts,
       });
