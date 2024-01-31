@@ -141,43 +141,44 @@ function textToSpeech(speechText:string, index: number){
 {/if}
 
 <main>
-  <header class="flex justify-between items-start px-4 py-2 mb-4">
-    <h1 class="block font-bold text-2xl mb-4">Aphasia GPT</h1>
-
-    {#if $username}
-      <form method="POST" action="/?/logout" use:enhance={logout} class="flex items-baseline gap-4">
-        <div>Hi {$username} 👋</div>
-      </form>
-    {/if}
-    <!-- This is the dropdown menu -->
-    <div class="relative">
-      <button class="bg-neutral-800 text-white px-2 py-1 rounded-md" on:click={toggleDropdown} aria-label="Select Aphasia Type">
-        {#if isMenuOpen}
-      <i class="material-icons">close</i>
-        {:else}
-      <i class ="material-icons">menu</i>
-        {/if}
-      </button>
-      <div id="dropdown" class="absolute right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md hidden">
-        <ul class="py-1">
-          <li><button on:click={changeType} class="block px-4 py-2 hover:bg-gray-100">Type 1 Aphasia</button></li>
-          <li><button on:click={changeType2} class="block px-4 py-2 hover:bg-gray-100">Type 2 Aphasia</button></li>
-          <div class="FontSizeFunction">
-            <li><button on:click={font} class="block px-4 py-2 hover:bg-gray-100">Font Size</button></li>
-            
-            <span class="minus" on:click={e=>fontSize--}>-</span>
-              <!-- <p class="fontSizeExample" style="display:inline-block; font-size:{fontSize}px">
-                Hi!
-              </p> -->
-            <span class="plus" on:click={e => fontSize++}>+</span>
-          </div>
-          <li>{#if $username}
-            <form method="POST" action="/?/logout" use:enhance={logout} >
-              <button class="block px-4 py-2 hover:bg-gray-100">Log Out</button>
-            </form>
-          {/if}</li>
-          <!-- Add more options as needed -->
-        </ul>
+  <header class="flex justify-between items-center px-2 md:px-4 py-2 mb-8">
+    <h1 class="block font-bold text-lg sm:text-2xl">Aphasia GPT</h1>
+    <div class="flex items-center">
+      {#if $username}
+        <form method="POST" action="/?/logout" use:enhance={logout} class="mr-1 md:mr-3">
+          <div class="text-sm sm:text-base">Hi {$username} 👋</div>
+        </form>
+      {/if}
+      <!-- This is the dropdown menu -->
+      <div class="relative">
+        <button class="bg-neutral-800 text-white px-2 py-2 rounded-md flex items-center" on:click={toggleDropdown} aria-label="menu">
+          {#if isMenuOpen}
+        <i class="material-icons">close</i>
+          {:else}
+        <i class ="material-icons">menu</i>
+          {/if}
+        </button>
+        <div id="dropdown" class="absolute right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md hidden">
+          <ul class="py-1">
+            <li><button on:click={changeType} class="block px-4 py-2 hover:bg-gray-100">Type 1 Aphasia</button></li>
+            <li><button on:click={changeType2} class="block px-4 py-2 hover:bg-gray-100">Type 2 Aphasia</button></li>
+            <div class="FontSizeFunction">
+              <li><button on:click={font} class="block px-4 py-2 hover:bg-gray-100">Font Size</button></li>
+              
+              <span class="minus" on:click={e=>fontSize--}>-</span>
+                <!-- <p class="fontSizeExample" style="display:inline-block; font-size:{fontSize}px">
+                  Hi!
+                </p> -->
+              <span class="plus" on:click={e => fontSize++}>+</span>
+            </div>
+            <li>{#if $username}
+              <form method="POST" action="/?/logout" use:enhance={logout} >
+                <button class="block px-4 py-2 hover:bg-gray-100">Log Out</button>
+              </form>
+            {/if}</li>
+            <!-- Add more options as needed -->
+          </ul>
+        </div>
       </div>
     </div>
   </header>
@@ -188,60 +189,60 @@ function textToSpeech(speechText:string, index: number){
       {onFail}
       onChange={transcriptProcessor.addTranscriptChunk}
     />
-    {/if}
+  {/if}
     
-    <section class="max-w-2xl mx-auto px-4">
-      <Controls
-        isRecording={$transcriptProcessor.isRecording}
-        {hasTranscript}
-        toggleRecording={transcriptProcessor.toggleRecording}
-        onBack={transcriptProcessor.back}
-        onNew={transcriptProcessor.clear}
-        />
-        
-        <div class="flex justify-center mt-6">
-          <div class="w-1/3 flex justify-center">
-            <Picker title="Setting" bind:selectedItem={selectedSetting} options={SETTING_OPTIONS} setSelectedItem={transcriptProcessor.setSetting} />
-          </div>
-          <div class="w-1/3 flex justify-center">
-            <Picker title="Type" bind:selectedItem={selectedConversationType} options={CONVERSATION_TYPE_OPTIONS} setSelectedItem={transcriptProcessor.setConversationType} />
-          </div>
-          <div class="w-1/3 flex justify-center">
-            <Picker title="Tone" bind:selectedItem={selectedTone} options={TONE_OPTIONS} setSelectedItem={transcriptProcessor.setTone} />
-          </div>
-        </div>
-
-      <div class="mt-12">
-        
-        <h2 class="font-semibold text-lg">What we think you said:</h2>
-
-        {#each $transcriptProcessor.transcript.text as word}
-          <p style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" class = "HoverBox">
-            {word} 
-              <i class="material-icons no-show"  style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
-                close
-              </i>
-          </p> 
-        {/each}
-
-        <br class="h-24" />
-        <h2 class="font-semibold text-lg" style="line-height:40px">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
-        <ul>
-          {#each $transcriptProcessor.transformations.texts as transformation, i}
-            <li style="font-size:{fontSize}px;line-height:40px"><div on:click={()=>textToSpeech(transformation, i)} class="material-icons">
-              {#if isPlaying === i}
-                pause
-              {:else}
-                play_arrow
-              {/if}
-              </div>
-            {transformation}
-            </li>
-          {/each}
-        </ul>
+  <section class="max-w-2xl mx-auto px-4">
+    <Controls
+      isRecording={$transcriptProcessor.isRecording}
+      {hasTranscript}
+      toggleRecording={transcriptProcessor.toggleRecording}
+      onBack={transcriptProcessor.back}
+      onNew={transcriptProcessor.clear}
+      />
+      
+    <div class="flex justify-center mt-6">
+      <div class="w-1/3 flex justify-center">
+        <Picker title="Setting" bind:selectedItem={selectedSetting} options={SETTING_OPTIONS} setSelectedItem={transcriptProcessor.setSetting} />
       </div>
+      <div class="w-1/3 flex justify-center">
+        <Picker title="Type" bind:selectedItem={selectedConversationType} options={CONVERSATION_TYPE_OPTIONS} setSelectedItem={transcriptProcessor.setConversationType} /> 
+      </div>
+      <div class="w-1/3 flex justify-center">
+        <Picker title="Tone" bind:selectedItem={selectedTone} options={TONE_OPTIONS} setSelectedItem={transcriptProcessor.setTone} />
+      </div>
+    </div>
 
-    </section>
+    <div class="mt-12">
+      
+      <h2 class="font-semibold text-lg">What we think you said:</h2>
+
+      {#each $transcriptProcessor.transcript.text as word}
+        <p style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" class = "HoverBox">
+          {word} 
+            <i class="material-icons no-show"  style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
+              close
+            </i>
+        </p> 
+      {/each}
+
+      <br class="h-24" />
+      <h2 class="font-semibold text-lg" style="line-height:40px">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
+      <ul>
+        {#each $transcriptProcessor.transformations.texts as transformation, i}
+          <li style="font-size:{fontSize}px;line-height:40px"><div on:click={()=>textToSpeech(transformation, i)} class="material-icons">
+            {#if isPlaying === i}
+              pause
+            {:else}
+              play_arrow
+            {/if}
+            </div>
+          {transformation}
+          </li>
+        {/each}
+      </ul>
+    </div>
+
+  </section>
   
 </main>
 
