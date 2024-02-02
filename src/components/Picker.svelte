@@ -5,9 +5,6 @@
 
   /** Currently selected item. */
   export let selectedItem: string;
-
-  /** Sets the selected item on change. */
-  export let setSelectedItem: (selectedItem: string) => void;
   
   /** Array of options to choose from. */
   export let options: string[];
@@ -18,7 +15,7 @@
 
 <div>
   <div class="font-semibold max-sm:text-sm text-center pb-1">{title}</div>
-  <select class="max-sm:text-xs text-black bg-white border-solid border-2 border-black-300 rounded-md p-1 sm:p-2" bind:value={selectedItem} on:change={() => setSelectedItem(selectedItem)}>
+  <select class="w-full truncate max-sm:text-xs text-black bg-white border-solid border-2 border-black-300 rounded-md p-1 sm:p-2" bind:value={selectedItem}>
     {#each options as option (option)}
       <option value={option}>{option}</option>
     {/each}

@@ -1,4 +1,4 @@
-import { DEFAULT_CONVERSATION_TYPE, DEFAULT_SETTING, DEFAULT_TONE } from "@/lib/constants";
+import { contextStore } from "./contextStore";
 import throttle from "lodash/throttle";
 import { get, writable } from "svelte/store";
 
@@ -6,9 +6,6 @@ type TranscriptProcessor = {
   isRecording: boolean;
   transcript: { text: string[]; version: number;};
   transformations: { texts: string[]; version: number };
-  setting: string;
-  conversationType: string;
-  tone: string;
 };
 
 function createTranscriptProcessor() {
@@ -16,9 +13,6 @@ function createTranscriptProcessor() {
     isRecording: false,
     transcript: { text: [], version: 0} ,
     transformations: { texts: [], version: 0 },
-    setting: DEFAULT_SETTING,
-    conversationType: DEFAULT_CONVERSATION_TYPE,
-    tone: DEFAULT_TONE,
   });
 
   
@@ -29,9 +23,6 @@ function createTranscriptProcessor() {
     const processor = get(transcriptProcessor);
     const transcript = processor.transcript;
     const processingVersion = transcript.version;
-    const setting = processor.setting;
-    const conversationType = processor.conversationType;
-    const tone = processor.tone;
     console.log(`updateTransforms gets called. Processing transcript: 
       "${transcript.text}", with version number: ${processingVersion}`);
 
@@ -55,9 +46,9 @@ function createTranscriptProcessor() {
         },
         body: JSON.stringify({
           utterance: recentTranscript,
-          setting: setting,
-          conversationType: conversationType,
-          tone: tone,
+          setting: get(contextStore).settingContext.selection,
+          conversationType: get(contextStore).typeContext.selection,
+          tone: get(contextStore).toneContext.selection,
         }),
         signal: abortSignal
       });
@@ -110,24 +101,6 @@ function createTranscriptProcessor() {
     toggleRecording: () => {
       update((transcriptProcessor) => {
         transcriptProcessor.isRecording = !transcriptProcessor.isRecording;
-        return transcriptProcessor;
-      });
-    },
-    setSetting: (setting: string) => {
-      update((transcriptProcessor) => {
-        transcriptProcessor.setting = setting;
-        return transcriptProcessor;
-      });
-    },
-    setConversationType: (conversationType: string) => {
-      update((transcriptProcessor) => {
-        transcriptProcessor.conversationType = conversationType;
-        return transcriptProcessor;
-      });
-    },
-    setTone: (tone: string) => {
-      update((transcriptProcessor) => {
-        transcriptProcessor.tone = tone;
         return transcriptProcessor;
       });
     },

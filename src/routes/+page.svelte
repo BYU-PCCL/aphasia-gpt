@@ -4,10 +4,11 @@
   import LoginModel from "@/components/LoginModel.svelte";
   import Controls from "@/components/Controls.svelte";
   import { transcriptProcessor } from "@/stores/transcriptProcessor";
+  import { contextStore } from "@/stores/contextStore";
   import { username } from "@/stores/user";
   import { onMount } from "svelte";
   import Picker from "@/components/Picker.svelte";
-  import { CONVERSATION_TYPE_OPTIONS, DEFAULT_CONVERSATION_TYPE, DEFAULT_SETTING, DEFAULT_TONE, SETTING_OPTIONS, TONE_OPTIONS } from "@/lib/constants";
+  import ContextOptionsModal from "@/components/ContextOptionsModal.svelte";
   
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   
@@ -23,11 +24,6 @@
   }
   $: hasTranscript = $transcriptProcessor.transcript .text.length > 0;
 
-  // get initial context values from store
-  let selectedSetting = $transcriptProcessor.setting; 
-  let selectedConversationType = $transcriptProcessor.conversationType;
-  let selectedTone = $transcriptProcessor.tone;
-
   // let fontSize = [18,26];
   let fontSize = 20;
 
@@ -38,6 +34,7 @@
   function logout() {
     transcriptProcessor.clear();
     $username = null;
+    isMenuOpen = false;
   }
 
   function onFail(message: string) {
@@ -47,7 +44,7 @@
 
   function deleteFunction(wordIndex:number){
   transcriptProcessor.delete(wordIndex);
- }
+  }
 
 //  const synth = window.speechSynthesis
 //  console.log(speechSynthesis.getVoices())
@@ -85,24 +82,26 @@ function textToSpeech(speechText:string, index: number){
     }
 }
 
- //drop down logic
   let isMenuOpen = false;
-  function toggleDropdown(event: MouseEvent) {
-    event.preventDefault();
-    const dropdown = document.getElementById("dropdown");
-    if (dropdown) {
-      dropdown.classList.toggle("hidden");
-      isMenuOpen = !isMenuOpen;
+  function toggleDropdown() {
+    isMenuOpen = !isMenuOpen;
+  }
+
+  let contextOptionsModal = false;
+  function toggleContextOptionsModal() {
+    contextOptionsModal = !contextOptionsModal;
+    isMenuOpen = false;
+    if ($transcriptProcessor.isRecording) {
+      transcriptProcessor.toggleRecording();
     }
   }
+
   let aphasiaType = "broca's aphasia";
   function changeType(){
     console.log("type1");
     aphasiaType = "broca's aphasia";
     sendDataToBackend();
-  }
-	
-  
+  }  
   function changeType2(){
     console.log("type2");
     aphasiaType = "vernickeis aphasia";
@@ -140,6 +139,10 @@ function textToSpeech(speechText:string, index: number){
   <LoginModel />
 {/if}
 
+{#if contextOptionsModal}
+  <ContextOptionsModal toggleModal={toggleContextOptionsModal} />
+{/if}
+
 <main>
   <header class="flex justify-between items-center px-2 md:px-4 py-2 mb-8">
     <h1 class="block font-bold text-lg sm:text-2xl">Aphasia GPT</h1>
@@ -150,7 +153,7 @@ function textToSpeech(speechText:string, index: number){
         </form>
       {/if}
       <!-- This is the dropdown menu -->
-      <div class="relative">
+      <div class="relative z-30">
         <button class="bg-neutral-800 text-white px-2 py-2 rounded-md flex items-center" on:click={toggleDropdown} aria-label="menu">
           {#if isMenuOpen}
         <i class="material-icons">close</i>
@@ -158,27 +161,31 @@ function textToSpeech(speechText:string, index: number){
         <i class ="material-icons">menu</i>
           {/if}
         </button>
-        <div id="dropdown" class="absolute right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md hidden">
+        {#if isMenuOpen}
+        <div id="dropdown" class="w-40 absolute right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md">
           <ul class="py-1">
-            <li><button on:click={changeType} class="block px-4 py-2 hover:bg-gray-100">Type 1 Aphasia</button></li>
-            <li><button on:click={changeType2} class="block px-4 py-2 hover:bg-gray-100">Type 2 Aphasia</button></li>
+            <li><button on:click={changeType} class="block w-full px-4 py-2 hover:bg-gray-100">Type 1 Aphasia</button></li>
+            <li><button on:click={changeType2} class="block w-full px-4 py-2 hover:bg-gray-100">Type 2 Aphasia</button></li>
             <div class="FontSizeFunction">
-              <li><button on:click={font} class="block px-4 py-2 hover:bg-gray-100">Font Size</button></li>
-              
-              <span class="minus" on:click={e=>fontSize--}>-</span>
+              <li><button on:click={font} class="block w-full px-4 py-2 hover:bg-gray-100">Font Size</button></li>
+              <div class="flex justify-center">
+                <span class="minus" on:click={e=>fontSize--}>-</span>
                 <!-- <p class="fontSizeExample" style="display:inline-block; font-size:{fontSize}px">
                   Hi!
                 </p> -->
-              <span class="plus" on:click={e => fontSize++}>+</span>
+                <span class="plus" on:click={e => fontSize++}>+</span>
+              </div>
             </div>
+            <li><button on:click={toggleContextOptionsModal} class="block w-full px-4 py-2 hover:bg-gray-100">Context Options</button></li>
             <li>{#if $username}
               <form method="POST" action="/?/logout" use:enhance={logout} >
-                <button class="block px-4 py-2 hover:bg-gray-100">Log Out</button>
+                <button class="block w-full px-4 py-2 hover:bg-gray-100">Log Out</button>
               </form>
             {/if}</li>
             <!-- Add more options as needed -->
           </ul>
         </div>
+        {/if}
       </div>
     </div>
   </header>
@@ -202,13 +209,13 @@ function textToSpeech(speechText:string, index: number){
       
     <div class="flex justify-center mt-6">
       <div class="w-1/3 flex justify-center">
-        <Picker title="Setting" bind:selectedItem={selectedSetting} options={SETTING_OPTIONS} setSelectedItem={transcriptProcessor.setSetting} />
+        <Picker title={$contextStore.settingContext.contextTitle} bind:selectedItem={$contextStore.settingContext.selection} options={$contextStore.settingContext.options} />
       </div>
       <div class="w-1/3 flex justify-center">
-        <Picker title="Type" bind:selectedItem={selectedConversationType} options={CONVERSATION_TYPE_OPTIONS} setSelectedItem={transcriptProcessor.setConversationType} /> 
+        <Picker title={$contextStore.typeContext.contextTitle} bind:selectedItem={$contextStore.typeContext.selection} options={$contextStore.typeContext.options} />
       </div>
       <div class="w-1/3 flex justify-center">
-        <Picker title="Tone" bind:selectedItem={selectedTone} options={TONE_OPTIONS} setSelectedItem={transcriptProcessor.setTone} />
+        <Picker title={$contextStore.toneContext.contextTitle} bind:selectedItem={$contextStore.toneContext.selection} options={$contextStore.toneContext.options} />
       </div>
     </div>
 
