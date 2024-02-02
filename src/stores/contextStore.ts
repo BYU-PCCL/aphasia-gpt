@@ -52,12 +52,13 @@ const createContextStore = () => {
 
   /**
    * Adds the current input value for the given context to the options for that context.
-   * Duplicates are not added.
+   * Empty/whitespace and duplicates are not added.
    * @param context Context to add the input value to
    */
   function addOption(context: Context) {
-    if (!context.options.includes(context.inputValue)) {
-      context.options.push(context.inputValue);
+    const trimmedInput = context.inputValue.trim();
+    if (trimmedInput !== "" && !context.options.includes(trimmedInput)) {
+      context.options.push(trimmedInput);
       context.inputValue = "";
     }
   }
