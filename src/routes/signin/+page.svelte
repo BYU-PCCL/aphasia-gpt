@@ -3,7 +3,7 @@
 <script lang="ts">
 import {goto} from '$app/navigation'
 import { json } from "@sveltejs/kit";
-import { username } from "@/stores/user";
+import { username} from "@/stores/user";
 export{signinusername}
 
 let signinusername = '';
@@ -36,7 +36,7 @@ $username = signinusername
 }
 
 
-async function sendDataToBackend(signinusername, email, password, name, age, about){
+async function sendDataToBackend(signinusername:string, email:string, password:string, name:string, age:string, about){
 try{
 const response = await fetch("/api/firebase", {
 method: 'POST',

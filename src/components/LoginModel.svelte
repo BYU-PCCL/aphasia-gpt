@@ -1,7 +1,7 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { username } from "@/stores/user";
-  import {goto} from '$app/navigation'
+  import {goto} from '$app/navigation';
 
 
 
@@ -10,9 +10,24 @@
 
   let inputValue = "";
   $: trimmedValue = inputValue.trim();
+  let inputPassword = "";
+  $: password = inputPassword.trim();
+  let errorMessage = 'Passwords do not match';
 
   function login() {
     $username = trimmedValue;
+    // $isMatch = false;
+    sendDataToBackend(trimmedValue, password);
+
+    // console.log("isMatch: ", $isMatch);
+    // if (!$isMatch) { // Check if login was unsuccessful
+      
+    //     console.error(errorMessage);
+    // }
+    // else{
+    //   console.log("Matched!");
+    // }
+
   }
   function signin(){
 
@@ -21,6 +36,32 @@
   function forget(){
 
   }
+
+
+async function sendDataToBackend(username:string, password:string){
+try{
+const response = await fetch("/api/firebase/login", {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify({username, password}),
+});
+
+console.log('Full response from server:', response);
+
+if(!response.ok){
+const errorData = await response.json();
+console.error('Error data from server:', errorData);
+throw new Error('Network response was not ok');
+}
+
+const data = await response.json();
+console.log('Response from backend:', data);
+}catch (error){
+console.error('Error:', error);
+}
+}
   
 </script>
 
@@ -46,10 +87,11 @@
       >
       <input
           type="password"
+          bind:value={inputPassword}
           placeholder="password"
           class="flex-1 focus:outline-none px-3 py-1"
         />
-        <input name="password" value={trimmedValue} hidden required />
+        <input name="password" value={inputPassword} hidden required />
       
       </div>
       <div class="text-center">
