@@ -19,6 +19,7 @@
         bind:title={$contextStore.settingContext.contextTitle}
         bind:items={$contextStore.settingContext.options}
         bind:inputValue={$contextStore.settingContext.inputValue}
+        bind:errorMessage={$contextStore.settingContext.errorMessage}
         addItem={contextStore.addSettingOption}
         removeItem={contextStore.removeSettingOption}
       />
@@ -28,6 +29,7 @@
         bind:title={$contextStore.typeContext.contextTitle}
         bind:items={$contextStore.typeContext.options}
         bind:inputValue={$contextStore.typeContext.inputValue}
+        bind:errorMessage={$contextStore.typeContext.errorMessage}
         addItem={contextStore.addTypeOption}
         removeItem={contextStore.removeTypeOption}
       />
@@ -37,6 +39,7 @@
         bind:title={$contextStore.toneContext.contextTitle}
         bind:items={$contextStore.toneContext.options}
         bind:inputValue={$contextStore.toneContext.inputValue}
+        bind:errorMessage={$contextStore.toneContext.errorMessage}
         addItem={contextStore.addToneOption}
         removeItem={contextStore.removeToneOption}
       />

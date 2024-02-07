@@ -15,6 +15,11 @@
   export let inputValue: string = "";
 
   /**
+   * Error message to show if needed
+   */
+  export let errorMessage: string = "";
+
+  /**
    * Adds a new list item
    */
   export let addItem: () => void;
@@ -37,7 +42,12 @@
     <li class="flex justify-between items-center">
       <div class="flex items-center w-full">
         <span class="truncate w-0 flex-grow" title={item}>{item}</span>
-        <button on:click={() => removeItem(item)} class="flex items-center p-1" title="Remove" aria-label="Remove">
+        <button
+          on:click={() => removeItem(item)}
+          class="flex items-center p-1"
+          title="Remove"
+          aria-label="Remove"
+        >
           <i class="material-icons" aria-hidden="true">delete</i>
         </button>
       </div>
@@ -49,9 +59,17 @@
   <form on:submit|preventDefault={() => addItem()}>
     <li class="flex justify-between items-center gap-1">
       <input type="text" bind:value={inputValue} placeholder="Add" class="flex-1 p-1 rounded-md bg-white outline-none"/>
-      <button type="submit" class="flex items-center p-1 rounded-md bg-green-100 text-green-500" title="Add" aria-label="Add">
+      <button type="submit"
+        class="flex items-center p-1 rounded-md bg-green-100 text-green-500"
+        title="Add"
+        aria-label="Add"
+        disabled={inputValue.trim() == ""}
+      >
         <i class="material-icons" aria-hidden="true">add</i>
       </button>
     </li>
   </form>
+  {#if errorMessage}
+    <p class="text-red-500">{errorMessage}</p>
+  {/if}
 </div>

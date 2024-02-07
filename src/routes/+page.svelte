@@ -33,6 +33,7 @@
 
   function logout() {
     transcriptProcessor.clear();
+    contextStore.clear();
     $username = null;
     isMenuOpen = false;
   }
@@ -93,6 +94,9 @@ function textToSpeech(speechText:string, index: number){
     isMenuOpen = false;
     if ($transcriptProcessor.isRecording) {
       transcriptProcessor.toggleRecording();
+    }
+    if (!contextOptionsModal) {
+      contextStore.clearForm();
     }
   }
 
