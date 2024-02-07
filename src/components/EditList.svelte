@@ -34,7 +34,7 @@
 <!-- @component An editable (appendable) list of items -->
 
 <div class="rounded-md p-2 lg:p-4 bg-gray-200">
-  <h2 class="font-bold text-xl text-center">{title}</h2>
+  <h2 class="font-bold text-xl text-center">{title.charAt(0).toUpperCase() + title.slice(1)}</h2>
 
   <!-- List of items -->
   <ul>

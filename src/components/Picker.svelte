@@ -14,7 +14,7 @@
 <!-- @component A dropdown to select an option from a list. -->
 
 <div>
-  <div class="font-semibold max-sm:text-sm text-center pb-1">{title}</div>
+  <div class="font-semibold max-sm:text-sm text-center pb-1">{title.charAt(0).toUpperCase() + title.slice(1)}</div>
   <select class="w-full truncate max-sm:text-xs text-black bg-white border-solid border-2 border-black-300 rounded-md p-1 sm:p-2" bind:value={selectedItem}>
     {#each options as option (option)}
       <option value={option}>{option}</option>

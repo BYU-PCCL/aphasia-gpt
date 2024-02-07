@@ -26,7 +26,16 @@ function getContextRef(username: string) {
   const db = admin.database();
   const ref = db.ref('users');
   const usersRef = ref.child(username);
-  return usersRef.child("context");
+  const contextRef = usersRef.child("context");
+
+  // Create the context property if it doesn't exist
+  contextRef.once("value", (snapshot) => {
+    if (!snapshot.exists()) {
+      contextRef.set({});
+    }
+  });
+  
+  return contextRef;
 }
 
 /**
@@ -54,7 +63,7 @@ export const GET: RequestHandler = async (req) => {
 }
 
 /**
- * Create or reset the conversational context for the given user
+ * Create or reset the default conversational context options/selection for the given user
  */
 export const POST: RequestHandler = async ({ request }) => {
   const { username } = await request.json();

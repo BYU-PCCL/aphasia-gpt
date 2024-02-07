@@ -182,7 +182,7 @@ function createContextStore() {
     },
 
     /**
-     * Resets the user's conversational contexts to their original default values, erasing any changes made
+     * Resets in the database the user's conversational contexts to their original default values, erasing any changes made
      */
     resetUserContextsToDefaults: async () => {
       const response = await fetch("/api/firebase/context", {
