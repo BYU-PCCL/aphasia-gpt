@@ -21,8 +21,7 @@ let serviceAccount = {
   project_id: FIREBASE_PROJECT_ID,
   private_key: FIREBASE_API_KEY.replace(/\\n/g, '\n'),
   client_email: FIREBASE_CLIENT_EMAIL
-  
-  
+
 }
 
 if(!admin.apps.length){

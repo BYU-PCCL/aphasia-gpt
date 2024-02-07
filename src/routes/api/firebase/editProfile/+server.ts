@@ -30,15 +30,30 @@ if(!admin.apps.length){
     });
 }
 
-function EditUserData(username: string, name: string, age: string, about: string){
+async function EditUserData(username: string, name: string, age: string, about: string){
 const db = admin.database();
 const ref = db.ref('users');
 const usersRef = ref.child(username);
+const snapshot = await usersRef.once('value');
+let userData = snapshot.val();
+let email = userData.email
+let password = userData.password;
+if(name === ""){
+    name = userData.name;
+}
+if(age === ""){
+    age = userData.age;
+}
+if(about ==""){
+    about = userData.age;
+}
 
-const userData = {
-name: name,
-age: age,
-about: about
+userData = {
+    email: email,
+    password: password,
+    name: name,
+    age: age,
+    about: about
 }
 usersRef.set(userData);
 }

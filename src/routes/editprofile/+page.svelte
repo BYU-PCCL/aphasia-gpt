@@ -72,7 +72,7 @@
               <textarea id="about" bind:value={about} rows="4"></textarea>
             </div>
             <div class="button-container">
-              <button type="submit" class="button">Submit</button>
+              <button type="submit" on:click={() => goto('/')}  class="button">Submit</button>
               <button on:click={() => goto('/')} class="button back-button">Back</button>
             </div>
           </div>

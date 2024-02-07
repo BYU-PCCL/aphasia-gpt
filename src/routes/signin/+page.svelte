@@ -1,5 +1,3 @@
-
-
 <script lang="ts">
 import {goto} from '$app/navigation'
 import { json } from "@sveltejs/kit";
