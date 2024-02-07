@@ -10,7 +10,7 @@ export enum ContextTitle {
 /**
  * The current state of the conversational contexts as stored in the database
  */
-export interface ContextDb {
+export interface ContextDbData {
   setting: {
     options: string[];
     selection: string;

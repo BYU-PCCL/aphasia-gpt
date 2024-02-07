@@ -6,7 +6,7 @@ import { CONVERSATION_TYPE_OPTIONS, DEFAULT_CONVERSATION_TYPE, DEFAULT_SETTING, 
 import type { RequestHandler } from "./../$types";
 import { error } from "@sveltejs/kit";
 import admin from "firebase-admin";
-import type { ContextDbPutRequest, ContextDb, ContextDbPutResponse } from '@/lib/types/Context';
+import type { ContextDbPutRequest, ContextDbData, ContextDbPutResponse } from '@/lib/types/Context';
 
 admin.database.enableLogging(true);
 const serviceAccount = {
@@ -40,7 +40,7 @@ export const GET: RequestHandler = async (req) => {
 
   const contextRef = getContextRef(username);
   const contextSnapshot = await contextRef.get();
-  const context: ContextDb = contextSnapshot.val();
+  const context: ContextDbData = contextSnapshot.val();
 
   return new Response(
     JSON.stringify(context),
@@ -58,9 +58,12 @@ export const GET: RequestHandler = async (req) => {
  */
 export const POST: RequestHandler = async ({ request }) => {
   const { username } = await request.json();
-  const contextRef = getContextRef(username);
+  if (!username || username === "") {
+    throw error(400, "Username is required");
+  }
 
-  const context: ContextDb = {
+  const contextRef = getContextRef(username);
+  const context: ContextDbData = {
     setting: {
       options: SETTING_OPTIONS,
       selection: DEFAULT_SETTING,
@@ -74,7 +77,6 @@ export const POST: RequestHandler = async ({ request }) => {
       selection: DEFAULT_TONE,
     },
   };
-
   contextRef.set(context);
 
   return new Response(

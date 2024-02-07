@@ -45,4 +45,12 @@
       />
     </div>
   </div>
+  <div class="flex justify-center mt-12">
+    <button
+      class="bg-red-400 hover:bg-red-600 text-white font-bold py-2 px-2 rounded-md flex items-center"
+      on:click={() => contextStore.resetUserContextsToDefaults()}
+    >
+      <i class="material-icons mr-1">refresh</i> Restore Defaults
+    </button>
+  </div>
 </Modal>

@@ -1,6 +1,6 @@
 import { get, writable } from 'svelte/store';
 import { username } from './user';
-import type { ContextState, ContextDb, ContextDbPutRequest, ContextDbPutResponse } from "@/lib/types/Context";
+import type { ContextState, ContextDbData, ContextDbPutRequest, ContextDbPutResponse } from "@/lib/types/Context";
 import { ContextTitle } from "@/lib/types/Context";
 
 /**
@@ -35,6 +35,21 @@ function createContextStore() {
       lastToneSelection = store.toneContext.selection;
     }
   });
+
+  /**
+   * Updates the store with the given database values
+   */
+  function setStoreFromDatabaseValues(dbData: ContextDbData) {
+    update(store => {
+      store.settingContext.options = dbData.setting.options;
+      store.settingContext.selection = dbData.setting.selection;
+      store.typeContext.options = dbData.type.options;
+      store.typeContext.selection = dbData.type.selection;
+      store.toneContext.options = dbData.tone.options;
+      store.toneContext.selection = dbData.tone.selection;
+      return store;
+    });
+  }
 
   /**
    * Updates the database with the given context's options and selection
@@ -134,22 +149,14 @@ function createContextStore() {
         return;
       }
 
-      const initialDatabaseValues: ContextDb = await getDatabaseValues(usernameValue);
+      const initialDatabaseValues: ContextDbData = await getDatabaseValues(usernameValue);
 
-      // Set initial values and store them for comparison later
+      // Track initial values for later comparison
       lastSettingSelection = initialDatabaseValues.setting.selection;
       lastTypeSelection = initialDatabaseValues.type.selection;
       lastToneSelection = initialDatabaseValues.tone.selection;
 
-      update(store => {
-        store.settingContext.options = initialDatabaseValues.setting.options;
-        store.settingContext.selection = initialDatabaseValues.setting.selection;
-        store.typeContext.options = initialDatabaseValues.type.options;
-        store.typeContext.selection = initialDatabaseValues.type.selection;
-        store.toneContext.options = initialDatabaseValues.tone.options;
-        store.toneContext.selection = initialDatabaseValues.tone.selection;
-        return store;
-      });
+      setStoreFromDatabaseValues(initialDatabaseValues);
     },
 
     /**
@@ -172,6 +179,28 @@ function createContextStore() {
         contextStore.toneContext.errorMessage = "";
         return contextStore;
       });
+    },
+
+    /**
+     * Resets the user's conversational contexts to their original default values, erasing any changes made
+     */
+    resetUserContextsToDefaults: async () => {
+      const response = await fetch("/api/firebase/context", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: get(username),
+        }),
+      });
+
+      const responseData = await response.json();
+      if (response.ok) {
+        setStoreFromDatabaseValues(responseData as ContextDbData);
+      } else {
+        throw new Error(responseData.error || "Unknown error");
+      }
     },
 
     /**
@@ -228,7 +257,6 @@ function createContextStore() {
   };
 }
 
-
 async function getDatabaseValues(usernameValue: string) {
   const response = await fetch(`/api/firebase/context?username=${encodeURIComponent(usernameValue)}`, {
     method: "GET",
@@ -239,7 +267,7 @@ async function getDatabaseValues(usernameValue: string) {
 
   const responseData = await response.json();
   if (response.ok) {
-    return responseData as ContextDb;
+    return responseData as ContextDbData;
   } else {
     throw new Error(responseData.error || "Unknown error");
   }
