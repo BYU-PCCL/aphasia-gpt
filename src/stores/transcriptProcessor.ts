@@ -1,3 +1,4 @@
+import { contextStore } from "./contextStore";
 import throttle from "lodash/throttle";
 import { get, writable } from "svelte/store";
 
@@ -11,7 +12,7 @@ function createTranscriptProcessor() {
   const { subscribe, set, update } = writable<TranscriptProcessor>({
     isRecording: false,
     transcript: { text: [], version: 0} ,
-    transformations: { texts: [], version: 0 }
+    transformations: { texts: [], version: 0 },
   });
 
   
@@ -43,7 +44,12 @@ function createTranscriptProcessor() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ utterance: recentTranscript }),
+        body: JSON.stringify({
+          utterance: recentTranscript,
+          setting: get(contextStore).settingContext.selection,
+          conversationType: get(contextStore).typeContext.selection,
+          tone: get(contextStore).toneContext.selection,
+        }),
         signal: abortSignal
       });
       const data = await response.json();

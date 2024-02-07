@@ -35,7 +35,7 @@
   {/if}
 
   <button on:click={toggleRecording} class="inline-block rounded-full bg-red-100 text-red-500 p-10 z-10"
-  style="margin-right: 2vw;">
+  >
     {#if isRecording}
       <div class="w-10 h-10 m-2 rounded-md bg-red-500" />
     {:else}
@@ -56,6 +56,7 @@
     <button
       on:click={onBack}
       class="inline-block rounded-full bg-stone-200/80 text-stone-500 p-10"
+      style="margin-left: 2vw;"
       transition:fly={{ x: -160, duration: 250, opacity: 1 }}
     >
       <svg
