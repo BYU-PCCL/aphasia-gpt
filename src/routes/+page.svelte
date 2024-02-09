@@ -9,6 +9,7 @@
   import { onMount } from "svelte";
   import Picker from "@/components/Picker.svelte";
   import ContextOptionsModal from "@/components/ContextOptionsModal.svelte";
+  import {goto} from '$app/navigation';
   
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   
@@ -181,6 +182,7 @@ function textToSpeech(speechText:string, index: number){
               </div>
             </div>
             <li><button on:click={toggleContextOptionsModal} class="block w-full px-4 py-2 hover:bg-gray-100">Context Options</button></li>
+            <li><button on:click = {() => goto('/editprofile')}  class="block w-full px-4 py-2 hover:bg-gray-100">Edit Profile</button></li>
             <li>{#if $username}
               <form method="POST" action="/?/logout" use:enhance={logout} >
                 <button class="block w-full px-4 py-2 hover:bg-gray-100">Log Out</button>

@@ -50,7 +50,7 @@ export const POST: RequestHandler = async ({ request }) => {
             - tone of voice they are trying to convey: ${tone}
           Now, please provide three transformed and predicted sentences (separated by line break) for the following utterance: 
           ${utterance}`,
-      temperature: .5,
+      temperature: 1,
       max_tokens: 400, // Set the desired maximum token length for the response
       n: 1,
     });

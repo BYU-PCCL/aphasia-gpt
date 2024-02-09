@@ -11,6 +11,7 @@ import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 // import 'server-only'
 import admin from "firebase-admin";
+import {GlobalVars} from "@/stores/user";
 
 // this creates a dictionary from a string that's read from a run-time environment variable
 //import FIREBASE_JSON_STRING from '$env/static/private';
@@ -21,7 +22,8 @@ let serviceAccount = {
   project_id: FIREBASE_PROJECT_ID,
   private_key: FIREBASE_API_KEY.replace(/\\n/g, '\n'),
   client_email: FIREBASE_CLIENT_EMAIL
-
+  
+  
 }
 
 if(!admin.apps.length){
@@ -32,45 +34,35 @@ if(!admin.apps.length){
     });
 }
 
-function writeUserData(username: string, email: string, password: string, name: string, age: string, about: string){
-const db = admin.database();
-const ref = db.ref('users');
-const usersRef = ref.child(username);
+async function getUserData(username: string, password:string) {
+    const db = admin.database();
+    const ref = db.ref('users');
+    const usersRef = ref.child(username);
 
+    try {
+        const snapshot = await usersRef.once('value');
+        const userData = snapshot.val();
 
-
-console.log("this is a test for write user data")
-const userData = {
-email: email,
-password: password,
-name: name,
-age: age,
-about: about
+        if (userData && userData.password) {
+            // Password found, return it
+            return userData.password;
+        } else {
+            // User or password not found
+            return null;
+        }
+    } catch (error) {
+        // Handle any errors
+        console.error("Error fetching user data:", error);
+        throw error;
+    }
 }
-usersRef.set(userData);
-}
-
-
-export const GET: RequestHandler = async () => {
-console.log("this is a test");
-return json(
-{
-status: 200,
-}
-);
-};
 
 export const POST: RequestHandler = async ({ request }) => {
-console.log("fire base is called");
 try {
-const {signinusername, email, password, name, age, about} = await request.json();
-console.log('username from frontend:', signinusername);
-console.log('email from frontend:', email);
+const {username, password} = await request.json();
+console.log('username from frontend:', username);
 console.log('password from frontend:', password);
-console.log('name from frontend:', name);
-console.log('age from frontend:', age);
-console.log('about from frontend:', about);
-writeUserData(signinusername,email, password, name, age, about)
+getUserData(username, password);
 return json({
 status: 200,
 body: { message: 'Data received successfully.' },
@@ -83,3 +75,6 @@ body: { error: 'hi Server Error' },
 });
 }
 };
+
+
+
