@@ -2,6 +2,7 @@
   import { enhance } from "$app/forms";
   import { username } from "@/stores/user";
   import {goto} from '$app/navigation';
+  import { contextStore } from "@/stores/contextStore";
 
 
 
@@ -14,10 +15,11 @@
   $: password = inputPassword.trim();
   let errorMessage = 'Passwords do not match';
 
-  function login() {
+  async function login() {
     $username = trimmedValue;
     // $isMatch = false;
-    sendDataToBackend(trimmedValue, password);
+    await sendDataToBackend(trimmedValue, password);
+    await contextStore.initialize();
 
     // console.log("isMatch: ", $isMatch);
     // if (!$isMatch) { // Check if login was unsuccessful

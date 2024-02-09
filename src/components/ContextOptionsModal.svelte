@@ -19,6 +19,7 @@
         bind:title={$contextStore.settingContext.contextTitle}
         bind:items={$contextStore.settingContext.options}
         bind:inputValue={$contextStore.settingContext.inputValue}
+        bind:errorMessage={$contextStore.settingContext.errorMessage}
         addItem={contextStore.addSettingOption}
         removeItem={contextStore.removeSettingOption}
       />
@@ -28,6 +29,7 @@
         bind:title={$contextStore.typeContext.contextTitle}
         bind:items={$contextStore.typeContext.options}
         bind:inputValue={$contextStore.typeContext.inputValue}
+        bind:errorMessage={$contextStore.typeContext.errorMessage}
         addItem={contextStore.addTypeOption}
         removeItem={contextStore.removeTypeOption}
       />
@@ -37,9 +39,18 @@
         bind:title={$contextStore.toneContext.contextTitle}
         bind:items={$contextStore.toneContext.options}
         bind:inputValue={$contextStore.toneContext.inputValue}
+        bind:errorMessage={$contextStore.toneContext.errorMessage}
         addItem={contextStore.addToneOption}
         removeItem={contextStore.removeToneOption}
       />
     </div>
+  </div>
+  <div class="flex justify-center mt-12">
+    <button
+      class="bg-red-400 hover:bg-red-600 text-white font-bold py-2 px-2 rounded-md flex items-center"
+      on:click={() => contextStore.resetUserContextsToDefaults()}
+    >
+      <i class="material-icons mr-1">refresh</i> Restore Defaults
+    </button>
   </div>
 </Modal>

@@ -2,6 +2,7 @@
 import {goto} from '$app/navigation'
 import { json } from "@sveltejs/kit";
 import { username} from "@/stores/user";
+import { contextStore } from '@/stores/contextStore';
 export{signinusername}
 
 let signinusername = '';
@@ -22,15 +23,16 @@ errorMessage = passwordMatch ? '' : 'Passwords do not match';
 
 
 
-function handleSubmit() {
+async function handleSubmit() {
 checkpassword(password, repeatPassword);
 if (!passwordMatch) {
 // Display an error message or handle the validation as needed
 console.error(errorMessage);
 return;
 }
-sendDataToBackend(signinusername, email, password, name, age, about)
+await sendDataToBackend(signinusername, email, password, name, age, about)
 $username = signinusername
+await contextStore.resetUserContextsToDefaults();
 }
 
 
