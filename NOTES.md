@@ -18,7 +18,7 @@ Flow of the main functionality:
 
 - If the user starts speaking, the event handler `.onmessage` of the web socket will be triggered, which is defined by the function `onSocketMessage`.
 
-- When the function `onSocketMessage` gets called, it sends the transcript, which is obtained from `evet.data.text`, to the function `onChange`.
+- When the function `onSocketMessage` gets called, it sends the transcript, which is obtained from `event.data.text`, to the function `onChange`.
 
 - The function `onChange` in the Mic component `Mic.svelte` is defined in the page component `+page.svelte`, by the function `transcriptProcessor.addTranscriptChunk`.
 

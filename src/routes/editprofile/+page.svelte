@@ -1,40 +1,53 @@
-
-
 <script lang="ts">
     import {goto} from '$app/navigation'
-    import { json } from "@sveltejs/kit";
     import { username} from "@/stores/user";
+    import type { EditProfileData } from '@/lib/types/EditProfile';
+    import type { PageData } from '../$types';
+    import { onMount } from 'svelte';
 
-    let name = '';
-    let age = '';
-    let about = '';
-    let editUsername = '';
-    if ($username !== null) {
-        editUsername = $username;
-    } else {
-        editUsername = '';
+    export let data: PageData;
+    $: {
+        $username = data.username;
     }
-  
-    
-    
-    function handleSubmit() {
 
-        console.log(name);
-        console.log(age);
-        console.log(about);
-        sendDataToBackend(editUsername, name, age, about);
-}
+    let editProfileData: EditProfileData = {
+        username: "asdf",
+        name: "",
+        age: 0,
+        about: ""
+    };
+
+    async function getDatabaseValues(usernameValue: string) {
+        const response = await fetch(`/api/firebase/editProfile?username=${encodeURIComponent(usernameValue)}`, {
+            method: "GET",
+            headers: {
+            "Content-Type": "application/json",
+            },
+        });
+        const responseData = await response.json();
+        if (response.ok) {
+            return responseData as EditProfileData;
+        } else {
+            throw new Error(responseData.error || "Unknown error");
+        }
+    }
+    
+    function handleSubmit(event: Event) {
+        event.preventDefault();
+        sendDataToBackend();
+        goto('/');
+    }
     
     
     
-    async function sendDataToBackend(username:string, name:string, age:string, about:string){
+    async function sendDataToBackend(){
     try{
     const response = await fetch("/api/firebase/editProfile", {
     method: 'POST',
     headers: {
     'Content-Type': 'application/json',
     },
-    body: JSON.stringify({username,name, age, about}),
+    body: JSON.stringify(editProfileData),
     });
     
     console.log('Full response from server:', response);
@@ -52,7 +65,14 @@
     }
     }
 
-    
+    onMount(async () => {
+        if (!$username) {
+            console.error('No username found');
+            // TODO: Redirect to login page?
+            return;
+        }
+        editProfileData = await getDatabaseValues($username);
+    });
     </script>
     
     
@@ -61,18 +81,18 @@
           <div class="whole-form">
             <div class="form-group">
               <label for="name">Name:</label>
-              <input type="text" id="name" bind:value={name} required />
+              <input type="text" id="name" bind:value={editProfileData.name} required />
             </div>
             <div class="form-group">
               <label for="age">Age:</label>
-              <input type="number" id="age" bind:value={age} required />
+              <input type="number" id="age" bind:value={editProfileData.age} required />
             </div>
             <div class="form-group">
               <label for="about">Tell Us About Yourself!</label>
-              <textarea id="about" bind:value={about} rows="4"></textarea>
+              <textarea id="about" bind:value={editProfileData.about} rows="4"></textarea>
             </div>
             <div class="button-container">
-              <button type="submit" on:click={() => goto('/')}  class="button">Submit</button>
+              <button type="submit" class="button">Submit</button>
               <button on:click={() => goto('/')} class="button back-button">Back</button>
             </div>
           </div>
@@ -90,13 +110,7 @@
             text-align: center;
             margin:20px;
         }
-      
-        h1.center {
-            font-size: 24px;
-            margin-bottom: 25px;
-            text-align: center; /* Center the text horizontally */
-        }
-      
+            
         form {
             max-width: 80%;
             max-height: 80%;

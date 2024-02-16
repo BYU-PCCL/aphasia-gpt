@@ -1,71 +1,51 @@
 
 
-import {ASSEMBLYAI_API_KEY } from '$env/static/private';
-// Import the functions you need from the SDKs you need
 if (!import.meta.env.SSR) {
-throw new Error("This module can only be imported on the server side.");
+  throw new Error("This module can only be imported on the server side.");
 }
-import { FIREBASE_API_KEY, FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL } from '$env/static/private';
-
-import { json } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-// import 'server-only'
-import admin from "firebase-admin";
-admin.database.enableLogging(true);
+import { getUserRef } from "../firebaseUtils";
+import type { EditProfileData } from "@/lib/types/EditProfile";
 
-let serviceAccount = {
-  
-  project_id: FIREBASE_PROJECT_ID,
-  private_key: FIREBASE_API_KEY.replace(/\\n/g, '\n'),
-  client_email: FIREBASE_CLIENT_EMAIL
-  
-  
-}
+async function EditUserData(username: string, name: string, age: string, about: string) {
+  const userRef = getUserRef(username);
 
-if(!admin.apps.length){
-  
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-    databaseURL: "https://brocas-userdb-default-rtdb.firebaseio.com"
-    });
+  const nameRef = userRef.child("name");
+  nameRef.set(name);
+  const ageRef = userRef.child("age");
+  ageRef.set(age);
+  const aboutRef = userRef.child("about");
+  aboutRef.set(about);
 }
 
-async function EditUserData(username: string, name: string, age: string, about: string){
-const db = admin.database();
-const ref = db.ref('users');
-const usersRef = ref.child(username);
-const snapshot = await usersRef.once('value');
-let userData = snapshot.val();
-let email = userData.email
-let password = userData.password;
-if(name === ""){
-    name = userData.name;
-}
-if(age === ""){
-    age = userData.age;
-}
-if(about ==""){
-    about = userData.age;
-}
+/**
+ * Get editable profile data for the given user
+ */
+export const GET: RequestHandler = async (req) => {
+  const username = req.url.searchParams.get("username");
+  if (!username || username === "") {
+    throw error(400, "Username is required");
+  }
 
-userData = {
-    email: email,
-    password: password,
-    name: name,
-    age: age,
-    about: about
-}
-usersRef.set(userData);
-}
+  const userRef = getUserRef(username);
+  const name = (await userRef.child("name").get()).val();
+  const age = (await userRef.child("age").get()).val();
+  const about = (await userRef.child("about").get()).val();
 
+  const editProfileData: EditProfileData = {
+    username,
+    name,
+    age,
+    about,
+  };
 
-export const GET: RequestHandler = async () => {
-console.log("this is a test");
-return json(
-{
-status: 200,
-}
-);
+  return new Response(JSON.stringify(editProfileData), {
+    status: 200,
+    headers: {
+      "content-type": "application/json",
+    },
+  });
 };
 
 export const POST: RequestHandler = async ({ request }) => {
