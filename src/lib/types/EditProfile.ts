@@ -1,5 +1,5 @@
-export interface EditProfileData {
-  username: string;
+export interface EditProfileDbData {
+  uid: string;
   name: string;
   age: number;
   about: string;

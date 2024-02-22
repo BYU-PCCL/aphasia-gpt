@@ -1,24 +1,21 @@
 <script lang="ts">
     import {goto} from '$app/navigation'
-    import { username} from "@/stores/user";
-    import type { EditProfileData } from '@/lib/types/EditProfile';
-    import type { PageData } from '../$types';
+    import type { EditProfileDbData } from '@/lib/types/EditProfile';
+    import { userName } from '@/stores/user';
     import { onMount } from 'svelte';
-
-    export let data: PageData;
-    $: {
-        $username = data.username;
-    }
-
-    let editProfileData: EditProfileData = {
-        username: "asdf",
+    
+    export let data;
+    let isLoadingInitialData = true;
+    let editProfileData: EditProfileDbData = {
+        uid: "",
         name: "",
         age: 0,
         about: ""
     };
 
-    async function getDatabaseValues(usernameValue: string) {
-        const response = await fetch(`/api/firebase/editProfile?username=${encodeURIComponent(usernameValue)}`, {
+
+    async function getDatabaseValues(uid: string) {
+        const response = await fetch(`/api/firebase/editProfile?uid=${encodeURIComponent(uid)}`, {
             method: "GET",
             headers: {
             "Content-Type": "application/json",
@@ -26,16 +23,16 @@
         });
         const responseData = await response.json();
         if (response.ok) {
-            return responseData as EditProfileData;
+            return responseData as EditProfileDbData;
         } else {
             throw new Error(responseData.error || "Unknown error");
         }
     }
     
-    function handleSubmit(event: Event) {
+    async function handleSubmit(event: Event) {
         event.preventDefault();
-        sendDataToBackend();
-        goto('/');
+        await sendDataToBackend();
+        await goto('/');
     }
     
     
@@ -60,32 +57,38 @@
     
     const data = await response.json();
     console.log('Response from backend:', data);
+    userName.set(editProfileData.name);
     }catch (error){
     console.error('Error:', error);
     }
     }
 
-    onMount(async () => {
-        if (!$username) {
-            console.error('No username found');
-            // TODO: Redirect to login page?
-            return;
+
+    onMount(async () => {   
+        if (!data.userFirebaseUid) {
+            console.warn('User not logged in');
+            goto('/');
         }
-        editProfileData = await getDatabaseValues($username);
+        editProfileData = await getDatabaseValues(data.userFirebaseUid);
+        isLoadingInitialData = false;
     });
+    
     </script>
     
     
     <body>
+        {#if isLoadingInitialData}
+        <p>Loading...</p>
+        {:else}
         <form on:submit={handleSubmit}>
           <div class="whole-form">
             <div class="form-group">
               <label for="name">Name:</label>
-              <input type="text" id="name" bind:value={editProfileData.name} required />
+              <input type="text" id="name" bind:value={editProfileData.name} />
             </div>
             <div class="form-group">
               <label for="age">Age:</label>
-              <input type="number" id="age" bind:value={editProfileData.age} required />
+              <input type="number" id="age" bind:value={editProfileData.age} />
             </div>
             <div class="form-group">
               <label for="about">Tell Us About Yourself!</label>
@@ -93,10 +96,11 @@
             </div>
             <div class="button-container">
               <button type="submit" class="button">Submit</button>
-              <button on:click={() => goto('/')} class="button back-button">Back</button>
+              <button type="button" class="button back-button" on:click={() => goto('/')}>Back</button>
             </div>
           </div>
         </form>
+        {/if}
       </body>
       
 
@@ -185,10 +189,5 @@
             margin-left: 10px;
         }
 
-
-
-
-
-        
     </style>
     

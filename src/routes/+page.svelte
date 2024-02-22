@@ -1,15 +1,16 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import { enhance } from "$app/forms";
-  import LoginModel from "@/components/LoginModel.svelte";
+  import LoginModal from "@/components/LoginModal.svelte";
   import Controls from "@/components/Controls.svelte";
   import { transcriptProcessor } from "@/stores/transcriptProcessor";
   import { contextStore } from "@/stores/contextStore";
-  import { username } from "@/stores/user";
+  import { userName, userFirebaseUid, isLoadingAuthState } from "@/stores/user";
   import { onMount } from "svelte";
   import Picker from "@/components/Picker.svelte";
   import ContextOptionsModal from "@/components/ContextOptionsModal.svelte";
   import {goto} from '$app/navigation';
+  import { app as firebaseApp } from "@/lib/firebase";
   
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   
@@ -19,10 +20,6 @@
     Mic = (await import("@/components/Mic.svelte")).default;
   });
 
-  export let data: PageData;
-  $: {
-    $username = data.username;
-  }
   $: hasTranscript = $transcriptProcessor.transcript .text.length > 0;
 
   // let fontSize = [18,26];
@@ -31,12 +28,12 @@
   function fontSizeIncrement(){
     fontSize++;
   }
-
   function logout() {
     transcriptProcessor.clear();
     contextStore.clear();
-    $username = null;
     isMenuOpen = false;
+
+    firebaseApp.auth().signOut();
   }
 
   function onFail(message: string) {
@@ -140,124 +137,123 @@ function textToSpeech(speechText:string, index: number){
  
 </script>
 
-{#if !$username}
-  <LoginModel />
-{/if}
+{#if !$isLoadingAuthState} <!-- Prevents jarring flashes of content as the page's state is loading -->
 
-{#if contextOptionsModal}
-  <ContextOptionsModal toggleModal={toggleContextOptionsModal} />
-{/if}
-
-<main>
-  <header class="flex justify-between items-center px-2 md:px-4 py-2 mb-8">
-    <h1 class="block font-bold text-lg sm:text-2xl">Aphasia GPT</h1>
-    <div class="flex items-center">
-      {#if $username}
-        <form method="POST" action="/?/logout" use:enhance={logout} class="mr-1 md:mr-3">
-          <div class="text-sm sm:text-base">Hi {$username} 👋</div>
-        </form>
-      {/if}
-      <!-- This is the dropdown menu -->
-      <div class="relative z-30">
-        <button class="bg-neutral-800 text-white px-2 py-2 rounded-md flex items-center" on:click={toggleDropdown} aria-label="menu">
-          {#if isMenuOpen}
-        <i class="material-icons">close</i>
-          {:else}
-        <i class ="material-icons">menu</i>
-          {/if}
-        </button>
-        {#if isMenuOpen}
-        <div id="dropdown" class="w-40 absolute right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md">
-          <ul class="py-1">
-            <li><button on:click={changeType} class="block w-full px-4 py-2 hover:bg-gray-100">Type 1 Aphasia</button></li>
-            <li><button on:click={changeType2} class="block w-full px-4 py-2 hover:bg-gray-100">Type 2 Aphasia</button></li>
-            <div class="FontSizeFunction">
-              <li><button on:click={font} class="block w-full px-4 py-2 hover:bg-gray-100">Font Size</button></li>
-              <div class="flex justify-center">
-                <span class="minus" on:click={e=>fontSize--}>-</span>
-                <!-- <p class="fontSizeExample" style="display:inline-block; font-size:{fontSize}px">
-                  Hi!
-                </p> -->
-                <span class="plus" on:click={e => fontSize++}>+</span>
-              </div>
-            </div>
-            <li><button on:click={toggleContextOptionsModal} class="block w-full px-4 py-2 hover:bg-gray-100">Context Options</button></li>
-            <li><button on:click = {() => goto('/editprofile')}  class="block w-full px-4 py-2 hover:bg-gray-100">Edit Profile</button></li>
-            <li>{#if $username}
-              <form method="POST" action="/?/logout" use:enhance={logout} >
-                <button class="block w-full px-4 py-2 hover:bg-gray-100">Log Out</button>
-              </form>
-            {/if}</li>
-            <!-- Add more options as needed -->
-          </ul>
-        </div>
-        {/if}
-      </div>
-    </div>
-  </header>
-
-  {#if Mic !== null}
-    <svelte:component this={Mic}
-      isRecording={$transcriptProcessor.isRecording}
-      {onFail}
-      onChange={transcriptProcessor.addTranscriptChunk}
-    />
+  {#if !$userFirebaseUid}
+    <LoginModal />
   {/if}
-    
-  <section class="max-w-2xl mx-auto px-4">
-    <Controls
-      isRecording={$transcriptProcessor.isRecording}
-      {hasTranscript}
-      toggleRecording={transcriptProcessor.toggleRecording}
-      onBack={transcriptProcessor.back}
-      onNew={transcriptProcessor.clear}
-      />
-      
-    <div class="flex justify-center mt-6">
-      <div class="w-1/3 flex justify-center">
-        <Picker title={$contextStore.settingContext.contextTitle} bind:selectedItem={$contextStore.settingContext.selection} options={$contextStore.settingContext.options} />
-      </div>
-      <div class="w-1/3 flex justify-center">
-        <Picker title={$contextStore.typeContext.contextTitle} bind:selectedItem={$contextStore.typeContext.selection} options={$contextStore.typeContext.options} />
-      </div>
-      <div class="w-1/3 flex justify-center">
-        <Picker title={$contextStore.toneContext.contextTitle} bind:selectedItem={$contextStore.toneContext.selection} options={$contextStore.toneContext.options} />
-      </div>
-    </div>
 
-    <div class="mt-12">
-      
-      <h2 class="font-semibold text-lg">What we think you said:</h2>
+  {#if contextOptionsModal}
+    <ContextOptionsModal toggleModal={toggleContextOptionsModal} />
+  {/if}
 
-      {#each $transcriptProcessor.transcript.text as word}
-        <p style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" class = "HoverBox">
-          {word} 
-            <i class="material-icons no-show"  style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
-              close
-            </i>
-        </p> 
-      {/each}
-
-      <br class="h-24" />
-      <h2 class="font-semibold text-lg" style="line-height:40px">What we think you are trying to say: (version {$transcriptProcessor.transformations.version})</h2>
-      <ul>
-        {#each $transcriptProcessor.transformations.texts as transformation, i}
-          <li style="font-size:{fontSize}px;line-height:40px"><div on:click={()=>textToSpeech(transformation, i)} class="material-icons">
-            {#if isPlaying === i}
-              pause
+  <main>
+    <header class="flex justify-between items-center px-2 md:px-4 py-2 mb-8">
+      <h1 class="block font-bold text-lg sm:text-2xl">Aphasia GPT</h1>
+      <div class="flex items-center">
+        {#if $userName}
+          <div class="text-sm sm:text-base mr-1 md:mr-3">Hi {$userName} 👋</div>
+        {/if}
+        <!-- This is the dropdown menu -->
+        <div class="relative z-30">
+          <button class="bg-neutral-800 text-white px-2 py-2 rounded-md flex items-center" on:click={toggleDropdown} aria-label="menu">
+            {#if isMenuOpen}
+          <i class="material-icons">close</i>
             {:else}
-              play_arrow
+          <i class ="material-icons">menu</i>
             {/if}
-            </div>
-          {transformation}
-          </li>
-        {/each}
-      </ul>
-    </div>
+          </button>
+          {#if isMenuOpen}
+          <div id="dropdown" class="w-40 absolute right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md">
+            <ul class="py-1">
+              <li><button on:click={changeType} class="block w-full px-4 py-2 hover:bg-gray-100">Type 1 Aphasia</button></li>
+              <li><button on:click={changeType2} class="block w-full px-4 py-2 hover:bg-gray-100">Type 2 Aphasia</button></li>
+              <div class="FontSizeFunction">
+                <li><button on:click={font} class="block w-full px-4 py-2 hover:bg-gray-100">Font Size</button></li>
+                <div class="flex justify-center">
+                  <span class="minus" on:click={e=>fontSize--}>-</span>
+                  <!-- <p class="fontSizeExample" style="display:inline-block; font-size:{fontSize}px">
+                    Hi!
+                  </p> -->
+                  <span class="plus" on:click={e => fontSize++}>+</span>
+                </div>
+              </div>
+              <li><button on:click={toggleContextOptionsModal} class="block w-full px-4 py-2 hover:bg-gray-100">Context Options</button></li>
+              <li><button on:click = {() => goto('/editprofile')}  class="block w-full px-4 py-2 hover:bg-gray-100">Edit Profile</button></li>
+              <li>{#if $userFirebaseUid}
+                <button class="block w-full px-4 py-2 hover:bg-gray-100" on:click={logout}>Log Out</button>
+              {/if}</li>
+              <!-- Add more options as needed -->
+            </ul>
+          </div>
+          {/if}
+        </div>
+      </div>
+    </header>
 
-  </section>
-  
-</main>
+    {#if Mic !== null}
+      <svelte:component this={Mic}
+        isRecording={$transcriptProcessor.isRecording}
+        {onFail}
+        onChange={transcriptProcessor.addTranscriptChunk}
+      />
+    {/if}
+      
+    <section class="max-w-2xl mx-auto px-4">
+      <Controls
+        isRecording={$transcriptProcessor.isRecording}
+        {hasTranscript}
+        toggleRecording={transcriptProcessor.toggleRecording}
+        onBack={transcriptProcessor.back}
+        onNew={transcriptProcessor.clear}
+        />
+        
+      <div class="flex justify-center mt-6">
+        <div class="w-1/3 flex justify-center">
+          <Picker title={$contextStore.settingContext.contextTitle} bind:selectedItem={$contextStore.settingContext.selection} options={$contextStore.settingContext.options} />
+        </div>
+        <div class="w-1/3 flex justify-center">
+          <Picker title={$contextStore.typeContext.contextTitle} bind:selectedItem={$contextStore.typeContext.selection} options={$contextStore.typeContext.options} />
+        </div>
+        <div class="w-1/3 flex justify-center">
+          <Picker title={$contextStore.toneContext.contextTitle} bind:selectedItem={$contextStore.toneContext.selection} options={$contextStore.toneContext.options} />
+        </div>
+      </div>
+
+      <div class="mt-12">
+        
+        <h2 class="font-semibold text-lg">What we think you said:</h2>
+
+        {#each $transcriptProcessor.transcript.text as word}
+          <p style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" class = "HoverBox">
+            {word} 
+              <i class="material-icons no-show"  style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
+                close
+              </i>
+          </p> 
+        {/each}
+
+        <br class="h-24" />
+        <h2 class="font-semibold text-lg" style="line-height:40px">What we think you are trying to say:</h2>
+        <ul>
+          {#each $transcriptProcessor.transformations.texts as transformation, i}
+            <li style="font-size:{fontSize}px;line-height:40px"><div on:click={()=>textToSpeech(transformation, i)} class="material-icons">
+              {#if isPlaying === i}
+                pause
+              {:else}
+                play_arrow
+              {/if}
+              </div>
+            {transformation}
+            </li>
+          {/each}
+        </ul>
+      </div>
+
+    </section>
+    
+  </main>
+{/if}
 
 <style>
   .HoverBox{

@@ -4,7 +4,7 @@
 export enum ContextTitle {
   SETTING = "setting",
   TYPE = "type",
-  TONE = "tone"
+  TONE = "tone",
 }
 
 /**
@@ -29,7 +29,7 @@ export interface ContextDbData {
  * API Request object to update the conversational context for the given user
  */
 export interface ContextDbPutRequest {
-  username: string;
+  uid: string;
   contextTitle: ContextTitle;
   options: string[];
   selection: string;
@@ -72,4 +72,3 @@ export interface ContextState {
    */
   errorMessage: string;
 }
-

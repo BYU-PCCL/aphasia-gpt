@@ -1,6 +1,11 @@
-import { get, writable } from 'svelte/store';
-import { username } from './user';
-import type { ContextState, ContextDbData, ContextDbPutRequest, ContextDbPutResponse } from "@/lib/types/Context";
+import { get, writable } from "svelte/store";
+import { userFirebaseUid } from "./user";
+import type {
+  ContextState,
+  ContextDbData,
+  ContextDbPutRequest,
+  ContextDbPutResponse,
+} from "@/lib/types/Context";
 import { ContextTitle } from "@/lib/types/Context";
 
 /**
@@ -20,18 +25,46 @@ function createContextStore() {
   let lastTypeSelection = "";
   let lastToneSelection = "";
   subscribe((store: ContextStore) => {
-    if (get(username) === null) return; // Don't update the database if the user is not logged in
+    const userUid: string | null = get(userFirebaseUid);
+    if (!userUid) return; // Don't update the database if the user is not logged in
 
-    if (store.settingContext.selection !== lastSettingSelection && store.settingContext.selection !== "" && store.settingContext.options.length > 0) {
-      updateDatabase(store.settingContext, store.settingContext.options, store.settingContext.selection);
+    if (
+      store.settingContext.selection !== lastSettingSelection &&
+      store.settingContext.selection !== "" &&
+      store.settingContext.options.length > 0
+    ) {
+      updateDatabase(
+        store.settingContext,
+        store.settingContext.options,
+        store.settingContext.selection,
+        userUid
+      );
       lastSettingSelection = store.settingContext.selection;
     }
-    if (store.typeContext.selection !== lastTypeSelection && store.typeContext.selection !== "" && store.typeContext.options.length > 0) {
-      updateDatabase(store.typeContext, store.typeContext.options, store.typeContext.selection);
+    if (
+      store.typeContext.selection !== lastTypeSelection &&
+      store.typeContext.selection !== "" &&
+      store.typeContext.options.length > 0
+    ) {
+      updateDatabase(
+        store.typeContext,
+        store.typeContext.options,
+        store.typeContext.selection,
+        userUid
+      );
       lastTypeSelection = store.typeContext.selection;
     }
-    if (store.toneContext.selection !== lastToneSelection && store.toneContext.selection !== "" && store.toneContext.options.length > 0) {
-      updateDatabase(store.toneContext, store.toneContext.options, store.toneContext.selection);
+    if (
+      store.toneContext.selection !== lastToneSelection &&
+      store.toneContext.selection !== "" &&
+      store.toneContext.options.length > 0
+    ) {
+      updateDatabase(
+        store.toneContext,
+        store.toneContext.options,
+        store.toneContext.selection,
+        userUid
+      );
       lastToneSelection = store.toneContext.selection;
     }
   });
@@ -40,7 +73,7 @@ function createContextStore() {
    * Updates the store with the given database values
    */
   function setStoreFromDatabaseValues(dbData: ContextDbData) {
-    update(store => {
+    update((store) => {
       store.settingContext.options = dbData.setting.options;
       store.settingContext.selection = dbData.setting.selection;
       store.typeContext.options = dbData.type.options;
@@ -56,21 +89,27 @@ function createContextStore() {
    * @param context Context to update
    * @param options Updated options for the context
    * @param selection Updated selection for the context
+   * @param userUid UID of the user to update the context for
    */
-  async function updateDatabase(context: ContextState, options: string[], selection: string) {
+  async function updateDatabase(
+    context: ContextState,
+    options: string[],
+    selection: string,
+    userUid: string
+  ) {
     const response = await fetch("/api/firebase/context", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        username: get(username),
+        uid: userUid,
         contextTitle: context.contextTitle,
         options: options,
         selection: selection,
       } as ContextDbPutRequest),
     });
-  
+
     let responseData = await response.json();
     if (response.ok) {
       // Update the state with the successful results
@@ -81,8 +120,8 @@ function createContextStore() {
       context.selection = responseData.selection;
     } else {
       context.errorMessage = responseData.error || "Unknown error";
-    };
-  
+    }
+
     // Trigger UI update
     update((value: ContextStore) => {
       return value;
@@ -95,11 +134,18 @@ function createContextStore() {
    * @param context Context to add the input value to
    */
   async function addOption(context: ContextState) {
+    const userUid: string | null = get(userFirebaseUid);
+    if (!userUid) {
+      console.error("User is not logged in");
+      return;
+    }
+
     context.errorMessage = "";
     const trimmedInput = context.inputValue.trim();
     if (trimmedInput == "") {
       return;
-    } if (context.options.includes(trimmedInput)) {
+    }
+    if (context.options.includes(trimmedInput)) {
       context.errorMessage = "Option already exists";
       return;
     }
@@ -108,7 +154,7 @@ function createContextStore() {
     const updatedOptions = context.options.slice();
     updatedOptions.push(trimmedInput);
 
-    await updateDatabase(context, updatedOptions, context.selection);
+    await updateDatabase(context, updatedOptions, context.selection, userUid);
   }
 
   /**
@@ -119,6 +165,12 @@ function createContextStore() {
    * @param option Option to remove
    */
   async function removeOption(context: ContextState, option: string) {
+    const userUid: string | null = get(userFirebaseUid);
+    if (!userUid) {
+      console.error("User is not logged in");
+      return;
+    }
+
     context.errorMessage = "";
     if (context.options.length <= 1) {
       context.errorMessage = "Cannot remove the last option";
@@ -132,7 +184,7 @@ function createContextStore() {
       selection = updatedOptions[0];
     }
 
-    await updateDatabase(context, updatedOptions, selection);
+    await updateDatabase(context, updatedOptions, selection, userUid);
   }
 
   return {
@@ -143,13 +195,13 @@ function createContextStore() {
      * Initializes the context store with the current database values
      */
     initialize: async () => {
-      const usernameValue: string | null = get(username);
-      if (!usernameValue) {
+      const userUid: string | null = get(userFirebaseUid);
+      if (!userUid) {
         // Don't fetch from the DB if the user is not logged in
         return;
       }
 
-      const initialDatabaseValues: ContextDbData = await getDatabaseValues(usernameValue);
+      const initialDatabaseValues: ContextDbData = await getDatabaseValues(userUid);
 
       // Track initial values for later comparison
       lastSettingSelection = initialDatabaseValues.setting.selection;
@@ -185,13 +237,19 @@ function createContextStore() {
      * Resets in the database the user's conversational contexts to their original default values, erasing any changes made
      */
     resetUserContextsToDefaults: async () => {
+      const userUid: string | null = get(userFirebaseUid);
+      if (!userUid) {
+        console.error("User is not logged in");
+        return;
+      }
+
       const response = await fetch("/api/firebase/context", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: get(username),
+          uid: userUid,
         }),
       });
 
@@ -206,59 +264,64 @@ function createContextStore() {
     /**
      * Adds the current setting input value to the options for the setting context
      */
-    addSettingOption: () => update((contextStore) => {
-      addOption(contextStore.settingContext);
-      return contextStore;
-    }),
+    addSettingOption: () =>
+      update((contextStore) => {
+        addOption(contextStore.settingContext);
+        return contextStore;
+      }),
 
     /**
      * Adds the current type input value to the options for the type context
      */
-    addTypeOption: () => update((contextStore) => {
-      addOption(contextStore.typeContext);
-      return contextStore;
-    }),
+    addTypeOption: () =>
+      update((contextStore) => {
+        addOption(contextStore.typeContext);
+        return contextStore;
+      }),
 
     /**
      * Adds the current tone input value to the options for the tone context
      */
-    addToneOption: () => update((contextStore) => {
-      addOption(contextStore.toneContext);
-      return contextStore;
-    }),
+    addToneOption: () =>
+      update((contextStore) => {
+        addOption(contextStore.toneContext);
+        return contextStore;
+      }),
 
     /**
      * Removes the given setting option from the setting context
      * @param contextOption The option to remove
      */
-    removeSettingOption: (contextOption: string) => update((contextStore) => {
-      removeOption(contextStore.settingContext, contextOption);
-      return contextStore;
-    }),
+    removeSettingOption: (contextOption: string) =>
+      update((contextStore) => {
+        removeOption(contextStore.settingContext, contextOption);
+        return contextStore;
+      }),
 
     /**
      * Removes the given type option from the type context
      * @param contextOption The option to remove
      */
-    removeTypeOption: (contextOption: string) => update((contextStore) => {
-      removeOption(contextStore.typeContext, contextOption);
-      return contextStore;
-    }),
+    removeTypeOption: (contextOption: string) =>
+      update((contextStore) => {
+        removeOption(contextStore.typeContext, contextOption);
+        return contextStore;
+      }),
 
     /**
      * Removes the given tone option from the tone context
      * @param contextOption The option to remove
      */
-    removeToneOption: (contextOption: string) => update((contextStore) => {
-      removeOption(contextStore.toneContext, contextOption);
-      return contextStore;
-    }),
-
+    removeToneOption: (contextOption: string) =>
+      update((contextStore) => {
+        removeOption(contextStore.toneContext, contextOption);
+        return contextStore;
+      }),
   };
 }
 
-async function getDatabaseValues(usernameValue: string) {
-  const response = await fetch(`/api/firebase/context?username=${encodeURIComponent(usernameValue)}`, {
+async function getDatabaseValues(uid: string) {
+  const response = await fetch(`/api/firebase/context?uid=${encodeURIComponent(uid)}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
