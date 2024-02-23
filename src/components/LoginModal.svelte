@@ -35,7 +35,6 @@
       ],
       callbacks: {
         signInSuccessWithAuthResult: function (authResult, redirectUrl: string | undefined) {
-          console.log("signInSuccessWithAuthResult", authResult, redirectUrl);
           firebaseUiAuthContainer.style.display = "none"; // Hide the UI container that would display before the modal gets hidden
           return false; // False means it will not attempt a redirect on successful sign in
         },
