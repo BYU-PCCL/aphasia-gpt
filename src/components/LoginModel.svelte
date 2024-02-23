@@ -3,11 +3,6 @@
   import { username } from "@/stores/user";
   import {goto} from '$app/navigation';
 
-
-
-
-
-
   let inputValue = "";
   $: trimmedValue = inputValue.trim();
   let inputPassword = "";

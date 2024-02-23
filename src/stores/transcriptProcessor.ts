@@ -27,7 +27,7 @@ function createTranscriptProcessor() {
       "${transcript.text}", with version number: ${processingVersion}`);
 
     const words = transcript.text;
-    const minCleanWordCount = 2;
+    const minCleanWordCount = 1;
     const maxCleanWordCount = 20;
     if (words.length < minCleanWordCount) {
       return;
