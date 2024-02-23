@@ -7,11 +7,11 @@ import type {
   ContextDbPutResponse,
 } from "@/lib/types/Context";
 import { ContextTitle } from "@/lib/types/Context";
-
 /**
  * The current state of the conversational contexts
  */
 type ContextStore = {
+
   settingContext: ContextState;
   typeContext: ContextState;
   toneContext: ContextState;
@@ -319,6 +319,12 @@ function createContextStore() {
       }),
   };
 }
+
+
+
+
+
+
 
 async function getDatabaseValues(uid: string) {
   const response = await fetch(`/api/firebase/context?uid=${encodeURIComponent(uid)}`, {

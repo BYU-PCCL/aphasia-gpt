@@ -9,34 +9,52 @@ const openai = new OpenAIApi(configuration);
 const model = 'gpt-3.5-turbo-instruct'; // Use the GPT-3 model
 
 let value = "Broca's Aphasia";
+let namevalue = "";
+let agevalue = "";
+let aboutvalue = "";
+
+
 
 export const POST: RequestHandler = async ({ request }) => {
   const {
+    name,
+    age,
+    about,
     aphasiaType,
     utterance,
     setting,
     conversationType,
     tone,
   } = await request.json();
+  console.log("received userName from frontend:", name);
+  console.log("received userAge from frontend:", age);
+  console.log("received userContent from frontend:", about);
+
   console.log('received aphasia type from frontend:', aphasiaType);
   console.log("received utterance from frontend:", utterance);
   console.log("received setting from frontend:", setting);
   console.log("received conversation type from frontend:", conversationType);
   console.log("received tone from frontend:", tone);
 
-  if (aphasiaType) {
-    value = aphasiaType;
-    console.log(aphasiaType);
-    return json({
-      aphasiaType: aphasiaType, // Return the aphasiaType data in the response body
-    });
+  if(name || age || about){
+    namevalue = name;
+    agevalue = age;
+    aboutvalue = about;
   }
+  // if (aphasiaType) {
+  //   value = aphasiaType;
+  //   return json({
+  //     aphasiaType: aphasiaType, // Return the aphasiaType data in the response body
+  //   });
+  // }
 
   if (utterance) {
-    console.log(value);
     const chatResponse = await openai.createCompletion({
       model: model, // Use the GPT-3 model
-      prompt: `You are an expert in communication disorders, specifically ${value}. Your task is to transform an utterance from a person with Broca's aphasia into a grammatically correct sentence and predict the next several words they will say. Do NOT request any additional information or context or ask any questions. Only provide the transformed predicted utterances. Examples:
+      prompt: `You are an expert in communication disorders, specifically ${value}. 
+      This patient name is ${name}, and he is ${age} years old. This is a Profile about him:
+      ${about}. 
+      Your task is to transform an utterance from a person with Broca's aphasia into a grammatically correct sentence and predict the next several words they will say. Do NOT request any additional information or context or ask any questions. Only provide the transformed predicted utterances. Examples:
           1. "Walk dog" => "I will take the dog for a walk"
           2. "Book book two table" => "There are two books on the table"
           3. "i want take kids" => "I want to take the kids to the park"

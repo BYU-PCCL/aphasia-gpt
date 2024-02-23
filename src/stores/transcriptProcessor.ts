@@ -1,4 +1,5 @@
 import { contextStore } from "./contextStore";
+import { ProfileStore } from "./EditProfileStore";
 import throttle from "lodash/throttle";
 import { get, writable } from "svelte/store";
 
@@ -36,6 +37,7 @@ function createTranscriptProcessor() {
 
     abortController = new AbortController();
     const abortSignal = abortController.signal;
+    console.log("ProfileStore looks like: ",ProfileStore);
 
     
     try {
@@ -45,6 +47,9 @@ function createTranscriptProcessor() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          name: get(ProfileStore).Profile.name,
+          age:get(ProfileStore).Profile.age,
+          about:get(ProfileStore).Profile.about,
           utterance: recentTranscript,
           setting: get(contextStore).settingContext.selection,
           conversationType: get(contextStore).typeContext.selection,
