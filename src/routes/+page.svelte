@@ -134,6 +134,11 @@ function textToSpeech(speechText:string, index: number){
       console.error('Error:', error);
     }
   }
+
+  async function navigateToEditProfile() {
+    transcriptProcessor.stopRecording();
+    await goto('/editprofile');
+  }
  
 </script>
 
@@ -179,7 +184,7 @@ function textToSpeech(speechText:string, index: number){
                 </div>
               </div>
               <li><button on:click={toggleContextOptionsModal} class="block w-full px-4 py-2 hover:bg-gray-100">Context Options</button></li>
-              <li><button on:click = {() => goto('/editprofile')}  class="block w-full px-4 py-2 hover:bg-gray-100">Edit Profile</button></li>
+              <li><button on:click={navigateToEditProfile}  class="block w-full px-4 py-2 hover:bg-gray-100">Edit Profile</button></li>
               <li>{#if $userFirebaseUid}
                 <button class="block w-full px-4 py-2 hover:bg-gray-100" on:click={logout}>Log Out</button>
               {/if}</li>
