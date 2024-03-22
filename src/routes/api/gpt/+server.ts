@@ -1,11 +1,14 @@
-import { Configuration, OpenAIApi } from "openai";
+
+import openAI from "openai"
+
 import { OPENAI_API_KEY } from "$env/static/private";
 import { json, type RequestHandler } from "@sveltejs/kit";
 
-const configuration = new Configuration({
+const openai = new openAI({
   apiKey: OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
+
+
 const model = 'gpt-3.5-turbo-instruct'; // Use the GPT-3 model
 
 let value = "Broca's Aphasia";
@@ -74,7 +77,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
       try {
         const chatResponse = await retryWithExponentialBackoff(async () => {
-          return await openai.createCompletion({
+          return await openai.completions.create({
             model: model, // Use the GPT-3 model
             prompt:
               `You are an expert in communication disorders, specifically ${value}. Your task is to transform an utterance from a person with Broca's aphasia into a grammatically correct sentence and predict the next several words they will say. Do NOT request any additional information or context or ask any questions. Only provide the  3 transformed predicted sentences based on the utterance provided. Do not attempt to change the utterance itself in any way.
@@ -120,7 +123,7 @@ export const POST: RequestHandler = async ({ request }) => {
           });
         });
 
-        responseTexts = chatResponse.data.choices?.[0]?.text;
+        responseTexts = chatResponse.choices?.[0]?.text;
         console.log(responseTexts);
       } catch (error: any) {
         if (error.response && error.response.status === 429) {
