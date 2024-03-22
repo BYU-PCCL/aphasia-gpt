@@ -2,6 +2,7 @@
   import "../app.css";
   import { onMount } from "svelte";
   import { contextStore } from "../stores/contextStore";
+  import { ProfileStore } from "../stores/EditProfileStore";
   import { getAuth, onAuthStateChanged, type Auth, type User } from "firebase/auth";
   import {
     clearUserState,
@@ -9,6 +10,7 @@
     initializeUserStateFromCookies,
     isLoadingAuthState,
   } from "@/stores/user";
+
 
   /**
    * Data supplied by server's `load` function
@@ -20,6 +22,7 @@
     const module = await import("@/lib/firebase");
     const auth: Auth = getAuth(module.app);
     await contextStore.initialize();
+    await ProfileStore.initialize();
 
     $isLoadingAuthState = false;
     onAuthStateChanged(auth, async (user: User | null) => {
@@ -30,6 +33,7 @@
   const handleUserSignedIn = async (user: User) => {
     await initializeUserStateFromUser(user);
     await contextStore.initialize();
+    await ProfileStore.initialize();
   };
 
   const handleUserSignedOut = () => {
