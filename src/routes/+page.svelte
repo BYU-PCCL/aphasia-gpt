@@ -242,6 +242,7 @@ function textToSpeech(speechText:string, index: number){
         <h2 class="font-semibold text-lg" style="line-height:40px">What we think you are trying to say:</h2>
         <ul>
           {#each $transcriptProcessor.transformations.texts as transformation, i}
+          
             <li style="font-size:{fontSize}px;line-height:40px"><div on:click={()=>textToSpeech(transformation, i)} class="material-icons">
               {#if isPlaying === i}
                 pause

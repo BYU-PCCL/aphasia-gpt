@@ -54,6 +54,7 @@ function createTranscriptProcessor() {
       });
       const data = await response.json();
       const gptTransformations = data.texts;
+      console.log("constantGPT tranform:", data.txt);
       update((transcriptProcessor) => {
         transcriptProcessor.transformations.texts = gptTransformations;
         transcriptProcessor.transformations.version = processingVersion;
