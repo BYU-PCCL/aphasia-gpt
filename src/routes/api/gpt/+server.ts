@@ -90,6 +90,7 @@ export const POST: RequestHandler = async ({ request }) => {
               - Tone of voice they are trying to convey: ${tone}
 
               Formatting examples:
+              
               Utterance: "walk dog"
                 Prediction 1: "I will take the dog for a walk."
                 Prediction 2: "Have you walked the dog today?"
@@ -110,12 +111,11 @@ export const POST: RequestHandler = async ({ request }) => {
                 Prediction 1: "Do you have a cat? You seem like a cat person."
                 Prediction 2: "The cat seems hungry"
                 Prediction 3: "Is the cat angry?"
-              Utterance: I I need I need some"
+              Utterance: "I I need I need some"
                 Prediction 1: "I need some water."
                 Prediction 2: "I need to go to sleep."
                 Prediction 3: "You've got something I need!"
-            
-              Utterance: ${utterance}
+              Utterance: "${utterance}"
               Prediction 1:`,
             temperature: 1,
             max_tokens: 100, // Set the desired maximum token length for the response
