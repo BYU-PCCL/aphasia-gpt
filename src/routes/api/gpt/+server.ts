@@ -78,6 +78,8 @@ export const POST: RequestHandler = async ({ request }) => {
             model: model, // Use the GPT-3 model
             prompt:
               `You are an expert in communication disorders, specifically ${value}. Your task is to transform an utterance from a person with Broca's aphasia into a grammatically correct sentence and predict the next several words they will say. Do NOT request any additional information or context or ask any questions. Only provide the  3 transformed predicted sentences based on the utterance provided. Do not attempt to change the utterance itself in any way.
+              This patient name is ${name}, and he is ${age} years old. This is a Profile about him:
+              ${about}. 
             
               Please consider the following about the speaker:
               - Current setting: ${setting}
@@ -130,31 +132,6 @@ export const POST: RequestHandler = async ({ request }) => {
       }
     } while (!responseTexts || responseTexts.split('\n').filter((s: string) => s.length > 0).length !== 3);
 
-    const chatResponse = await openai.createCompletion({
-      model: model, // Use the GPT-3 model
-      prompt: `You are an expert in communication disorders, specifically ${value}. 
-      This patient name is ${name}, and he is ${age} years old. This is a Profile about him:
-      ${about}. 
-      Your task is to transform an utterance from a person with Broca's aphasia into a grammatically correct sentence and predict the next several words they will say. Do NOT request any additional information or context or ask any questions. Only provide the transformed predicted utterances. Examples:
-          1. "Walk dog" => "I will take the dog for a walk"
-          2. "Book book two table" => "There are two books on the table"
-          3. "i want take kids" => "I want to take the kids to the park"
-          4. "sweaty i need" => "I am sweaty and I need a hot shower"
-          5. "cat seems cat" => "The cat seems hungry"
-          6. "i i need i need some" => "I need to get some sleep"
-          
-          Please consider the following about the speaker:
-            - current setting: ${setting}
-            - type of conversation they are having: ${conversationType}
-            - tone of voice they are trying to convey: ${tone}
-          Now, please provide three transformed and predicted sentences (separated by line break) for the following utterance: 
-          ${utterance}`,
-      temperature: 1,
-      max_tokens: 400, // Set the desired maximum token length for the response
-      n: 1,
-    });
-    const responseTexts = chatResponse.data.choices?.[0]?.text;
-    
     if (responseTexts) {
       console.log("generated text:", responseTexts);
 
