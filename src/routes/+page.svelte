@@ -153,6 +153,7 @@ function textToSpeech(speechText:string, index: number){
   {/if}
 
   <main>
+    
     <header class="flex justify-between items-center px-2 md:px-4 py-2 mb-8">
       <h1 class="block font-bold text-lg sm:text-2xl">Aphasia GPT</h1>
       <div class="flex items-center">

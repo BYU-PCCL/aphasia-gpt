@@ -320,12 +320,6 @@ function createContextStore() {
   };
 }
 
-
-
-
-
-
-
 async function getDatabaseValues(uid: string) {
   const response = await fetch(`/api/firebase/context?uid=${encodeURIComponent(uid)}`, {
     method: "GET",

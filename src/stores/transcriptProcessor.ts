@@ -3,6 +3,7 @@ import { ProfileStore } from "./EditProfileStore";
 import throttle from "lodash/throttle";
 import { get, writable } from "svelte/store";
 
+
 type TranscriptProcessor = {
   isRecording: boolean;
   transcript: { text: string[]; version: number;};
@@ -15,8 +16,6 @@ function createTranscriptProcessor() {
     transcript: { text: [], version: 0} ,
     transformations: { texts: [], version: 0 },
   });
-
-  
 
   let abortController = new AbortController();
   
@@ -37,8 +36,6 @@ function createTranscriptProcessor() {
 
     abortController = new AbortController();
     const abortSignal = abortController.signal;
-    console.log("ProfileStore looks like: ",ProfileStore);
-
     
     try {
       const response = await fetch("/api/gpt", {
@@ -59,7 +56,7 @@ function createTranscriptProcessor() {
       });
       const data = await response.json();
       const gptTransformations = data.texts;
-      console.log("constantGPT tranform:", data.txt);
+      console.log("constantGPT transform:", data.txt);
       update((transcriptProcessor) => {
         transcriptProcessor.transformations.texts = gptTransformations;
         transcriptProcessor.transformations.version = processingVersion;
@@ -67,15 +64,14 @@ function createTranscriptProcessor() {
       });
     } catch (error) {
       if (error instanceof DOMException && error.name == 'AbortError') {
-        console.log(`Aborted: proccessing transcript version ${processingVersion}`);
+        console.log(`Aborted: processing transcript version ${processingVersion}`);
       } else {
         throw error;
       }
     }
   };
- 
- 
-  return {
+  
+  const transcriptProcessor = {
     subscribe,
     addTranscriptChunk: (text: string) => {
       console.log(`addTranscriptChunk gets called with input text: "${text}"`);
@@ -110,25 +106,16 @@ function createTranscriptProcessor() {
         return transcriptProcessor;
       });
     },
-    // stop: () => {
-    //   const maxTrascriptTimestamp = getMaximumTranscriptTimestamp();
-    //   timestampsToIgnore.add(maxTrascriptTimestamp);
-    // },
     clear: () => {
-      //updateTransformations.clear();
       abortController.abort();
       update((transcriptProcessor) => {
         transcriptProcessor.transcript.text = [];
         transcriptProcessor.transformations.texts = [];
         transcriptProcessor.transcript.version += 1;
-
-        // transcriptProcessor.transcript = { text: [], version: 0 };
-        // transcriptProcessor.transformations = { texts: [], version: 0 };
         return transcriptProcessor;
       });
     },
     back: () => {
-      //updateTransformations.clear();
       abortController.abort();
       update((transcriptProcessor) => {
         transcriptProcessor.transcript.text.pop();
@@ -138,7 +125,6 @@ function createTranscriptProcessor() {
       updateTransformations();
     },
     delete: (wordIndex:number) => {
-      //updateTransformations().clear;
       abortController.abort();
       update((transcriptProcessor) => {
         transcriptProcessor.transcript.text.splice(wordIndex, 1);
@@ -148,6 +134,12 @@ function createTranscriptProcessor() {
       updateTransformations();
     },
   };
+  
+  contextStore.subscribe(() => {
+    updateTransformations();
+  });
+  
+  return transcriptProcessor;
 }
 
 export const transcriptProcessor = createTranscriptProcessor();
