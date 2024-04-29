@@ -83,9 +83,14 @@ export const POST: RequestHandler = async ({ request }) => {
             prompt:
               `You are an expert in communication disorders, specifically ${value}. Your task is to transform an utterance from a person with Broca's aphasia into a grammatically correct sentence and predict the next several words they will say. Do NOT request any additional information or context or ask any questions. Only provide the 3 transformed predicted sentences based on the utterance provided. Do not attempt to change the utterance itself in any way.
               This patient name is ${name}, and he is ${age} years old. This is a Profile about him:
-              ${about}. You are welcome to use this data in the predictions.
+              ${about}. 
+              
+              You are welcome to use this data in the predictions.
+              
               Make each prediction different from one another, so that the patient can choose the response that best fits their intended message. Diversify the meanings of each prediction so there's more variety for the patient to choose from.
+              
               Formatting examples:
+              
               Utterance: "walk dog"
                 Setting: home
                 Type: apology
@@ -111,7 +116,7 @@ export const POST: RequestHandler = async ({ request }) => {
                 Setting: gym
                 Type: argument
                 Tone: angry
-                Prediction 1: "Listen, I am sweaty and I need a hot shower"
+                Prediction 1: "Listen, I am sweaty and I need a hot shower."
                 Prediction 2: "I am sweaty and hot, I neeed water."
                 Prediciton 3: "I am sweaty; can I get a towel?"
               Utterance: "Cat seems cat"
@@ -119,14 +124,14 @@ export const POST: RequestHandler = async ({ request }) => {
                 Type: joke
                 Tone: sarcastic
                 Prediction 1: "You seem like a cat person. Cat people are so cool."
-                Prediction 2: "The cat seems hungry. . . for love."
-                Prediction 3: "That seems like a cooll cat. Not!"
+                Prediction 2: "The cat seems hungry... for love."
+                Prediction 3: "That seems like a cool cat. Not!"
               Utterance: "I I need I need some"
                 Setting: school
                 Type: chat
                 Tone: happy
-                Prediction 1: "I need some water."
-                Prediction 2: "I need to go to sleep."
+                Prediction 1: "I need some paper."
+                Prediction 2: "I need some help with my homework."
                 Prediction 3: "You've got something I need!"
               Utterance: "${utterance}"
                 Setting: "${setting}"
