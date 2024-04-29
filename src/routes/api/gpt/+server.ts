@@ -82,7 +82,9 @@ export const POST: RequestHandler = async ({ request }) => {
             model: model, // Use the GPT-3 model
             prompt:
               `You are an expert in communication disorders, specifically ${value}. Your task is to transform an utterance from a person with Broca's aphasia into a grammatically correct sentence and predict the next several words they will say. Do NOT request any additional information or context or ask any questions. Only provide the 3 transformed predicted sentences based on the utterance provided. Do not attempt to change the utterance itself in any way.
+              
               This patient name is ${name}, and he is ${age} years old. This is a Profile about him:
+              
               ${about}. 
               
               You are welcome to use this data in the predictions.
