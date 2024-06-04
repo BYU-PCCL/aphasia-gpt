@@ -56,8 +56,6 @@ function createProfileStore() {
             setStoreFromDatabaseValues(initialDatabaseValues);
           }
         }
-
-
 };
 
 

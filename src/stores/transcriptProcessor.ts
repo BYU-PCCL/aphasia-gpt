@@ -1,7 +1,7 @@
 import { contextStore } from "./contextStore";
 import { ProfileStore } from "./EditProfileStore";
-import throttle from "lodash/throttle";
 import { get, writable } from "svelte/store";
+
 
 
 type TranscriptProcessor = {
@@ -29,7 +29,12 @@ function createTranscriptProcessor() {
     const words = transcript.text;
     const minCleanWordCount = 1;
     const maxCleanWordCount = 20;
+
     if (words.length < minCleanWordCount) {
+      update((transcriptProcessor) => {
+        transcriptProcessor.transformations.texts = [];
+        return transcriptProcessor;
+      });
       return;
     }
     const recentTranscript = words.slice(-maxCleanWordCount).join(" ");
@@ -51,6 +56,7 @@ function createTranscriptProcessor() {
           setting: get(contextStore).settingContext.selection,
           conversationType: get(contextStore).typeContext.selection,
           tone: get(contextStore).toneContext.selection,
+          voice: get(contextStore).voiceContext.selectedVoice.name
         }),
         signal: abortSignal
       });
@@ -80,7 +86,7 @@ function createTranscriptProcessor() {
       if (!processor.isRecording || text === " ") {
         return;
       }
-      updateTransformations();
+      
       abortController.abort();
       update((transcriptProcessor) => {
         const texts = text.split(" ");
@@ -120,20 +126,23 @@ function createTranscriptProcessor() {
       update((transcriptProcessor) => {
         transcriptProcessor.transcript.text.pop();
         transcriptProcessor.transcript.version += 1;
+        updateTransformations();
         return transcriptProcessor;
       });
-      updateTransformations();
+      
     },
     delete: (wordIndex:number) => {
       abortController.abort();
       update((transcriptProcessor) => {
         transcriptProcessor.transcript.text.splice(wordIndex, 1);
         transcriptProcessor.transcript.version += 1;
+        updateTransformations();
         return transcriptProcessor;
       });
-      updateTransformations();
+      
     },
   };
+  
   
   contextStore.subscribe(() => {
     updateTransformations();

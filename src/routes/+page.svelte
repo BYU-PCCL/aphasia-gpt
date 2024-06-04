@@ -11,7 +11,8 @@
   import ContextOptionsModal from "@/components/ContextOptionsModal.svelte";
   import {goto} from '$app/navigation';
   import { app as firebaseApp } from "@/lib/firebase";
-  
+  import { sendTextToAudio, getCurrentAudio, setCurrentAudio } from "@/lib/textToSpeech";
+  import VoiceTypeModal from "@/components/voiceTypeModal.svelte";
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   
   // Mic requires browser environment
@@ -54,37 +55,73 @@
 //     })
 //   })
 
-let isPlaying = -1;
-function textToSpeech(speechText:string, index: number){
-    transcriptProcessor.stopRecording();
+
+// let isPlaying = -1;
+// function textToSpeech(speechText:string, index: number){
+//     transcriptProcessor.stopRecording();
     
+//     if (isPlaying === index) {
+//       // If the current element is already playing, pause it.
+//       isPlaying = -1;
+//       window.speechSynthesis.cancel();
+//     } else {
+//       // If a different element is playing, stop it first and then play the new one.
+//       if (isPlaying !== -1) {
+//         window.speechSynthesis.cancel();
+//       }
+//       isPlaying = index;
+//       let speech = new SpeechSynthesisUtterance();
+//       speech.text = speechText;
+//       speech.lang = "en-US";
+//       speech.volume = 1;
+//       speech.rate = 1;
+//       speech.pitch = 1;
+//       speech.onend = () => {
+//         isPlaying = -1; // Reset the isPlaying variable after the speech is completed.
+//       };
+//       window.speechSynthesis.speak(speech);
+//     }
+// }
+
+  let isPlaying = -1;
+
+  async function textToSpeech(speechText: string, index: number) {
+    transcriptProcessor.stopRecording();
     if (isPlaying === index) {
-      // If the current element is already playing, pause it.
-      isPlaying = -1;
-      window.speechSynthesis.cancel();
+        const audio = getCurrentAudio();
+        if (audio) {
+            audio.pause();
+            isPlaying = -1;
+        }
     } else {
-      // If a different element is playing, stop it first and then play the new one.
-      if (isPlaying !== -1) {
-        window.speechSynthesis.cancel();
-      }
-      isPlaying = index;
-      let speech = new SpeechSynthesisUtterance();
-      speech.text = speechText;
-      speech.lang = "en-US";
-      speech.volume = 1;
-      speech.rate = 1;
-      speech.pitch = 1;
-      speech.onend = () => {
-        isPlaying = -1; // Reset the isPlaying variable after the speech is completed.
-      };
-      window.speechSynthesis.speak(speech);
+        try {
+            const audio = await sendTextToAudio(speechText);
+            setCurrentAudio(audio);
+            isPlaying = index;
+
+            // Add event listener to play audio when it's loaded
+            audio.addEventListener('loadeddata', () => {
+                audio.play();
+            });
+
+            // Add event listener to change the play button back to the play icon when audio finishes
+            audio.addEventListener('ended', () => {
+                isPlaying = -1;
+            });
+            
+        } catch (error) {
+            console.error("Error:", error);
+        }
     }
 }
+
+
 
   let isMenuOpen = false;
   function toggleDropdown() {
     isMenuOpen = !isMenuOpen;
   }
+
 
   let contextOptionsModal = false;
   function toggleContextOptionsModal() {
@@ -139,6 +176,12 @@ function textToSpeech(speechText:string, index: number){
     transcriptProcessor.stopRecording();
     await goto('/editprofile');
   }
+
+  let voiceTypesModal = false;
+  function toggleVoiceTypesModal() {
+    voiceTypesModal = !voiceTypesModal;
+    isMenuOpen = false; // Close the hamburger menu when voice types modal is opened
+  }
  
 </script>
 
@@ -146,6 +189,10 @@ function textToSpeech(speechText:string, index: number){
 
   {#if !$userFirebaseUid}
     <LoginModal />
+  {/if}
+
+  {#if voiceTypesModal}
+  <VoiceTypeModal toggleVoiceTypesModal={toggleVoiceTypesModal} />
   {/if}
 
   {#if contextOptionsModal}
@@ -186,6 +233,7 @@ function textToSpeech(speechText:string, index: number){
               </div>
               <li><button on:click={toggleContextOptionsModal} class="block w-full px-4 py-2 hover:bg-gray-100">Context Options</button></li>
               <li><button on:click={navigateToEditProfile}  class="block w-full px-4 py-2 hover:bg-gray-100">Edit Profile</button></li>
+              <li><button on:click={toggleVoiceTypesModal} class="block w-full px-4 py-2 hover:bg-gray-100">Voice Types</button></li>
               <li>{#if $userFirebaseUid}
                 <button class="block w-full px-4 py-2 hover:bg-gray-100" on:click={logout}>Log Out</button>
               {/if}</li>
@@ -287,8 +335,6 @@ function textToSpeech(speechText:string, index: number){
     font-size: 20px;
     cursor: pointer;
   }  
-
-
   span {cursor:pointer; }
   .FontSizeFunction{
     margin:10px;

@@ -1,20 +1,25 @@
 
 import openAI from "openai"
-
+import path from "path";
 import { OPENAI_API_KEY } from "$env/static/private";
 import { json, type RequestHandler } from "@sveltejs/kit";
+import { Buffer } from 'buffer';
+import fs from "fs";
+
 
 const openai = new openAI({
   apiKey: OPENAI_API_KEY,
 });
-
+const speechFile = path.resolve("./src/speech.mp3");
 
 const model = 'gpt-3.5-turbo-instruct'; // Use the GPT-3 model
+
 
 let value = "Broca's Aphasia";
 let namevalue = "";
 let agevalue = "";
 let aboutvalue = "";
+let voiceValue;
 
 // Define a function to handle API retries with exponential backoff
 const retryWithExponentialBackoff = async <T>(func: () => Promise<T>, maxRetries = 5): Promise<T> => {
@@ -34,32 +39,111 @@ const retryWithExponentialBackoff = async <T>(func: () => Promise<T>, maxRetries
   }
 };
 
+
 export const POST: RequestHandler = async ({ request }) => {
-  const {
-    name,
-    age,
+  const requestBody = await request.json();
+
+  if (requestBody.userInput !== undefined) {
+    return handleUserInput(requestBody.userInput);
+  } else if (requestBody.utterance !== undefined) {
+    return handleFormData(requestBody);
+  } else {
+    return json({ error: "Invalid requestBody" }, { status: 400 });
+  }
+};
+
+// Function to delete the existing audio file
+
+async function handleUserInput(userInput: any) {
+  try {
+    let usedVoice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "alloy";
+    if (voiceValue){
+      usedVoice = voiceValue;
+    }
+    const mp3 = await openai.audio.speech.create({
+      model: "tts-1",
+      voice: usedVoice,
+      input: userInput
+    });
+    //Used to write the audio data to a file. 
+    // const buffer = Buffer.from(await mp3.arrayBuffer());
+    // await fs.promises.writeFile(speechFile, buffer);
+
+    // Check if the response is successful
+    if (!mp3 || !mp3.blob) {
+      throw new Error('Failed to generate audio in API');
+    }
+    console.log()
+
+    const audioData = await mp3.blob(); 
+    // return new Response(audioData, {
+    //   headers: {
+    //     'Content-Type': 'audio/mpeg'
+    //   }
+    // });
+
+    // Check if audio data is empty
+    //await blob.text()???
+    if (!audioData || audioData.size === 0) {
+      throw new Error('Empty audio data received');
+    }
+
+    // Convert audio blob to Base64 string
+    const audioBase64 = await blobToBase64(audioData);
+    return json({
+      audioBase64
+    });
+    // Construct JSON response with Base64 encoded audio data
+    
+  
+  } catch(error: any) {
+    console.log(error);
+    return json({
+      error: "Response was not correctly implemented",
+    });
+  }
+}
+
+// Helper function to convert blob to Base64 string
+async function blobToBase64(blob: Blob): Promise<string> {
+  // Convert blob to ArrayBuffer
+  const arrayBuffer = await blob.arrayBuffer();
+  // Convert ArrayBuffer to Buffer
+  const buffer = Buffer.from(arrayBuffer);
+  // Convert buffer to Base64 string
+  const base64String = buffer.toString('base64');
+  return base64String;
+}
+
+
+async function handleFormData(requestBody) {
+  const { 
+    name, 
+    age, 
     about,
     aphasiaType,
     utterance,
     setting,
     conversationType,
     tone,
-  } = await request.json();
-  
+    voice
+  } = requestBody;
+
   console.log("received userName from frontend:", name);
   console.log("received userAge from frontend:", age);
   console.log("received userContent from frontend:", about);
-
   console.log('received aphasia type from frontend:', aphasiaType);
   console.log("received utterance from frontend:", utterance);
   console.log("received setting from frontend:", setting);
   console.log("received conversation type from frontend:", conversationType);
   console.log("received tone from frontend:", tone);
+  console.log("received voice from frontend", voice);
 
-  if(name || age || about){
+  if(name || age || about || voice){
     namevalue = name;
     agevalue = age;
     aboutvalue = about;
+    voiceValue = voice;
   }
   // if (aphasiaType) {
   //   value = aphasiaType;
@@ -179,7 +263,6 @@ export const POST: RequestHandler = async ({ request }) => {
     }
   }
 };
-
 
 /*          
 `You are an expert in communication disorders, specifically ${value}. Your task is to transform an utterance from a person with Broca's aphasia into a grammatically correct sentence and predict the next several words they will say. Do NOT request any additional information or context or ask any questions. Only provide the 3 transformed predicted sentences based on the utterance provided. Do not attempt to change the utterance itself in any way.

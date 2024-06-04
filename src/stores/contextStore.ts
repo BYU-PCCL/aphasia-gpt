@@ -7,14 +7,18 @@ import type {
   ContextDbPutResponse,
 } from "@/lib/types/Context";
 import { ContextTitle } from "@/lib/types/Context";
+
 /**
  * The current state of the conversational contexts
  */
 type ContextStore = {
-
   settingContext: ContextState;
   typeContext: ContextState;
   toneContext: ContextState;
+  voiceContext: {
+    availableVoices: { name: string, url: string, sampleText: string}[];
+    selectedVoice: { name: string, url: string, sampleText: string };
+  };
 };
 
 function createContextStore() {
@@ -80,6 +84,17 @@ function createContextStore() {
       store.typeContext.selection = dbData.type.selection;
       store.toneContext.options = dbData.tone.options;
       store.toneContext.selection = dbData.tone.selection;
+      return store;
+    });
+  }
+
+  /**
+   * Selects a voice and updates the store
+   * @param voice The voice to select
+   */
+  function selectVoice(voice: { name: string, url: string, sampleText: string }) {
+    update((store) => {
+      store.voiceContext.selectedVoice = voice;
       return store;
     });
   }
@@ -317,6 +332,12 @@ function createContextStore() {
         removeOption(contextStore.toneContext, contextOption);
         return contextStore;
       }),
+
+    /**
+     * Selects a voice for the voice context
+     * @param voice The voice to select
+     */
+    selectVoice,
   };
 }
 
@@ -359,6 +380,17 @@ function getBaseStore(): ContextStore {
       inputValue: "",
       errorMessage: "",
     } as ContextState,
+    voiceContext: {
+      availableVoices: [
+        { name: "alloy", url: "/audio/alloy.mp3", sampleText: "The sun rises in the east and sets in the west."},
+        { name: "echo", url: "/audio/echo.mp3", sampleText:  "How many peppers did Peter Piper pick."},
+        { name: "fable", url: "/audio/fable.mp3", sampleText: "Do you know the muffin man?" },
+        { name: "onyx", url: "/audio/onyx.mp3", sampleText: "Do you know where the remote is?" },
+        { name: "nova", url: "/audio/nova.mp3", sampleText: "Hey, is the food ready yet?" },
+        { name: "shimmer", url: "/audio/shimmer.mp3", sampleText: "I want to go home"},
+      ],
+      selectedVoice: { name: "alloy", url: "/audio/alloy.mp3", sampleText: "The sun rises in the east and sets in the west." },
+    },
   } as ContextStore;
 }
 

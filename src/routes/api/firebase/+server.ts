@@ -70,7 +70,7 @@ console.log('password from frontend:', password);
 console.log('name from frontend:', name);
 console.log('age from frontend:', age);
 console.log('about from frontend:', about);
-writeUserData(signinusername,email, password, name, age, about)
+writeUserData(signinusername, email, password, name, age, about)
 return json({
 status: 200,
 body: { message: 'Data received successfully.' },
