@@ -249,7 +249,7 @@ async function handleFormData(requestBody) {
       // Remove Prediction 1, Prediction 2, and Prediction 3 from each sentence
       const texts = responseTexts.split('\n')
         .filter((s: string) => s.length > 0)
-        .map((s) => s.replace(/['"]+/g, ''))
+        .map((s) => s.replace(/["]+/g, ''))
         .map((s) => s.replace(/Prediction \d+: /g, ''));
 
       return json({
