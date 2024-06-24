@@ -13,6 +13,8 @@
   import { app as firebaseApp } from "@/lib/firebase";
   import { sendTextToAudio, getCurrentAudio, setCurrentAudio } from "@/lib/textToSpeech";
   import VoiceTypeModal from "@/components/voiceTypeModal.svelte";
+  import { homophonesStore } from "@/stores/homophonesStore"; // Import homophonesStore
+  import { get } from 'svelte/store'
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   
   // Mic requires browser environment
@@ -45,6 +47,20 @@
   function deleteFunction(wordIndex:number){
   transcriptProcessor.delete(wordIndex);
   }
+
+  function replaceWord(index: number, newWord: string) {
+    transcriptProcessor.delete(index);
+  
+  }
+
+
+// Function to get homophones for a given word
+  function getHomophones(word: string) {
+    const homophonesDict = get(homophonesStore);
+    return homophonesDict[word] || [];
+  }
+  let hoveredIndex = null;
+  let hoveredIndexHomophone = null;
 
 //  const synth = window.speechSynthesis
 //  console.log(speechSynthesis.getVoices())
@@ -278,20 +294,32 @@
         
         <h2 class="font-semibold text-lg">What we think you said:</h2>
 
-        {#each $transcriptProcessor.transcript.text as word}
-          <p style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" class = "HoverBox">
-            {word} 
-              <i class="material-icons no-show"  style="font-size: 15px; color: white" on:click={()=>deleteFunction($transcriptProcessor.transcript.text.indexOf(word))} >
-                close
-              </i>
-          </p> 
-        {/each}
+        {#each $transcriptProcessor.transcript.text as word, index}
+        <p style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" class="HoverBox" on:mouseenter={() => hoveredIndex = index} on:mouseleave={() => hoveredIndex = null}>
+          {word} 
+          <i class="material-icons no-show" style="font-size: 15px; color: white" on:click={() => deleteFunction(index)}>close</i>
+          {#if hoveredIndex === index && getHomophones(word).length > 0}
+            <div class="homophones-popup">
+              {#each getHomophones(word) as homophone}
+                <div class="homophone" class:hovered-word={hoveredIndexHomophone === homophone} on:mouseenter={() => hoveredIndexHomophone = homophone} on:mouseleave={() => hoveredIndexHomophone = null} on:click={() => transcriptProcessor.replace(index, homophone)}>
+                  {#if hoveredIndexHomophone === homophone}
+                    <span class="hovered-word">{homophone}</span>
+                  {:else}
+                    {homophone}
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </p>
+      {/each}
+      
+      
 
         <br class="h-24" />
         <h2 class="font-semibold text-lg" style="line-height:40px">What we think you are trying to say:</h2>
         <ul>
           {#each $transcriptProcessor.transformations.texts as transformation, i}
-          
             <li style="font-size:{fontSize}px;line-height:40px"><div on:click={()=>textToSpeech(transformation, i)} class="material-icons">
               {#if isPlaying === i}
                 pause
@@ -352,6 +380,50 @@
   .minus{
     margin-right:10px;
   }
+  .homophones-popup {
+    position: absolute;
+    background-color: #f3f4f6; /* Light background color */
+    border: 1px solid #ccc; /* Border color */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Box shadow for depth */
+    padding: 5px;
+    z-index: 10; /* Ensure it's above other content */
+    border-radius: 4px;
+  }
+
+  .homophones-popup {
+    position: absolute;
+    background-color: #f3f4f6; /* Light background color */
+    border: 1px solid #ccc; /* Border color */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Box shadow for depth */
+    padding: 5px;
+    z-index: 10; /* Ensure it's above other content */
+    border-radius: 4px;
+  }
+
+  .homophones-popup:before {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    background-color: #f3f4f6;
+    border: 1px solid #ccc;
+    z-index: -1;
+  }
+
+  .homophone {
+    padding: 5px;
+    cursor: pointer; /* Cursor style */
+  }
+
+  .homophone:hover {
+    background-color: #e2e8f0; /* Lighter background color on hover */
+  }
+
+
+  
 
 </style>
 

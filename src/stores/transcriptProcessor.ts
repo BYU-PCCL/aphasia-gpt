@@ -131,6 +131,15 @@ function createTranscriptProcessor() {
       });
       
     },
+    replace: (wordIndex:number, newWord:string) => {
+      abortController.abort();
+      update((transcriptProcessor) => {
+        transcriptProcessor.transcript.text[wordIndex] = newWord;
+        transcriptProcessor.transcript.version += 1;
+        updateTransformations();
+        return transcriptProcessor;
+      });
+    },
     delete: (wordIndex:number) => {
       abortController.abort();
       update((transcriptProcessor) => {
