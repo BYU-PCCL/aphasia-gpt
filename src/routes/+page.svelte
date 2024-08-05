@@ -12,7 +12,7 @@
   import {goto} from '$app/navigation';
   import { app as firebaseApp } from "@/lib/firebase";
   import { sendTextToAudio, getCurrentAudio, setCurrentAudio } from "@/lib/textToSpeech";
-  import VoiceTypeModal from "@/components/voiceTypeModal.svelte";
+  import VoiceTypeModal from "@/components/VoiceTypeModal.svelte";
   import { homophonesStore } from "@/stores/homophonesStore"; // Import homophonesStore
   import { get } from 'svelte/store'
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
@@ -22,6 +22,7 @@
   onMount(async () => {
     Mic = (await import("@/components/Mic.svelte")).default;
   });
+  
 
   $: hasTranscript = $transcriptProcessor.transcript .text.length > 0;
 
@@ -45,7 +46,8 @@
   }
 
   function deleteFunction(wordIndex:number){
-  transcriptProcessor.delete(wordIndex);
+    console.log("in delete function")
+    transcriptProcessor.delete(wordIndex);
   }
 
   function replaceWord(index: number, newWord: string) {
@@ -198,6 +200,46 @@
     voiceTypesModal = !voiceTypesModal;
     isMenuOpen = false; // Close the hamburger menu when voice types modal is opened
   }
+  let startX = 0;
+  let startY = 0;
+  let startTime = 0;
+  let isFlicking = false;
+  let currentWordIndex: number | null = null;
+
+  function handleFlickStart(event: MouseEvent, index: number) {
+    startX = event.clientX;
+    startY = event.clientY;
+    startTime = event.timeStamp;
+    isFlicking = true;
+    currentWordIndex = index;
+    document.addEventListener('mouseup', handleFlickEnd, { once: true });
+    console.log("In the handleFlickStart")
+  }
+  // function handleFlickMove(event: MouseEvent) {
+  //   // You can implement any additional logic here if needed while the mouse is moving
+  // }
+
+  function handleFlickEnd(event: MouseEvent) {
+    if (!isFlicking) return;
+
+    const endX = event.clientX;
+    const endY = event.clientY;
+    const endTime = event.timeStamp;
+
+    const diffX = endX - startX;
+    const diffY = endY - startY;
+    const duration = endTime - startTime;
+    const distance = Math.sqrt(diffX * diffX + diffY * diffY);
+
+    if (distance > 20 && duration < 300 && currentWordIndex !== null) {
+      deleteFunction(currentWordIndex);
+    }
+    
+    isFlicking = false;
+    currentWordIndex = null;
+    document.removeEventListener('mouseup', handleFlickEnd);
+  }
+
  
 </script>
 
@@ -208,7 +250,7 @@
   {/if}
 
   {#if voiceTypesModal}
-  <VoiceTypeModal toggleVoiceTypesModal={toggleVoiceTypesModal} />
+    <VoiceTypeModal toggleVoiceTypesModal={toggleVoiceTypesModal} />
   {/if}
 
   {#if contextOptionsModal}
@@ -295,13 +337,24 @@
         <h2 class="font-semibold text-lg">What we think you said:</h2>
 
         {#each $transcriptProcessor.transcript.text as word, index}
-        <p style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" class="HoverBox" on:mouseenter={() => hoveredIndex = index} on:mouseleave={() => hoveredIndex = null}>
+        <p 
+          style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" 
+          class="HoverBox word-{index}" 
+          on:mouseenter={() => hoveredIndex = index} 
+          on:mouseleave={() => hoveredIndex = null} 
+          on:mousedown={(event) => handleFlickStart(event, index)}
+
+        >
           {word} 
-          <i class="material-icons no-show" style="font-size: 15px; color: white" on:click={() => deleteFunction(index)}>close</i>
           {#if hoveredIndex === index && getHomophones(word).length > 0}
             <div class="homophones-popup">
               {#each getHomophones(word) as homophone}
-                <div class="homophone" class:hovered-word={hoveredIndexHomophone === homophone} on:mouseenter={() => hoveredIndexHomophone = homophone} on:mouseleave={() => hoveredIndexHomophone = null} on:click={() => transcriptProcessor.replace(index, homophone)}>
+                <div 
+                  class="homophone" 
+                  class:hovered-word={hoveredIndexHomophone === homophone} 
+                  on:mouseenter={() => hoveredIndexHomophone = homophone} 
+                  on:mouseleave={() => hoveredIndexHomophone = null}
+                  on:click={() => transcriptProcessor.replace(index, homophone)}>
                   {#if hoveredIndexHomophone === homophone}
                     <span class="hovered-word">{homophone}</span>
                   {:else}
@@ -339,64 +392,79 @@
 {/if}
 
 <style>
-  .HoverBox{
+  @keyframes flick {
+    0% {
+      transform: translateX(0);
+      
+    }
+    100% {
+      transform: translateX(100vw);
+      
+    }
+  }
+
+  .flick-animation {
+    animation: flick 0.5s forwards;
+  }
+
+  .HoverBox {
+    user-select: none;
     border-radius: 8px;
     padding: 1px;
-    width:fit-content;
+    width: fit-content;
     background-color: rgb(222, 222, 222);
   }
-  .no-show{
+
+  .no-show {
     display: none;
   }
 
-  p.HoverBox:hover .no-show{
-    display:inline;
+  p.HoverBox:hover .no-show {
+    display: inline;
   }
-  
-  p.HoverBox:hover{
+
+  p.HoverBox:hover {
     border-radius: 8px;
     padding: 1px;
-    width:fit-content;
+    width: fit-content;
     background-color: rgb(180, 180, 180);
-  } 
+  }
+
   .material-icons {
     font-size: 20px;
     cursor: pointer;
-  }  
-  span {cursor:pointer; }
-  .FontSizeFunction{
-    margin:10px;
   }
-  .minus, .plus{
-    width:25px;
-    height:25px;
-    background:#f2f2f2;
-    border-radius:4px;
-    border:1px solid #ddd;
+
+  span {
+    cursor: pointer;
+  }
+
+  .FontSizeFunction {
+    margin: 10px;
+  }
+
+  .minus, .plus {
+    width: 25px;
+    height: 25px;
+    background: #f2f2f2;
+    border-radius: 4px;
+    border: 1px solid #ddd;
     display: inline-block;
     vertical-align: middle;
     text-align: center;
   }
-  .minus{
-    margin-right:10px;
-  }
-  .homophones-popup {
-    position: absolute;
-    background-color: #f3f4f6; /* Light background color */
-    border: 1px solid #ccc; /* Border color */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Box shadow for depth */
-    padding: 5px;
-    z-index: 10; /* Ensure it's above other content */
-    border-radius: 4px;
+
+  .minus {
+    margin-right: 10px;
   }
 
   .homophones-popup {
     position: absolute;
-    background-color: #f3f4f6; /* Light background color */
-    border: 1px solid #ccc; /* Border color */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Box shadow for depth */
+    background-color: #f3f4f6;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 5px;
-    z-index: 10; /* Ensure it's above other content */
+    z-index: 10;
     border-radius: 4px;
   }
 
@@ -415,16 +483,12 @@
 
   .homophone {
     padding: 5px;
-    cursor: pointer; /* Cursor style */
+    cursor: pointer;
   }
 
   .homophone:hover {
-    background-color: #e2e8f0; /* Lighter background color on hover */
+    background-color: #e2e8f0;
   }
-
-
-  
-
 </style>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
