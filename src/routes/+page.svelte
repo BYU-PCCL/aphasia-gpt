@@ -206,24 +206,26 @@
   let isFlicking = false;
   let currentWordIndex: number | null = null;
 
-  function handleFlickStart(event: MouseEvent, index: number) {
-    startX = event.clientX;
-    startY = event.clientY;
+  function handleFlickStart(event: MouseEvent | TouchEvent, index: number) {
+    const touch = event instanceof TouchEvent ? event.touches[0] : event;
+    startX = touch.clientX;
+    startY = touch.clientY;
     startTime = event.timeStamp;
     isFlicking = true;
     currentWordIndex = index;
     document.addEventListener('mouseup', handleFlickEnd, { once: true });
-    console.log("In the handleFlickStart")
+    document.addEventListener('touchend', handleFlickEnd, { once: true });
   }
   // function handleFlickMove(event: MouseEvent) {
   //   // You can implement any additional logic here if needed while the mouse is moving
   // }
 
-  function handleFlickEnd(event: MouseEvent) {
+  function handleFlickEnd(event: MouseEvent | TouchEvent) {
     if (!isFlicking) return;
 
-    const endX = event.clientX;
-    const endY = event.clientY;
+    const touch = event instanceof TouchEvent ? event.changedTouches[0] : event;
+    const endX = touch.clientX;
+    const endY = touch.clientY;
     const endTime = event.timeStamp;
 
     const diffX = endX - startX;
@@ -238,6 +240,7 @@
     isFlicking = false;
     currentWordIndex = null;
     document.removeEventListener('mouseup', handleFlickEnd);
+    document.removeEventListener('touchend', handleFlickEnd);
   }
 
  
@@ -343,7 +346,7 @@
           on:mouseenter={() => hoveredIndex = index} 
           on:mouseleave={() => hoveredIndex = null} 
           on:mousedown={(event) => handleFlickStart(event, index)}
-
+          on:touchstart={(event) => handleFlickStart(event, index)}
         >
           {word} 
           {#if hoveredIndex === index && getHomophones(word).length > 0}
