@@ -234,7 +234,7 @@
     if (distance > 20 && duration < 300 && currentWordIndex !== null) {
       deleteFunction(currentWordIndex);
     }
-    
+
     isFlicking = false;
     currentWordIndex = null;
     document.removeEventListener('mouseup', handleFlickEnd);
@@ -392,20 +392,6 @@
 {/if}
 
 <style>
-  @keyframes flick {
-    0% {
-      transform: translateX(0);
-      
-    }
-    100% {
-      transform: translateX(100vw);
-      
-    }
-  }
-
-  .flick-animation {
-    animation: flick 0.5s forwards;
-  }
 
   .HoverBox {
     user-select: none;
