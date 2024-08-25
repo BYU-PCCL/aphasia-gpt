@@ -61,8 +61,10 @@
     const homophonesDict = get(homophonesStore);
     return homophonesDict[word] || [];
   }
-  let hoveredIndex = null;
-  let hoveredIndexHomophone = null;
+
+  let hoveredIndex: number | null = null;
+  let hoveredIndexHomophone: string | null = null;
+
 
 //  const synth = window.speechSynthesis
 //  console.log(speechSynthesis.getVoices())
@@ -120,11 +122,13 @@
 
             // Add event listener to play audio when it's loaded
             audio.addEventListener('loadeddata', () => {
+                console.log("inAudioplay");
                 audio.play();
             });
 
             // Add event listener to change the play button back to the play icon when audio finishes
             audio.addEventListener('ended', () => {
+                console.log("onend")
                 isPlaying = -1;
             });
             
