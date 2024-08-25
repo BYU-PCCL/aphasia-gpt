@@ -121,10 +121,11 @@
             isPlaying = index;
 
             // Add event listener to play audio when it's loaded
-            audio.addEventListener('loadeddata', () => {
-                console.log("inAudioplay");
-                audio.play();
-            });
+            audio.addEventListener('canplaythrough', () => {
+            console.log("Audio can play through");
+            audio.play();
+              });
+
 
             // Add event listener to change the play button back to the play icon when audio finishes
             audio.addEventListener('ended', () => {
