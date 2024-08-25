@@ -106,8 +106,8 @@
   let isPlaying = -1;
 
   async function textToSpeech(speechText: string, index: number) {
-    console.log("Works on Mobile.")
     transcriptProcessor.stopRecording();
+
     if (isPlaying === index) {
         const audio = getCurrentAudio();
         if (audio) {
@@ -120,24 +120,28 @@
             setCurrentAudio(audio);
             isPlaying = index;
 
-            // Add event listener to play audio when it's loaded
+            // Preload audio to ensure it's ready to play
+            audio.preload = 'auto';
+
+            // Ensure the audio plays on user interaction
+            audio.play().catch((error) => {
+                console.log("Playback prevented:", error);
+            });
+
             audio.addEventListener('canplaythrough', () => {
-            console.log("Audio can play through");
-            audio.play();
-              });
+                audio.play();
+            });
 
-
-            // Add event listener to change the play button back to the play icon when audio finishes
             audio.addEventListener('ended', () => {
-                console.log("onend")
                 isPlaying = -1;
             });
-            
+
         } catch (error) {
             console.error("Error:", error);
         }
     }
 }
+
 
 
 
