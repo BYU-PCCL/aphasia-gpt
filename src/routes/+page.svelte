@@ -104,6 +104,7 @@
   let isPlaying = -1;
 
   async function textToSpeech(speechText: string, index: number) {
+    console.log("Works on Mobile.")
     transcriptProcessor.stopRecording();
     if (isPlaying === index) {
         const audio = getCurrentAudio();
