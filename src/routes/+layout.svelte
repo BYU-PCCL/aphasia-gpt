@@ -26,6 +26,7 @@
 
     $isLoadingAuthState = false;
     onAuthStateChanged(auth, async (user: User | null) => {
+      console.log("onauthstatechange");
       await module.handleOnAuthStateChange(user, handleUserSignedIn, handleUserSignedOut);
     });
   });

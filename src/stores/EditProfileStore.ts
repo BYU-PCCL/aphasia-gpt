@@ -9,12 +9,20 @@ type ProfileStore={
 function createProfileStore() {
     const {subscribe, update} = writable<ProfileStore>(getBaseStore());
     // getDBProfileData();
-    subscribe(() => {
-        const userUid: string | null = get(userFirebaseUid);
-        if (!userUid) return; // Don't update the database if the user is not logged in
-    
+    // subscribe(() => {
+    //     const userUid: string | null = get(userFirebaseUid);
+    //     if (!userUid) return; // Don't update the database if the user is not logged in
+    // });
+    userFirebaseUid.subscribe(async (userUid: string | null) => {
+      console.log("Current user UID:", userUid);
+      if(!userUid){
+        console.log("user did not log in");
+        return;
+      }
+      console.log("User is logged in, fetching profile data...");
+      const initialDatabaseValues: EditProfileDbData = await getDatabaseValues(userUid);
+      setStoreFromDatabaseValues(initialDatabaseValues);
     });
-    
 
     function setStoreFromDatabaseValues(dbData: EditProfileDbData) {
         update((store) => {
@@ -86,7 +94,6 @@ function getBaseStore(): ProfileStore {
         age:NaN,
         about:"",
        }
-
     };
   }
 export const ProfileStore = createProfileStore();

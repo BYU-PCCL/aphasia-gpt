@@ -162,47 +162,14 @@
       contextStore.clearForm();
     }
   }
-
-  let aphasiaType = "broca's aphasia";
-  function changeType(){
-    console.log("type1");
-    aphasiaType = "broca's aphasia";
-    sendDataToBackend();
-  }  
-  function changeType2(){
-    console.log("type2");
-    aphasiaType = "vernickeis aphasia";
-    sendDataToBackend();
-  }
   
   function font(){
     console.log("change font");
   }
 
-  async function sendDataToBackend(){
-    try{
-      const response = await fetch("/api/gpt", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({aphasiaType}),
-      });
-      
-      if(!response.ok){
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-      console.log('Response from backend:', data);
-    }catch (error){
-      console.error('Error:', error);
-    }
-  }
-
   async function navigateToEditProfile() {
     transcriptProcessor.stopRecording();
-    await goto('/editprofile');
+    await goto('/editprofile', { replaceState: true, invalidateAll: true });
   }
 
   let voiceTypesModal = false;
@@ -243,7 +210,7 @@
     const duration = endTime - startTime;
     const distance = Math.sqrt(diffX * diffX + diffY * diffY);
 
-    if (distance > 20 && duration < 300 && currentWordIndex !== null) {
+    if (distance > 20 && duration < 5000 && currentWordIndex !== null) {
       deleteFunction(currentWordIndex);
     }
 
@@ -290,8 +257,6 @@
           {#if isMenuOpen}
           <div id="dropdown" class="w-40 absolute right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md">
             <ul class="py-1">
-              <li><button on:click={changeType} class="block w-full px-4 py-2 hover:bg-gray-100">Type 1 Aphasia</button></li>
-              <li><button on:click={changeType2} class="block w-full px-4 py-2 hover:bg-gray-100">Type 2 Aphasia</button></li>
               <div class="FontSizeFunction">
                 <li><button on:click={font} class="block w-full px-4 py-2 hover:bg-gray-100">Font Size</button></li>
                 <div class="flex justify-center">

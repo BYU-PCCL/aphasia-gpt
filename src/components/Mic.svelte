@@ -121,7 +121,7 @@
       type: "audio",
       mimeType: "audio/webm;codecs=pcm",
       recorderType: StereoAudioRecorder,
-      timeSlice: 250,
+      timeSlice: 250, //changed from 250 to 600 to see if it affects chunking
       desiredSampRate: 16000,
       numberOfAudioChannels: 1,
       bufferSize: 4096,
