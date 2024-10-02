@@ -28,15 +28,18 @@
 
   // let fontSize = [18,26];
   let fontSize = 20;
+  //Homophone correct position
+  let dropdownPosition = { top: '0px', left: '0px' };
+
 
   function fontSizeIncrement(){
     fontSize++;
   }
+
   function logout() {
     transcriptProcessor.clear();
     contextStore.clear();
     isMenuOpen = false;
-
     firebaseApp.auth().signOut();
   }
 
@@ -52,7 +55,6 @@
 
   function replaceWord(index: number, newWord: string) {
     transcriptProcessor.delete(index);
-  
   }
 
 
@@ -65,43 +67,6 @@
   let hoveredIndex: number | null = null;
   let hoveredIndexHomophone: string | null = null;
 
-
-//  const synth = window.speechSynthesis
-//  console.log(speechSynthesis.getVoices())
- 
-//  let voicesPromise = new Promise((resolve) => {
-//     speechSynthesis.addEventListener("voiceschanged", ev => {
-//       resolve(speechSynthesis.getVoices())
-//     })
-//   })
-
-
-// let isPlaying = -1;
-// function textToSpeech(speechText:string, index: number){
-//     transcriptProcessor.stopRecording();
-    
-//     if (isPlaying === index) {
-//       // If the current element is already playing, pause it.
-//       isPlaying = -1;
-//       window.speechSynthesis.cancel();
-//     } else {
-//       // If a different element is playing, stop it first and then play the new one.
-//       if (isPlaying !== -1) {
-//         window.speechSynthesis.cancel();
-//       }
-//       isPlaying = index;
-//       let speech = new SpeechSynthesisUtterance();
-//       speech.text = speechText;
-//       speech.lang = "en-US";
-//       speech.volume = 1;
-//       speech.rate = 1;
-//       speech.pitch = 1;
-//       speech.onend = () => {
-//         isPlaying = -1; // Reset the isPlaying variable after the speech is completed.
-//       };
-//       window.speechSynthesis.speak(speech);
-//     }
-// }
 
   let isPlaying = -1;
 
@@ -184,6 +149,8 @@
   let currentWordIndex: number | null = null;
 
   function handleFlickStart(event: MouseEvent | TouchEvent, index: number) {
+    event.preventDefault();
+
     const touch = event instanceof TouchEvent ? event.touches[0] : event;
     startX = touch.clientX;
     startY = touch.clientY;
@@ -193,9 +160,6 @@
     document.addEventListener('mouseup', handleFlickEnd, { once: true });
     document.addEventListener('touchend', handleFlickEnd, { once: true });
   }
-  // function handleFlickMove(event: MouseEvent) {
-  //   // You can implement any additional logic here if needed while the mouse is moving
-  // }
 
   function handleFlickEnd(event: MouseEvent | TouchEvent) {
     if (!isFlicking) return;
@@ -255,28 +219,36 @@
             {/if}
           </button>
           {#if isMenuOpen}
-          <div id="dropdown" class="w-40 absolute right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md">
-            <ul class="py-1">
-              <div class="FontSizeFunction">
-                <li><button on:click={font} class="block w-full px-4 py-2 hover:bg-gray-100">Font Size</button></li>
-                <div class="flex justify-center">
-                  <span class="minus" on:click={e=>fontSize--}>-</span>
-                  <!-- <p class="fontSizeExample" style="display:inline-block; font-size:{fontSize}px">
-                    Hi!
-                  </p> -->
-                  <span class="plus" on:click={e => fontSize++}>+</span>
+            <div id="dropdown" role="menu" class="w-40 absolute right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md">
+              <ul class="py-1">
+                <div class="FontSizeFunction">
+                  <li role="none">
+                    <button on:click={font} class="block w-full px-4 py-2 hover:bg-gray-100" role="menuitem" aria-haspopup="true">Font Size</button>
+                  </li>
+                  <div class="flex justify-center">
+                    <span class="minus" role="button" tabindex="0" on:click={e => fontSize--} on:keydown={(e) => e.key === 'Enter' && fontSize--}>-</span>
+                    <span class="plus" role="button" tabindex="0" on:click={e => fontSize++} on:keydown={(e) => e.key === 'Enter' && fontSize++}>+</span>
+                  </div>
                 </div>
-              </div>
-              <li><button on:click={toggleContextOptionsModal} class="block w-full px-4 py-2 hover:bg-gray-100">Context Options</button></li>
-              <li><button on:click={navigateToEditProfile}  class="block w-full px-4 py-2 hover:bg-gray-100">Edit Profile</button></li>
-              <li><button on:click={toggleVoiceTypesModal} class="block w-full px-4 py-2 hover:bg-gray-100">Voice Types</button></li>
-              <li>{#if $userFirebaseUid}
-                <button class="block w-full px-4 py-2 hover:bg-gray-100" on:click={logout}>Log Out</button>
-              {/if}</li>
-              <!-- Add more options as needed -->
-            </ul>
-          </div>
+                <li role="none">
+                  <button on:click={toggleContextOptionsModal} class="block w-full px-4 py-2 hover:bg-gray-100" role="menuitem">Context Options</button>
+                </li>
+                <li role="none">
+                  <button on:click={navigateToEditProfile} class="block w-full px-4 py-2 hover:bg-gray-100" role="menuitem">Edit Profile</button>
+                </li>
+                <li role="none">
+                  <button on:click={toggleVoiceTypesModal} class="block w-full px-4 py-2 hover:bg-gray-100" role="menuitem">Voice Types</button>
+                </li>
+                <li role="none">
+                  {#if $userFirebaseUid}
+                    <button class="block w-full px-4 py-2 hover:bg-gray-100" on:click={logout} role="menuitem">Log Out</button>
+                  {/if}
+                </li>
+                <!-- Add more options as needed -->
+              </ul>
+            </div>
           {/if}
+          
         </div>
       </div>
     </header>
@@ -315,53 +287,69 @@
         <h2 class="font-semibold text-lg">What we think you said:</h2>
 
         {#each $transcriptProcessor.transcript.text as word, index}
-        <p 
-          style="display:inline-block; padding: 2.5px; font-size:{fontSize}px; margin-left: 5px;" 
-          class="HoverBox word-{index}" 
-          on:mouseenter={() => hoveredIndex = index} 
-          on:mouseleave={() => hoveredIndex = null} 
-          on:mousedown={(event) => handleFlickStart(event, index)}
-          on:touchstart={(event) => handleFlickStart(event, index)}
-        >
-          {word} 
-          {#if hoveredIndex === index && getHomophones(word).length > 0}
-            <div class="homophones-popup">
-              {#each getHomophones(word) as homophone}
-                <div 
+          <p 
+            style="display:inline-block; padding: 2.5px; font-size:{fontSize}px;" 
+            class="HoverBox word-{index}" 
+            on:mouseenter={(event) => {
+              hoveredIndex = index;
+              const target = event.target;
+              if (target instanceof HTMLElement) { // Check if it's an HTMLElement
+                const rect = target.getBoundingClientRect();
+                dropdownPosition = { 
+                  top: `${rect.bottom + window.scrollY}px`, 
+                  left: `${rect.left + window.scrollX}px` 
+                };
+              }
+            }} 
+            on:mouseleave={() => hoveredIndex = null} 
+            on:mousedown={(event) => handleFlickStart(event, index)}
+            on:touchstart={(event) => handleFlickStart(event, index)}
+          >
+            {word} 
+            {#if hoveredIndex === index && getHomophones(word).length > 0}
+              <div class="homophones-popup" style="top: {dropdownPosition.top}; left: {dropdownPosition.left};">
+                {#each getHomophones(word) as homophone}
+                <button
                   class="homophone" 
                   class:hovered-word={hoveredIndexHomophone === homophone} 
                   on:mouseenter={() => hoveredIndexHomophone = homophone} 
                   on:mouseleave={() => hoveredIndexHomophone = null}
-                  on:click={() => transcriptProcessor.replace(index, homophone)}>
+                  on:click={() => transcriptProcessor.replace(index, homophone)}
+                >
                   {#if hoveredIndexHomophone === homophone}
                     <span class="hovered-word">{homophone}</span>
                   {:else}
                     {homophone}
                   {/if}
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </p>
-      {/each}
-      
-      
+                </button>
+                {/each}
+              </div>
+            {/if}
+          </p>
+        {/each}
+
 
         <br class="h-24" />
         <h2 class="font-semibold text-lg" style="line-height:40px">What we think you are trying to say:</h2>
         <ul>
-          {#each $transcriptProcessor.transformations.texts as transformation, i}
-            <li style="font-size:{fontSize}px;line-height:40px"><div on:click={()=>textToSpeech(transformation, i)} class="material-icons">
-              {#if isPlaying === i}
-                pause
-              {:else}
-                play_arrow
-              {/if}
-              </div>
-            {transformation}
-            </li>
-          {/each}
-        </ul>
+  {#each $transcriptProcessor.transformations.texts as transformation, i}
+    <li style="font-size:{fontSize}px; line-height:40px">
+      <button 
+        on:click={() => textToSpeech(transformation, i)} 
+        class="material-icons" 
+        aria-label={isPlaying === i ? "Pause" : "Play"}
+      >
+        {#if isPlaying === i}
+          pause
+        {:else}
+          play_arrow
+        {/if}
+      </button>
+      {transformation}
+    </li>
+  {/each}
+</ul>
+
       </div>
 
     </section>
@@ -371,20 +359,18 @@
 
 <style>
 
-  .HoverBox {
-    user-select: none;
-    border-radius: 8px;
-    padding: 1px;
-    width: fit-content;
-    background-color: rgb(222, 222, 222);
-  }
+.HoverBox {
+  user-select: none;
+  border-radius: 8px;
+  padding: 1px;
+  width: fit-content;
+  background-color: rgb(222, 222, 222);
+  display: inline-block; /* Keep words inline */
+  margin-right: 5px; /* Horizontal spacing for words */
+}
 
   .no-show {
     display: none;
-  }
-
-  p.HoverBox:hover .no-show {
-    display: inline;
   }
 
   p.HoverBox:hover {
@@ -424,13 +410,16 @@
 
   .homophones-popup {
     position: absolute;
-    background-color: #f3f4f6;
+    display: block; /* Display homophones as a vertical list */
+    background-color: white;
     border: 1px solid #ccc;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 5px;
-    z-index: 10;
     border-radius: 4px;
   }
+  .hovered-word {
+    font-weight: bold;
+    color: #1E90FF; /* Same blue color when hovering */
+}
 
   .homophones-popup:before {
     content: '';
@@ -446,8 +435,8 @@
   }
 
   .homophone {
-    padding: 5px;
-    cursor: pointer;
+    display: block; /* Make each homophone take its own line */
+    margin-bottom: 5px; /* Add space between homophones */
   }
 
   .homophone:hover {

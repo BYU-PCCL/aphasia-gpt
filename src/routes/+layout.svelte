@@ -27,11 +27,13 @@
     $isLoadingAuthState = false;
     onAuthStateChanged(auth, async (user: User | null) => {
       console.log("onauthstatechange");
+      console.log("user:", user);
       await module.handleOnAuthStateChange(user, handleUserSignedIn, handleUserSignedOut);
     });
   });
 
   const handleUserSignedIn = async (user: User) => {
+    console.log("handleUserSignin", user);
     await initializeUserStateFromUser(user);
     await contextStore.initialize();
     await ProfileStore.initialize();
