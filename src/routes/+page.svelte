@@ -107,14 +107,10 @@
     }
 }
 
-
-
-
   let isMenuOpen = false;
   function toggleDropdown() {
     isMenuOpen = !isMenuOpen;
   }
-
 
   let contextOptionsModal = false;
   function toggleContextOptionsModal() {
@@ -142,6 +138,7 @@
     voiceTypesModal = !voiceTypesModal;
     isMenuOpen = false; // Close the hamburger menu when voice types modal is opened
   }
+
   let startX = 0;
   let startY = 0;
   let startTime = 0;
@@ -174,15 +171,37 @@
     const duration = endTime - startTime;
     const distance = Math.sqrt(diffX * diffX + diffY * diffY);
 
-    if (distance > 20 && duration < 5000 && currentWordIndex !== null) {
-      deleteFunction(currentWordIndex);
+    // Threshold values for distinguishing between a tap and a flick
+    const tapThresholdDistance = 10; // Allowable movement for a tap (in pixels)
+    const tapThresholdDuration = 300; // Maximum duration for a tap (in milliseconds)
+
+    if (distance < tapThresholdDistance && duration < tapThresholdDuration) {
+        // It's a tap! Show homophones.
+        if (currentWordIndex !== null) {
+            const word = $transcriptProcessor.transcript.text[currentWordIndex];
+            const homophones = getHomophones(word);
+            if (homophones.length > 0) {
+                hoveredIndex = currentWordIndex; // Set the hovered index to show homophones
+                const target = event.target as HTMLElement;
+                if (target) {
+                    const rect = target.getBoundingClientRect();
+                    dropdownPosition = { 
+                        top: `${rect.bottom + window.scrollY}px`, 
+                        left: `${rect.left + window.scrollX}px` 
+                    };
+                }
+            }
+        }
+    } else if (distance > 20 && duration < 5000 && currentWordIndex !== null) {
+        // It's a flick! Delete the word.
+        deleteFunction(currentWordIndex);
     }
 
     isFlicking = false;
     currentWordIndex = null;
     document.removeEventListener('mouseup', handleFlickEnd);
     document.removeEventListener('touchend', handleFlickEnd);
-  }
+}
 
  
 </script>
@@ -307,14 +326,17 @@
           >
             {word} 
             {#if hoveredIndex === index && getHomophones(word).length > 0}
-              <div class="homophones-popup" style="top: {dropdownPosition.top}; left: {dropdownPosition.left};">
-                {#each getHomophones(word) as homophone}
+            <div class="homophones-popup" style="top: {dropdownPosition.top}; left: {dropdownPosition.left};">
+              {#each getHomophones(word) as homophone}
                 <button
-                  class="homophone" 
-                  class:hovered-word={hoveredIndexHomophone === homophone} 
-                  on:mouseenter={() => hoveredIndexHomophone = homophone} 
+                  class="homophone"
+                  class:hovered-word={hoveredIndexHomophone === homophone}
+                  on:mouseenter={() => hoveredIndexHomophone = homophone}
                   on:mouseleave={() => hoveredIndexHomophone = null}
-                  on:click={() => transcriptProcessor.replace(index, homophone)}
+                  on:click={() => {
+                    transcriptProcessor.replace(index, homophone);
+                    hoveredIndex = null; // Reset hoveredIndex to close the homophone menu
+                  }}
                 >
                   {#if hoveredIndexHomophone === homophone}
                     <span class="hovered-word">{homophone}</span>
@@ -322,12 +344,12 @@
                     {homophone}
                   {/if}
                 </button>
-                {/each}
-              </div>
-            {/if}
+              {/each}
+            </div>
+          {/if}
+
           </p>
         {/each}
-
 
         <br class="h-24" />
         <h2 class="font-semibold text-lg" style="line-height:40px">What we think you are trying to say:</h2>
@@ -442,6 +464,7 @@
   .homophone:hover {
     background-color: #e2e8f0;
   }
+
 </style>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
