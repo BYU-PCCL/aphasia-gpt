@@ -333,6 +333,10 @@
                   class:hovered-word={hoveredIndexHomophone === homophone}
                   on:mouseenter={() => hoveredIndexHomophone = homophone}
                   on:mouseleave={() => hoveredIndexHomophone = null}
+                  on:touchstart={() => {
+                    transcriptProcessor.replace(index, homophone);
+                    hoveredIndex = null; // Reset hoveredIndex to close the homophone menu
+                  }}
                   on:click={() => {
                     transcriptProcessor.replace(index, homophone);
                     hoveredIndex = null; // Reset hoveredIndex to close the homophone menu
