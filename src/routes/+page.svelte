@@ -162,8 +162,14 @@
     startTime = event.timeStamp;
     isFlicking = true;
     currentWordIndex = index;
+    const endHandler = (e: MouseEvent | TouchEvent) => handleFlickEnd(e);
     document.addEventListener('mouseup', handleFlickEnd, { once: true });
     document.addEventListener('touchend', handleFlickEnd, { once: true });
+
+    onDestroy(() => {
+    document.removeEventListener('mouseup', endHandler);
+    document.removeEventListener('touchend', endHandler);
+  });
   }
 
   function handleFlickEnd(event: MouseEvent | TouchEvent) {
@@ -208,9 +214,37 @@
     isFlicking = false;
     currentWordIndex = null;
 }
-  function hideHomophones(){
-    hoveredIndex = null;
+function hideHomophones() {
+  hoveredIndex = null;
+  dropdownPosition = { top: '0px', left: '0px' };
+}
+function handleClickOutside(event: MouseEvent | TouchEvent) {
+  const target = event.target as HTMLElement;
+  const homophonePopup = document.querySelector('.homophones-popup');
+
+  // Check if the click/tap is outside the homophone popup
+  if (hoveredIndex !== null && homophonePopup && !homophonePopup.contains(target)) {
+    hideHomophones();
   }
+}
+$: {
+  if (hoveredIndex !== null) {
+    // When hoveredIndex is set, add event listeners to detect outside clicks/taps
+    document.addEventListener('mousedown', handleClickOutside, true);
+    document.addEventListener('touchstart', handleClickOutside, true);
+  } else {
+    // Remove event listeners when hoveredIndex is null (no homophones shown)
+    document.removeEventListener('mousedown', handleClickOutside, true);
+    document.removeEventListener('touchstart', handleClickOutside, true);
+  }
+}
+onDestroy(() => {
+  document.removeEventListener('mousedown', handleClickOutside, true);
+  document.removeEventListener('touchstart', handleClickOutside, true);
+});
+
+
+  
 
  
 </script>
