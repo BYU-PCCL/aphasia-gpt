@@ -35,14 +35,15 @@
       ],
       callbacks: {
         signInSuccessWithAuthResult: function (authResult, redirectUrl: string | undefined) {
-          // firebaseUiAuthContainer.style.display = "none"; // Hide the UI container that would display before the modal gets hidden
+          console.log("signInSuccessWithAuthResult", authResult, redirectUrl)
+          firebaseUiAuthContainer.style.display = "none"; // Hide the UI container that would display before the modal gets hidden
           return false; // False means it will not attempt a redirect on successful sign in
         },
         uiShown: function () {
           // The widget is rendered.
           loader.style.display = "none";
         },
-        sginInFailure: function (error: any) {
+        signInFailure: function (error: any) {
           console.error("Sign-in failed:", error);
           loader.style.display = "none";
         }

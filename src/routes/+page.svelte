@@ -14,7 +14,8 @@
   import { sendTextToAudio, getCurrentAudio, setCurrentAudio } from "@/lib/textToSpeech";
   import VoiceTypeModal from "@/components/VoiceTypeModal.svelte";
   import { homophonesStore } from "@/stores/homophonesStore"; // Import homophonesStore
-  import { get } from 'svelte/store'
+  import { get } from 'svelte/store';
+  import { onDestroy } from 'svelte';
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   
   // Mic requires browser environment
@@ -36,12 +37,19 @@
     fontSize++;
   }
 
-  function logout() {
+  async function logout() {
+  try {
     transcriptProcessor.clear();
     contextStore.clear();
     isMenuOpen = false;
-    firebaseApp.auth().signOut();
+    if (firebaseApp.auth) {
+      await firebaseApp.auth().signOut();
+    }
+  } catch (error) {
+    console.error("Failed to sign out:", error);
   }
+}
+
 
   function onFail(message: string) {
     transcriptProcessor.stopRecording();
@@ -199,9 +207,10 @@
 
     isFlicking = false;
     currentWordIndex = null;
-    document.removeEventListener('mouseup', handleFlickEnd);
-    document.removeEventListener('touchend', handleFlickEnd);
 }
+  function hideHomophones(){
+    hoveredIndex = null;
+  }
 
  
 </script>
