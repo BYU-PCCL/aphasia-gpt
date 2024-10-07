@@ -166,10 +166,7 @@
     document.addEventListener('mouseup', handleFlickEnd, { once: true });
     document.addEventListener('touchend', handleFlickEnd, { once: true });
 
-    onDestroy(() => {
-    document.removeEventListener('mouseup', endHandler);
-    document.removeEventListener('touchend', endHandler);
-  });
+
   }
 
   function handleFlickEnd(event: MouseEvent | TouchEvent) {
@@ -227,21 +224,8 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
     hideHomophones();
   }
 }
-$: {
-  if (hoveredIndex !== null) {
-    // When hoveredIndex is set, add event listeners to detect outside clicks/taps
-    document.addEventListener('mousedown', handleClickOutside, true);
-    document.addEventListener('touchstart', handleClickOutside, true);
-  } else {
-    // Remove event listeners when hoveredIndex is null (no homophones shown)
-    document.removeEventListener('mousedown', handleClickOutside, true);
-    document.removeEventListener('touchstart', handleClickOutside, true);
-  }
-}
-onDestroy(() => {
-  document.removeEventListener('mousedown', handleClickOutside, true);
-  document.removeEventListener('touchstart', handleClickOutside, true);
-});
+
+
 
 
   
