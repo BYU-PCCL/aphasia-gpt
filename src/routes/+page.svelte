@@ -22,6 +22,15 @@
   let Mic: null | typeof import("@/components/Mic.svelte").default = null;
   onMount(async () => {
     Mic = (await import("@/components/Mic.svelte")).default;
+
+    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+  });
+
+  onDestroy(() => {
+    // Clean up event listeners on component destroy
+    document.removeEventListener('click', handleClickOutside);
+    document.removeEventListener('touchstart', handleClickOutside);
   });
   
 
@@ -216,14 +225,14 @@ function hideHomophones() {
   dropdownPosition = { top: '0px', left: '0px' };
 }
 function handleClickOutside(event: MouseEvent | TouchEvent) {
-  const target = event.target as HTMLElement;
-  const homophonePopup = document.querySelector('.homophones-popup');
+    const target = event.target as HTMLElement;
+    const homophonePopup = document.querySelector('.homophones-popup');
 
-  // Check if the click/tap is outside the homophone popup
-  if (hoveredIndex !== null && homophonePopup && !homophonePopup.contains(target)) {
-    hideHomophones();
+    // Check if the click/tap is outside the homophone popup
+    if (hoveredIndex !== null && homophonePopup && !homophonePopup.contains(target)) {
+      hideHomophones();
+    }
   }
-}
 
 
 
