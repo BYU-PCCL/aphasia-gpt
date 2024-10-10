@@ -16,23 +16,26 @@
   import { homophonesStore } from "@/stores/homophonesStore"; // Import homophonesStore
   import { get } from 'svelte/store';
   import { onDestroy } from 'svelte';
+  import { browser } from '$app/environment';
+
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
-  
-  // Mic requires browser environment
   let Mic: null | typeof import("@/components/Mic.svelte").default = null;
+  // Mic requires browser environment
   onMount(async () => {
+  if (browser) {
     Mic = (await import("@/components/Mic.svelte")).default;
 
     document.addEventListener('click', handleClickOutside);
     document.addEventListener('touchstart', handleClickOutside);
-  });
+  }
+});
 
-  onDestroy(() => {
-    // Clean up event listeners on component destroy
+onDestroy(() => {
+  if (browser) {
     document.removeEventListener('click', handleClickOutside);
     document.removeEventListener('touchstart', handleClickOutside);
-  });
-  
+  }
+});
 
   $: hasTranscript = $transcriptProcessor.transcript .text.length > 0;
 
