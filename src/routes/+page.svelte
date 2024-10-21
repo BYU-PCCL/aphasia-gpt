@@ -275,11 +275,11 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
         {/if}
         <!-- This is the dropdown menu -->
         <div class="relative z-30">
-          <button class="bg-neutral-800 text-white px-2 py-2 rounded-md flex items-center" on:click={toggleDropdown} aria-label="menu">
+          <button class="hamburger-button" on:click={toggleDropdown} aria-label="menu">
             {#if isMenuOpen}
-          <i class="material-icons">close</i>
+          <i class="material-icons hamburger-icon">close</i>
             {:else}
-          <i class ="material-icons">menu</i>
+          <i class ="material-icons hamburger-icon">menu</i>
             {/if}
           </button>
           {#if isMenuOpen}
@@ -429,6 +429,34 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
 {/if}
 
 <style>
+
+.hamburger-button {
+  background: none; /* No background */
+  border: none; /* No border */
+  padding: 0; /* No padding */
+  margin: 0; /* No margin */
+  display: flex; /* Flexbox for centering */
+  align-items: center; 
+  justify-content: center;
+  cursor: pointer; /* Pointer cursor */
+}
+
+.hamburger-icon {
+  color: black;
+  font-size: 32px !important; /* Adjust size as needed */
+  line-height: 1; /* Ensure no extra height */
+}
+
+.hamburger-icon:hover {
+  color: darkgrey; /* Optional hover effect */
+}
+
+header div {
+  margin: 0; /* Ensure no margin from parent */
+  padding: 0; /* Ensure no padding from parent */
+}
+
+
 
 .HoverBox {
   user-select: none;
