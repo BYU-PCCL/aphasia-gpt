@@ -1,4 +1,5 @@
 <script lang="ts">
+  let data = {};
   import type { PageData } from "./$types";
   import { enhance } from "$app/forms";
   import LoginModal from "@/components/LoginModal.svelte";
@@ -13,6 +14,7 @@
   import { app as firebaseApp } from "@/lib/firebase";
   import { sendTextToAudio, getCurrentAudio, setCurrentAudio } from "@/lib/textToSpeech";
   import VoiceTypeModal from "@/components/VoiceTypeModal.svelte";
+  import EditProfile from "@/components/EditProfile.svelte";
   import { homophonesStore } from "@/stores/homophonesStore"; // Import homophonesStore
   import { get } from 'svelte/store';
   import { onDestroy } from 'svelte';
@@ -147,10 +149,10 @@ onDestroy(() => {
   function font(){
     console.log("change font");
   }
-
-  async function navigateToEditProfile() {
-    transcriptProcessor.stopRecording();
-    await goto('/editprofile', { replaceState: true, invalidateAll: true });
+  let editProfile = false;
+  function toggleEditProfile() {
+    editProfile = !editProfile;
+    isMenuOpen = false;
   }
 
   let voiceTypesModal = false;
@@ -219,7 +221,6 @@ onDestroy(() => {
         // It's a flick! Delete the word.
         deleteFunction(currentWordIndex);
     }
-
     isFlicking = false;
     currentWordIndex = null;
 }
@@ -250,6 +251,11 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
   {#if !$userFirebaseUid}
     <LoginModal />
   {/if}
+
+  {#if editProfile}
+    <EditProfile toggleEditProfile={toggleEditProfile} data={data}/>
+  {/if}
+
 
   {#if voiceTypesModal}
     <VoiceTypeModal toggleVoiceTypesModal={toggleVoiceTypesModal} />
@@ -292,7 +298,7 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
                   <button on:click={toggleContextOptionsModal} class="block w-full px-4 py-2 hover:bg-gray-100" role="menuitem">Context Options</button>
                 </li>
                 <li role="none">
-                  <button on:click={navigateToEditProfile} class="block w-full px-4 py-2 hover:bg-gray-100" role="menuitem">Edit Profile</button>
+                  <button on:click={toggleEditProfile} class="block w-full px-4 py-2 hover:bg-gray-100" role="menuitem">Edit Profile</button>
                 </li>
                 <li role="none">
                   <button on:click={toggleVoiceTypesModal} class="block w-full px-4 py-2 hover:bg-gray-100" role="menuitem">Voice Types</button>

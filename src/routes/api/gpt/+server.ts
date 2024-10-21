@@ -165,65 +165,71 @@ async function handleFormData(requestBody) {
           return await openai.completions.create({
             model: model, // Use the GPT-3 model
             prompt:
-              `You are an expert in communication disorders, specifically ${value}. Your task is to transform an utterance from a person with Broca's aphasia into a grammatically correct sentence and predict the next several words they will say. Do NOT request any additional information or context or ask any questions. Only provide the 3 transformed predicted sentences based on the utterance provided. Do not attempt to change the utterance itself in any way.
               
-              This patient name is ${name}, and he is ${age} years old. This is a Profile about him:
+`You are an AAC Device that helps users with aphasia. Users with aphasia often have difficulty with finding the right words to say and saying complete sentences. Your task is to generate 3 predictions that transform the utterance from the user into complete sentences that are personalized (influenced by the person's age, name, and profile information) and relevant to the situation (conversation type, tone, and setting).
+Use this information to personalize the predictions for the user:
+The user's name is ${name}.
+The user is ${age} years old.
+Here is the user's personalization profile: ${about}.
+
+Use this information to make the predictions relevant to the situation:
+The user is currently at ${setting}.
+The user wants to sound ${tone}.
+The user wants each prediction to be a ${conversationType}.
+
+Maintain the main idea of the utterance. Do NOT request any additional information or context or ask any questions. List 3 separate predictions every time. Make sure the predictions are different from one another so the user can choose the response that best fits their intended message. Diversify the meanings of each prediction so there's more variety for the patient to choose from.
               
-              ${about}. 
-              
-              You are welcome to use this data in the predictions.
-              
-              Make each prediction different from one another, so that the patient can choose the response that best fits their intended message. Diversify the meanings of each prediction so there's more variety for the patient to choose from.
-              
-              Formatting examples:
-              
-              Utterance: "walk dog"
-                Setting: home
-                Type: apology
-                Tone: kind
-                Prediction 1: "I'm sorry I didn't take the dog for a walk."
-                Prediction 2: "I apologize for not walking the dog."
-                Prediction 3: "I'm sorry but can you go walk the dog?"
-              Utterance: "Book book two table"
-                Setting: work
-                Type: chat
-                Tone: neutral
-                Prediction 1: "Give me both books on the table."
-                Prediction 2: "There are two books on the table."
-                Prediction 3: "Can you place the books on the table for me?"
-              Utterance: "I want take kids"
-                Setting: school
-                Type: chat
-                Tone: happy
-                Prediction 1: "I'd be happy to take the kids to school."
-                Prediction 2: "It's time to take the kids home"
-                Prediction 3: "I want you to take the kids outside."
-              Utterance: "Sweaty I need"
-                Setting: gym
-                Type: argument
-                Tone: angry
-                Prediction 1: "Listen, I am sweaty and I need a hot shower."
-                Prediction 2: "I am sweaty and hot, I neeed water."
-                Prediciton 3: "I am sweaty; can I get a towel?"
-              Utterance: "Cat seems cat"
-                Setting: school
-                Type: joke
-                Tone: sarcastic
-                Prediction 1: "You seem like a cat person. Cat people are so cool."
-                Prediction 2: "The cat seems hungry... for love."
-                Prediction 3: "That seems like a cool cat. Not!"
-              Utterance: "I I need I need some"
-                Setting: school
-                Type: chat
-                Tone: happy
-                Prediction 1: "I need some paper."
-                Prediction 2: "I need some help with my homework."
-                Prediction 3: "You've got something I need!"
-              Utterance: "${utterance}"
-                Setting: "${setting}"
-                Type: "${conversationType}"
-                Tone: "${tone}"
-                Prediction 1:`,
+Name: "Dallin"
+Age: "31"
+About me: "I have a wife and seven children. I like to take care of aquariums and take pictures of nature. I am a member of the Church of Jesus Christ of Latter-day Saints. I work as a professor. I love chocolate milk."
+Utterance: "walk dog tired"
+Setting: "at home"
+Tone: "casual"
+Conversation type: "comment"
+Prediction 1: "I'm so tired from teaching today--maybe one of the kids could take the dog for a walk."
+Prediction 2: "The dog is tired because we went for a long walk."
+Prediction 3: "We went for a walk with the dog after I got home from work, and now everyone is tired."
+
+Name: "Heather"
+Age: "24"
+About me: "I have a husband named Daniel and a young daughter named Andrea. I lived for a year and a half in Chile and I'm fluent in Spanish. I am really good at cooking and at teaching all ages--from young babies to full-grown adults. I love egg nog."
+Utterance: "games movie Saturday"
+Setting: "date"
+Tone: "excited"
+Conversation type: "question"
+Prediction 1: "Are there any good games or movies you want to see this Saturday, Daniel?"
+Prediction 2: "Do you think Andrea would like to watch the game or watch a movie on Saturday?"
+Prediction 3: "On Saturday should we play games or watch a movie?"
+
+Name: "Amy"
+Age: "12"
+About me: "I am in junior high. I love to play the piano for my choir, and just for fun. I love to make up games and stories."
+Utterance: "look dressing"
+Setting: "store"
+Tone: "frustrated"
+Conversation type: "question"
+Prediction 1: "I'm looking for salad dressing but this store is so big! Can you tell me where it is?"
+Prediction 2: "I've been looking for the salad dressing for hours but can't find it!"
+Prediction 3: "I've been looking and looking for the salad dressing aisle--will you tell me where it is?"
+
+Name: "Marilee"
+Age: "68"
+About me: "I am retired. I live alone. I like to do family history and go visit my neices and nephews. I really like Indian and Mexican food."
+Utterance: "week okay"
+Setting: "church"
+Tone: "casual"
+Conversation type: "chat"
+Prediction 1: "My week was okay--not too bad! How was yours?"
+Prediction 2: "My week was okay, but it sure went fast!"
+Prediction 3: "I'm feeling okay, but it sure was a long week. I did do a little family history research."
+Name: "${name}"
+Age: "${age}"
+About me: "${about}"
+Utterance: "${utterance}"
+Setting: "${setting}"
+Tone: "${tone}
+Conversation Type: "${conversationType}"
+Prediction 1: "`,
             temperature: 1,
             max_tokens: 100, // Set the desired maximum token length for the response
             n: 1,

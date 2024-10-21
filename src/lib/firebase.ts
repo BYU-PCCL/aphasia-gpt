@@ -69,10 +69,7 @@ export async function handleOnAuthStateChange(
     } as UserCookies);
 
     await onSignedIn(user);
-
-    if (isNewUser) {
-      goto("/editprofile");
-    }
+    
   } else {
     // User is signed out
 

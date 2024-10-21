@@ -47,10 +47,13 @@
 <Modal title="Voice Types" toggleVisibility={toggleVoiceTypesModal}>
   <div class="flex flex-col gap-4">
     {#each voices as voice}
-      <div class={`flex items-center justify-between p-4 border rounded-md shadow-sm ${voice === selectedVoice ? 'border-green-500' : ''}`}>
+      <!-- Darker blue border when selected -->
+      <div class={`flex items-center justify-between p-4 border rounded-md shadow-sm ${voice === selectedVoice ? 'border-blue-700' : 'border-gray-300'}`}>
         <div class="flex flex-col">
           <div class="flex items-center">
-            <span class="font-semibold text-lg">{voice.name}</span>
+            <!-- Black text when selected, blue otherwise -->
+            <span class={`font-semibold text-lg ${voice === selectedVoice ? 'text-black' : 'text-blue-900'}`}>{voice.name}</span>
+            <!-- Play button icon is black -->
             <button
               class="ml-2 text-black px-2 py-1 rounded-full hover:text-gray-700"
               on:click={() => playVoiceSample(voice)}
@@ -60,11 +63,13 @@
               </i>
             </button>
           </div>
-          <p class="mt-1">{voice.sampleText}</p>
+          <!-- Black text when selected, blue otherwise -->
+          <p class={`${voice === selectedVoice ? 'text-black' : 'text-blue-800'}`}>{voice.sampleText}</p>
         </div>
         <div>
+          <!-- Darker blue when selected -->
           <button
-            class={`px-4 py-2 rounded-md hover:bg-green-600 ${voice === selectedVoice ? 'bg-gray-500' : 'bg-green-500 text-white'}`}
+            class={`px-4 py-2 rounded-md ${voice === selectedVoice ? 'bg-blue-700 text-white' : 'bg-blue-200 text-blue-900'} hover:bg-blue-300`}
             on:click={() => selectVoice(voice)}
           >
             {voice === selectedVoice ? 'Selected' : 'Select'}
@@ -74,21 +79,6 @@
     {/each}
   </div>
   <div class="flex justify-center mt-4">
-    <button class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600" on:click={toggleVoiceTypesModal}>Close</button>
+    <button class="px-4 py-2 bg-gray-400 text-blue-900 rounded-md hover:bg-gray-500" on:click={toggleVoiceTypesModal}>Close</button>
   </div>
 </Modal>
-
-<style>
-  .modal-content {
-    max-width: 600px;
-    width: 100%;
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  }
-
-  .material-icons {
-    font-size: 24px;
-  }
-</style>

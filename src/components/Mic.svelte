@@ -49,7 +49,6 @@
 
     if (isRecording) {
       onFail("recording stopped unexpectedly");
-
     }
   }
 
