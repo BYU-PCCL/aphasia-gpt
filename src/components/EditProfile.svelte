@@ -14,6 +14,12 @@
         age: 0,
         about: ""
     };
+    
+    // Clear profile data when the user logs out or a new session begins
+    $: if (!data || data.userFirebaseUid !== editProfileData.uid) {
+        editProfileData = { uid: "", name: "", age: 0, about: "" };
+    }
+
 
     async function getDatabaseValues(uid: string) {
         const response = await fetch(`/api/firebase/editProfile?uid=${encodeURIComponent(uid)}`, {
