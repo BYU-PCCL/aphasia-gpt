@@ -3,9 +3,12 @@
     import type { EditProfileDbData } from '@/lib/types/EditProfile';
     import { userName } from '@/stores/user';
     import { onMount } from 'svelte';
+    import { get } from 'svelte/store';
+    import { userFirebaseUid } from '@/stores/user';
+
 
     export let toggleEditProfile: () => void; // Declare the prop for toggling the form
-    export let data;
+    let uid = get(userFirebaseUid);
     
     let isLoadingInitialData = true;
     let editProfileData: EditProfileDbData = {
@@ -70,11 +73,14 @@
     }
 
     onMount(async () => {   
-        if (!data.userFirebaseUid) {
-            console.warn('User not logged in');
-            goto('/');
+        
+        if(uid) {
+            editProfileData = await getDatabaseValues(uid);
         }
-        editProfileData = await getDatabaseValues(data.userFirebaseUid);
+        else {
+            console.error('UID is null, unable to fetch profile data');
+        }
+        
         isLoadingInitialData = false;
     });
 </script>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  let data = {};
+  export let data;
   import type { PageData } from "./$types";
   import { enhance } from "$app/forms";
   import LoginModal from "@/components/LoginModal.svelte";
@@ -24,7 +24,9 @@
   let Mic: null | typeof import("@/components/Mic.svelte").default = null;
   // Mic requires browser environment
   onMount(async () => {
+    
   if (browser) {
+    
     Mic = (await import("@/components/Mic.svelte")).default;
 
     document.addEventListener('click', handleClickOutside);
@@ -238,6 +240,11 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
     }
   }
 
+  function getProfileData() {
+    console.log("Profile Data:", data);
+    return data;
+  }
+
 
 
 
@@ -253,7 +260,7 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
   {/if}
 
   {#if editProfile}
-    <EditProfile toggleEditProfile={toggleEditProfile} data={data}/>
+  <EditProfile toggleEditProfile={toggleEditProfile} />
   {/if}
 
 
