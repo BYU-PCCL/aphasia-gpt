@@ -4,6 +4,7 @@
   import "firebase/compat/auth";
   import { onMount, onDestroy } from "svelte";
   import { app } from "@/lib/firebase";
+    import { signInWithPopup } from "@firebase/auth";
 
   let ui: firebaseui.auth.AuthUI | null;
   let loader: HTMLElement;
@@ -33,6 +34,7 @@
           },
         }
       ],
+      signInFlow: "popup",
       callbacks: {
         signInSuccessWithAuthResult: function (authResult, redirectUrl: string | undefined) {
           firebaseUiAuthContainer.style.display = "none"; // Hide the UI container that would display before the modal gets hidden
