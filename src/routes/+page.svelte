@@ -70,7 +70,7 @@ onDestroy(() => {
   }
 
   function deleteFunction(wordIndex:number){
-    console.log("in delete function")
+    // console.log("in delete function");
     transcriptProcessor.delete(wordIndex);
   }
 
@@ -111,7 +111,7 @@ onDestroy(() => {
 
             // Ensure the audio plays on user interaction
             audio.play().catch((error) => {
-                console.log("Playback prevented:", error);
+                // console.log("Playback prevented:", error);
             });
 
             audio.addEventListener('canplaythrough', () => {
@@ -146,7 +146,7 @@ onDestroy(() => {
   }
   
   function font(){
-    console.log("change font");
+    // console.log("change font");
   }
   let editProfile = false;
   function toggleEditProfile() {
@@ -238,7 +238,7 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
   }
 
   function getProfileData() {
-    console.log("Profile Data:", data);
+    // console.log("Profile Data:", data);
     return data;
   }
 

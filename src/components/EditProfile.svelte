@@ -56,7 +56,6 @@
                 body: JSON.stringify(editProfileData),
             });
 
-            console.log('Full response from server:', response);
             
             if(!response.ok){
                 const errorData = await response.json();
@@ -65,7 +64,6 @@
             }
             
             const data = await response.json();
-            console.log('Response from backend:', data);
             userName.set(editProfileData.name);
         } catch (error) {
             console.error('Error:', error);

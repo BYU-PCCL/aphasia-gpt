@@ -45,7 +45,7 @@ export async function handleOnAuthStateChange(
       // Verify email
       if (!user.emailVerified) {
         // sendEmailVerification(user);  // TODO: Handle more carefully so as to not spam them with email verification requests
-        console.log(`User email is not verified: ${user.email}`);
+        // console.log(`User email is not verified: ${user.email}`);
       }
 
       // Create user in database, if needed

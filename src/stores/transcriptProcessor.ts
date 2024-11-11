@@ -23,8 +23,8 @@ function createTranscriptProcessor() {
     const processor = get(transcriptProcessor);
     const transcript = processor.transcript;
     const processingVersion = transcript.version;
-    console.log(`updateTransforms gets called. Processing transcript: 
-      "${transcript.text}", with version number: ${processingVersion}`);
+    // console.log(`updateTransforms gets called. Processing transcript: 
+    //   "${transcript.text}", with version number: ${processingVersion}`);
 
     const words = transcript.text;
     const minCleanWordCount = 1;
@@ -62,7 +62,7 @@ function createTranscriptProcessor() {
       });
       const data = await response.json();
       const gptTransformations = data.texts;
-      console.log("constantGPT transform:", data.txt);
+      // console.log("constantGPT transform:", data.txt);
       update((transcriptProcessor) => {
         transcriptProcessor.transformations.texts = gptTransformations;
         transcriptProcessor.transformations.version = processingVersion;
@@ -70,7 +70,7 @@ function createTranscriptProcessor() {
       });
     } catch (error) {
       if (error instanceof DOMException && error.name == 'AbortError') {
-        console.log(`Aborted: processing transcript version ${processingVersion}`);
+        // console.log(`Aborted: processing transcript version ${processingVersion}`);
       } else {
         throw error;
       }
@@ -80,7 +80,7 @@ function createTranscriptProcessor() {
   const transcriptProcessor = {
     subscribe,
     addTranscriptChunk: (text: string) => {
-      console.log(`addTranscriptChunk gets called with input text: "${text}"`);
+      // console.log(`addTranscriptChunk gets called with input text: "${text}"`);
       // if we're not recording, don't update the transcript
       const processor = get(transcriptProcessor);
       if (!processor.isRecording || text === " ") {

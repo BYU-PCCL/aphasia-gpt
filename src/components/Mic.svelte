@@ -62,7 +62,7 @@
   async function startRecording() {
     const token = await tokenPromise;
 
-    console.log("starting recording", token);
+    // console.log("starting recording", token);
 
     // open the socket
     socket = new WebSocket(
@@ -82,15 +82,15 @@
   }
 
   function onSocketClose(event: CloseEvent) {
-    console.log("socket closed", event);
-    console.log("socket closed with code:", event.code);
+    // console.log("socket closed", event);
+    // console.log("socket closed with code:", event.code);
 
     stopRecording();
   }
 
   function onSocketMessage(event: MessageEvent) {
     const data = JSON.parse(event.data);
-    console.log("socket message::", data);
+    // console.log("socket message::", data);
 
     const transcriptMessageType = ["PartialTranscript", "FinalTranscript"];
     const isTranscript = transcriptMessageType.includes(data.message_type);
@@ -110,7 +110,7 @@
   }
 
   function onSocketOpen(event: Event) {
-    console.log("socket opened", event);
+    // console.log("socket opened", event);
     initializeRecorder();
   }
 
@@ -132,7 +132,7 @@
   }
 
   function onRecorderDataAvailable(blob: Blob) {
-    console.log("recorder data available", blob);
+    // console.log("recorder data available", blob);
 
     const reader = new FileReader();
     reader.onload = () => {

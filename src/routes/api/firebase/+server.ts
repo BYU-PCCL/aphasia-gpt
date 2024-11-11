@@ -33,43 +33,38 @@ if(!admin.apps.length){
 }
 
 function writeUserData(username: string, email: string, password: string, name: string, age: string, about: string){
-const db = admin.database();
-const ref = db.ref('users');
-const usersRef = ref.child(username);
+  const db = admin.database();
+  const ref = db.ref('users');
+  const usersRef = ref.child(username);
 
 
 
-console.log("this is a test for write user data")
-const userData = {
-email: email,
-password: password,
-name: name,
-age: age,
-about: about
-}
-usersRef.set(userData);
+// console.log("this is a test for write user data")
+  const userData = {
+    email: email,
+    password: password,
+    name: name,
+    age: age,
+    about: about
+  }
+  usersRef.set(userData);
 }
 
 
 export const GET: RequestHandler = async () => {
-console.log("this is a test");
-return json(
-{
-status: 200,
-}
-);
+  return json({status: 200,});
 };
 
 export const POST: RequestHandler = async ({ request }) => {
-console.log("fire base is called");
+// console.log("fire base is called");
 try {
 const {signinusername, email, password, name, age, about} = await request.json();
-console.log('username from frontend:', signinusername);
-console.log('email from frontend:', email);
-console.log('password from frontend:', password);
-console.log('name from frontend:', name);
-console.log('age from frontend:', age);
-console.log('about from frontend:', about);
+// console.log('username from frontend:', signinusername);
+// console.log('email from frontend:', email);
+// console.log('password from frontend:', password);
+// console.log('name from frontend:', name);
+// console.log('age from frontend:', age);
+// console.log('about from frontend:', about);
 writeUserData(signinusername, email, password, name, age, about)
 return json({
 status: 200,

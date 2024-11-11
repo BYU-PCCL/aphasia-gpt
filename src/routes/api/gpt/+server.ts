@@ -73,7 +73,7 @@ async function handleUserInput(userInput: any) {
     if (!mp3 || !mp3.blob) {
       throw new Error('Failed to generate audio in API');
     }
-    console.log()
+  
 
     const audioData = await mp3.blob(); 
     // return new Response(audioData, {

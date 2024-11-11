@@ -14,12 +14,12 @@ function createProfileStore() {
     //     if (!userUid) return; // Don't update the database if the user is not logged in
     // });
     userFirebaseUid.subscribe(async (userUid: string | null) => {
-      console.log("Current user UID:", userUid);
+      // console.log("Current user UID:", userUid);
       if(!userUid){
-        console.log("user did not log in 1");
+        // console.log("user did not log in 1");
         return;
       }
-      console.log("User is logged in, fetching profile data...");
+      // console.log("User is logged in, fetching profile data...");
       const initialDatabaseValues: EditProfileDbData = await getDatabaseValues(userUid);
       setStoreFromDatabaseValues(initialDatabaseValues);
     });
@@ -53,7 +53,7 @@ function createProfileStore() {
         initialize: async () => {
             const userUid: string | null = get(userFirebaseUid);
             if (!userUid) {
-                console.log("user did not log in");
+                // console.log("user did not log in");
                 
               // Don't fetch from the DB if the user is not logged in
               return;
@@ -78,9 +78,9 @@ async function getDatabaseValues(uid: string) {
   
     const responseData = await response.json();
     if (response.ok) {
-        console.log(responseData.name);
-        console.log(responseData.age);
-        console.log("Profile data from firebase",responseData.about);
+        // console.log(responseData.name);
+        // console.log(responseData.age);
+        // console.log("Profile data from firebase",responseData.about);
       return responseData as EditProfileDbData;
     } else {
       throw new Error(responseData.error || "Unknown error");
