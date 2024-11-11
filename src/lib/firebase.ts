@@ -13,9 +13,10 @@ const firebaseConfig = {
   authDomain: "brocas-userdb.firebaseapp.com",
   databaseURL: "https://brocas-userdb-default-rtdb.firebaseio.com",
   projectId: "brocas-userdb",
-  storageBucket: "brocas-userdb.appspot.com",
+  storageBucket: "brocas-userdb.firebasestorage.app",
   messagingSenderId: "795464505175",
   appId: "1:795464505175:web:13d2917301e88d1c5e9012",
+  measurementId: "G-Y2Y96HEC28"
 };
 const alreadyInitializedApps = firebase.apps;
 export const app: firebase.app.App =
