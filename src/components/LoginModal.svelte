@@ -4,16 +4,13 @@
   import "firebase/compat/auth";
   import { onMount, onDestroy } from "svelte";
   import { app } from "@/lib/firebase";
-  import { userFirebaseUid } from '@/stores/user';
-
   let ui: firebaseui.auth.AuthUI | null;
   let loader: HTMLElement;
   let firebaseUiAuthContainer: HTMLElement;
   let hasEmailSignInFormElement = false;
-  let observer: MutationObserver | null = null;
+  let observer: MutationObserver;
 
   onMount(async () => {
-    
     const firebaseui = await import("firebaseui");  // Must be imported dynamically onMount to avoid SSR
     ui = firebaseui.auth.AuthUI.getInstance();
     if (!ui) {
@@ -35,14 +32,9 @@
           },
         }
       ],
+      signInFlow: "popup",
       callbacks: {
-        signInSuccessWithAuthResult: function (authResult) {
-          const user = authResult.user;
-          if(user){
-            userFirebaseUid.set(user.uid);  // Set the UID in the store
-            console.log("User signed in with UID:", user.uid);
-          }
-          console.log("signInSuccessWithAuthResult", authResult)
+        signInSuccessWithAuthResult: function () {
           firebaseUiAuthContainer.style.display = "none"; // Hide the UI container that would display before the modal gets hidden
           return false; // False means it will not attempt a redirect on successful sign in
         },
@@ -50,14 +42,8 @@
           // The widget is rendered.
           loader.style.display = "none";
         },
-        signInFailure: function (error: any) {
-          console.error("Sign-in failed:", error);
-          loader.style.display = "none";
-        }
       },
     } as firebaseui.auth.Config;
-
-    console.log("Starting FirebaseUI with config:", firebaseUiConfig);
 
     ui.start("#firebaseui-auth-container", firebaseUiConfig);
 
@@ -80,12 +66,9 @@
     }
   });
 
-  
-
-onDestroy(() => {
-  if (observer) observer.disconnect();
-});
-
+  onDestroy(() => {
+    observer.disconnect();
+  });
 </script>
 
 <main class="absolute w-[100vw] h-[100vh] top-0 z-50 flex justify-center items-center bg-black/30">
