@@ -16,7 +16,7 @@ function createProfileStore() {
     userFirebaseUid.subscribe(async (userUid: string | null) => {
       console.log("Current user UID:", userUid);
       if(!userUid){
-        console.log("user did not log in");
+        console.log("user did not log in 1");
         return;
       }
       console.log("User is logged in, fetching profile data...");

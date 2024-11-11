@@ -1,7 +1,5 @@
 <script lang="ts">
   export let data;
-  import type { PageData } from "./$types";
-  import { enhance } from "$app/forms";
   import LoginModal from "@/components/LoginModal.svelte";
   import Controls from "@/components/Controls.svelte";
   import { transcriptProcessor } from "@/stores/transcriptProcessor";
@@ -10,7 +8,6 @@
   import { onMount } from "svelte";
   import Picker from "@/components/Picker.svelte";
   import ContextOptionsModal from "@/components/ContextOptionsModal.svelte";
-  import {goto} from '$app/navigation';
   import { app as firebaseApp } from "@/lib/firebase";
   import { sendTextToAudio, getCurrentAudio, setCurrentAudio } from "@/lib/textToSpeech";
   import VoiceTypeModal from "@/components/VoiceTypeModal.svelte";

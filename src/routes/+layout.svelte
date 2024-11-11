@@ -18,6 +18,7 @@
   export let data;
 
   onMount(async () => {
+    
     await initializeUserStateFromCookies(data.userFirebaseUid, data.userEmail, data.userName);
     const module = await import("@/lib/firebase");
     const auth: Auth = getAuth(module.app);
