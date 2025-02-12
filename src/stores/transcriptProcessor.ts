@@ -150,6 +150,22 @@ function createTranscriptProcessor() {
       });
       
     },
+    updateTranscript: (newText: string) => {
+      if (typeof newText !== "string") {
+        console.error("updateTranscript received non-string value:", newText);
+        return; // Prevent breaking the function
+      }
+
+      abortController.abort();
+      update((transcriptProcessor) => {
+        transcriptProcessor.transcript.text = newText.split(" ");
+        transcriptProcessor.transcript.version += 1;
+        return transcriptProcessor;
+      });
+
+      updateTransformations(); // <-- Ensure transformations update
+    }
+
   };
   
   

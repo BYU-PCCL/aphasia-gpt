@@ -16,6 +16,8 @@
   import { get } from 'svelte/store';
   import { onDestroy } from 'svelte';
   import { browser } from '$app/environment';
+  import EditTranscript from "@/components/EditTranscript.svelte";
+
 
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
   let Mic: null | typeof import("@/components/Mic.svelte").default = null;
@@ -37,6 +39,7 @@ onDestroy(() => {
     document.removeEventListener('touchstart', handleClickOutside);
   }
 });
+
 
   $: hasTranscript = $transcriptProcessor.transcript .text.length > 0;
 
@@ -62,6 +65,28 @@ onDestroy(() => {
     console.error("Failed to sign out:", error);
   }
 }
+  let isEditing = false;
+  function openEditModal() {
+    isEditing = true;
+  }
+
+// this is for updating the text
+  function handleSave(event) {
+    console.log("Event received:", event); // Debugging log
+
+    const updatedText = event.detail; // Fix: Extract correctly
+
+    if (typeof updatedText !== "string") {
+      console.error("handleSave received non-string value:", updatedText);
+      return; // Prevent errors
+    }
+
+    console.log("Saving transcript:", updatedText);
+    transcriptProcessor.updateTranscript(updatedText);
+  }
+
+
+
 
 
   function onFail(message: string) {
@@ -351,13 +376,28 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
       </div>
 
       <div class="mt-12">
-        
-        <h2 class="font-semibold text-lg">What we think you said:</h2>
+        <div class="flex items-center space-x-2">
+          <button on:click={openEditModal} class="text-gray-600 hover:text-black transition">
+            <i class="material-icons text-lg">edit</i>
+          </button>
+          <h2 class="font-semibold text-lg">What we think you said:</h2>
+        </div>
+
+        {#if isEditing}
+          <EditTranscript
+                  transcript={$transcriptProcessor.transcript.text.join(" ")}
+                  on:save={handleSave}
+                  on:close={() => isEditing = false}
+          />
+        {/if}
+
+
+
 
         {#each $transcriptProcessor.transcript.text as word, index}
-          <p 
-            style="display:inline-block; padding: 2.5px; font-size:{fontSize}px;" 
-            class="HoverBox word-{index}" 
+          <p
+            style="display:inline-block; padding: 2.5px; font-size:{fontSize}px;"
+            class="HoverBox word-{index}"
             on:mouseenter={(event) => {
               hoveredIndex = index;
               const target = event.target;
@@ -368,38 +408,31 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
                   left: `${rect.left + window.scrollX}px` 
                 };
               }
-            }} 
+            }}
             on:mouseleave={() => hoveredIndex = null} 
             on:mousedown={(event) => handleFlickStart(event, index)}
             on:touchstart={(event) => handleFlickStart(event, index)}
           >
-            {word} 
-            {#if hoveredIndex === index && getHomophones(word).length > 0}
+            {word}
+
+          {#if hoveredIndex === index && getHomophones(word).length > 0}
             <div class="homophones-popup" style="top: {dropdownPosition.top}; left: {dropdownPosition.left};">
-              {#each getHomophones(word) as homophone}
+              {#each getHomophones(word) as homophone (homophone)}
                 <button
-                  class="homophone"
-                  class:hovered-word={hoveredIndexHomophone === homophone}
+                  class="homophone px-2 py-1 bg-gray-200 rounded-md hover:bg-gray-300 transition"
                   on:mouseenter={() => hoveredIndexHomophone = homophone}
                   on:mouseleave={() => hoveredIndexHomophone = null}
-                  on:touchstart={() => {
-                    transcriptProcessor.replace(index, homophone);
-                    hoveredIndex = null; // Reset hoveredIndex to close the homophone menu
-                  }}
                   on:click={() => {
                     transcriptProcessor.replace(index, homophone);
-                    hoveredIndex = null; // Reset hoveredIndex to close the homophone menu
+                    hoveredIndex = null;
                   }}
                 >
-                  {#if hoveredIndexHomophone === homophone}
-                    <span class="hovered-word">{homophone}</span>
-                  {:else}
-                    {homophone}
-                  {/if}
+                  {@html homophone}
                 </button>
               {/each}
             </div>
           {/if}
+
 
           </p>
         {/each}
@@ -524,6 +557,74 @@ header div {
     color: #1E90FF; /* Same blue color when hovering */
 }
 
+.edit-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 10px;
+    border-radius: 5px;
+  }
+
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    max-width: 90%;
+    text-align: center;
+  }
+
+  .modal h2 {
+    margin-bottom: 10px;
+  }
+
+  .modal textarea {
+    width: 100%;
+    height: 100px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  .modal-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .save-button, .cancel-button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .save-button {
+    background-color: #4CAF50;
+    color: white;
+  }
+
+  .cancel-button {
+    background-color: #ccc;
+  }
+
   .homophones-popup:before {
     content: '';
     position: absolute;
@@ -544,6 +645,19 @@ header div {
 
   .homophone:hover {
     background-color: #e2e8f0;
+  }
+    .edit-icon {
+    font-size: 22px;
+    cursor: pointer;
+    color: gray;
+    transition: color 0.3s;
+    border: none;
+    background: none;
+    padding: 5px;
+  }
+
+  .edit-icon:hover {
+    color: black;
   }
 
 </style>
