@@ -376,12 +376,13 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
       </div>
 
       <div class="mt-12">
-        <div class="flex items-center space-x-2">
-          <button on:click={openEditModal} class="text-gray-600 hover:text-black transition">
-            <i class="material-icons text-lg">edit</i>
-          </button>
+        <div class="flex items-center justify-between w-full">
           <h2 class="font-semibold text-lg">What we think you said:</h2>
+          <button on:click={openEditModal} class="edit-icon">
+            <i class="material-icons">edit</i>
+          </button>
         </div>
+        
 
         {#if isEditing}
           <EditTranscript

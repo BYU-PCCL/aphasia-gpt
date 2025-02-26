@@ -166,7 +166,14 @@ async function handleFormData(requestBody) {
             model: model, // Use the GPT-3 model
             prompt:
               
-`You are an AAC Device that helps users with aphasia. Users with aphasia often have difficulty with finding the right words to say and saying complete sentences. Your task is to generate 3 predictions that transform the utterance from the user into complete sentences that are personalized (influenced by the person's age, name, and profile information) and relevant to the situation (conversation type, tone, and setting).
+`You are an AAC Device that helps users with aphasia. Users with aphasia often have difficulty finding words and forming complete sentences. Your task is to generate three predictions that transform the user’s utterance into complete sentences.
+
+Each prediction should vary in personalization level:
+Prediction 1: Fully personalized using the user's name, age, and profile.
+Prediction 2: Slightly personalized, incorperating some details but more general.
+Prediction 3: Not personalized at all-generic but still relevant to the context. 
+
+
 Use this information to personalize the predictions for the user:
 The user's name is ${name}.
 The user is ${age} years old.
@@ -186,9 +193,9 @@ Utterance: "walk dog tired"
 Setting: "at home"
 Tone: "casual"
 Conversation type: "comment"
-Prediction 1: "I'm so tired from teaching today--maybe one of the kids could take the dog for a walk."
-Prediction 2: "The dog is tired because we went for a long walk."
-Prediction 3: "We went for a walk with the dog after I got home from work, and now everyone is tired."
+Prediction 1: "Teaching all day has me exhausted—maybe one of the kids can take the dog for a walk while I rest."
+Prediction 2: "I'm tired after teaching, but maybe I can go for a walk with the dog."
+Prediction 3: "The dog looks tired after going on a walk."
 
 Name: "Heather"
 Age: "24"
@@ -197,7 +204,7 @@ Utterance: "games movie Saturday"
 Setting: "date"
 Tone: "excited"
 Conversation type: "question"
-Prediction 1: "Are there any good games or movies you want to see this Saturday, Daniel?"
+Prediction 1: "Daniel, do you want to play games or watch a movie this Saturday? Maybe we can make some popcorn!"
 Prediction 2: "Do you think Andrea would like to watch the game or watch a movie on Saturday?"
 Prediction 3: "On Saturday should we play games or watch a movie?"
 
@@ -208,9 +215,9 @@ Utterance: "look dressing"
 Setting: "store"
 Tone: "frustrated"
 Conversation type: "question"
-Prediction 1: "I'm looking for salad dressing but this store is so big! Can you tell me where it is?"
-Prediction 2: "I've been looking for the salad dressing for hours but can't find it!"
-Prediction 3: "I've been looking and looking for the salad dressing aisle--will you tell me where it is?"
+Prediction 1: "I've been looking everywhere for the salad dressing, and feeling frustrated because of how big the store is, Can you help me find it?"
+Prediction 2: "I’ve been searching for the salad dressing for a while now, but I can’t find it!"
+Prediction 3: "Where is the salad dressing aisle?"
 
 Name: "Marilee"
 Age: "68"
@@ -219,9 +226,9 @@ Utterance: "week okay"
 Setting: "church"
 Tone: "casual"
 Conversation type: "chat"
-Prediction 1: "My week was okay--not too bad! How was yours?"
-Prediction 2: "My week was okay, but it sure went fast!"
-Prediction 3: "I'm feeling okay, but it sure was a long week. I did do a little family history research."
+Prediction 1: "My week was okay—I've been working on some family history. How was your week?"
+Prediction 2: "My week was okay-I went to visit my neices and nephews!"
+Prediction 3: "It was an okay week."
 Name: "${name}"
 Age: "${age}"
 About me: "${about}"
