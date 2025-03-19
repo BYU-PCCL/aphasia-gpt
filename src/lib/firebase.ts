@@ -1,7 +1,7 @@
 import firebase from "firebase/compat/app";
 import { getDatabase, ref, get, type DatabaseReference, set } from "firebase/database";
 import type { User } from "firebase/auth";
-import { sendEmailVerification } from "@firebase/auth";
+//import { sendEmailVerification } from "@firebase/auth";
 import "firebase/compat/auth";
 import type { UserDbData } from "./types/UserDbData";
 import { getDefaultContextDbData } from "./utils/getDefaultContextDbData";
