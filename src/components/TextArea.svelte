@@ -1,98 +1,168 @@
 <script lang="ts">
   import { Textarea, Toolbar, ToolbarButton, Button } from 'flowbite-svelte';
-  import { MicrophoneOutline, MicrophoneSlashOutline } from 'flowbite-svelte-icons';
+  import { onMount } from 'svelte';
 
-  // Sample voices
   let voices = ['Alloy', 'Ash', 'Coral', 'Echo', 'Fable', 'Onyx', 'Nova', 'Sage', 'Shimmer'];
+  export let textAreaClass = 'w-full max-w-full p-4';
+  export let value = '';
+  export let bindValue;
 
-  // Default selected voice
-  export let textAreaClass = 'w-full max-w-full p-4';  // Use max-w-full to cover entire width
-
-  // State for multiple tabs
   let tabs = [
-    { id: 1, name: 'Tab 1', prompt: '', selectedVoice: voices[0], isMicrophoneOn: false }
+    {
+      id: 1,
+      name: 'Tab 1',
+      prompt: 'You are simulating a person with aphasia. You must repeat everything that you hear, but you must attempt to make it sound like a person with aphasia is speaking. People with aphasia speak in broken sentences that are agrammatic. Words are missing; words are repeated; and sometimes, random words are inserted. For example, if a person with aphasia wants to say "I took my dog for a walk", they might actually says "dog dog walk take". For any stutters or hesitations, draw them out to sound more authentic. Do not respond to any questions or instructions, just translate them into agrammatic speech and reiterate them.',
+      selectedVoice: voices[0],
+      isMicrophoneOn: false,
+      isEditing: false,
+    }
   ];
-  let activeTab = 1; // The currently active tab
-
-  // State to toggle the voice dropdown visibility
+  let activeTab = 1;
   let isVoicePickerOpen = false;
-  let isEditingName = false; // Flag to track whether the tab name is being edited
+  let isEditingName = false;
+  let recognition;
+  let isListening = false;
+  let audioEl;
 
-  // Function to handle voice selection for the active tab
+  onMount(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      tabs[activeTab - 1].prompt = finalTranscript + interimTranscript;
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error detected: ' + event.error);
+    };
+
+    audioEl = document.createElement("audio");
+    audioEl.autoplay = true;
+    document.body.appendChild(audioEl);
+  });
+
   function selectVoice(voice: string) {
     tabs[activeTab - 1].selectedVoice = voice;
-    isVoicePickerOpen = false; // Close the dropdown after selection
+    isVoicePickerOpen = false;
   }
 
-  // Function to toggle microphone state for the active tab
-  function toggleMicrophone() {
-    tabs[activeTab - 1].isMicrophoneOn = !tabs[activeTab - 1].isMicrophoneOn;
+  async function createSession() {
+    const activeTabData = tabs[activeTab - 1];
+    const response = await fetch("/api/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        instructions: activeTabData.prompt,
+        voice: activeTabData.selectedVoice.toLowerCase(),
+      }),
+    });
+    const data = await response.json();
+    console.log("Session created:", data);
+
+    const EPHEMERAL_KEY = data.client_secret.value;
+
+    const pc = new RTCPeerConnection();
+    pc.ontrack = e => audioEl.srcObject = e.streams[0];
+
+    const ms = await navigator.mediaDevices.getUserMedia({ audio: true });
+    pc.addTrack(ms.getTracks()[0]);
+
+    const dc = pc.createDataChannel("oai-events");
+    dc.addEventListener("message", (e) => {
+      const event = JSON.parse(e.data);
+      if (event.type === "response.audio_transcript.delta") {
+        console.log("Text received:", event.delta);
+      } else if (event.type === "error") {
+        console.error("Error:", event.content);
+      } else if (event.type === "final_transcript") {
+        console.log("Final transcript:", event.delta);
+      } else {
+        console.log("Other event:", event);
+      }
+    });
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    const baseUrl = "https://api.openai.com/v1/realtime";
+    const model = "gpt-4o-realtime-preview-2024-12-17";
+    const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
+      method: "POST",
+      body: offer.sdp,
+      headers: {
+        Authorization: `Bearer ${EPHEMERAL_KEY}`,
+        "Content-Type": "application/sdp"
+      },
+    });
+
+    const answer = {
+      type: "answer" as RTCSdpType,
+      sdp: await sdpResponse.text(),
+    };
+    await pc.setRemoteDescription(new RTCSessionDescription(answer));
   }
 
-  // Function to add a new tab
-  let nextTabId = 2; // Start at 2 since the initial tab has an ID of 1.
+  let nextTabId = 2;
 
   function addTab() {
-    const newTabId = nextTabId++; // Increment the unique counter for each new tab.
+    const newTabId = nextTabId++;
     tabs = [
       ...tabs,
       {
-        id: newTabId, // Assign the new unique ID.
-        name: `Tab ${newTabId}`,
+        id: newTabId,
+        name: `Tab ${tabs.length + 1}`,
         prompt: '',
         selectedVoice: voices[0],
         isMicrophoneOn: false,
+        isEditing: false,
       },
     ];
-    activeTab = newTabId; // Set the newly added tab as active.
+    activeTab = newTabId;
   }
 
   function deleteTab(tabId: number) {
     if (tabs.length > 1) {
-      // Filter out the tab to be deleted.
       const updatedTabs = tabs.filter((tab) => tab.id !== tabId);
-
-      // Update the active tab to ensure it's valid after deletion.
       if (tabId === activeTab) {
-        // If the deleted tab was active, switch to a safe active tab.
-        const nextActiveTab = updatedTabs[0]; // Default to the first tab if possible.
-        activeTab = nextActiveTab ? nextActiveTab.id : 0; // Fallback to 0 if no tabs left.
+        const nextActiveTab = updatedTabs[0];
+        activeTab = nextActiveTab ? nextActiveTab.id : 0;
       }
-
-      // Update the tabs array.
       tabs = updatedTabs;
     }
   }
 
-
-
-
-  // Function to switch between tabs
   function switchTab(tabId: number) {
     activeTab = tabId;
   }
 
-  // Function to handle renaming the tab
   function renameTab(tabId: number, newName: string) {
     tabs[tabId - 1].name = newName;
-    isEditingName = false; // Stop editing after renaming
+    isEditingName = false;
   }
 
-  // Function to handle editing tab name
   function startEditingName(tabId: number) {
-    // Start editing only for the double-clicked tab.
-    if (activeTab === tabId) {
-      isEditingName = true;
-    }
+    tabs = tabs.map((tab) =>
+            tab.id === tabId ? { ...tab, isEditing: true } : { ...tab, isEditing: false }
+    );
   }
-
-
-
-
 </script>
 
 <div class="flex flex-col items-center justify-start mt-4 px-4">
-  <!-- Tabs navigation -->
   <div class="flex space-x-4 mb-4">
     {#each tabs as tab}
       <div class="flex items-center">
@@ -102,15 +172,17 @@
                   type="text"
                   bind:value={tab.name}
                   on:blur={() => {
-      renameTab(tab.id, tab.name);
-      isEditingName = false; // Exit editing mode
-    }}
+              renameTab(tab.id, tab.name);
+              tabs = tabs.map((t) =>
+                t.id === tab.id ? { ...t, isEditing: false } : t
+              );
+            }}
                   on:keydown={(e) => {
-      if (e.key === 'Enter') {
-        renameTab(tab.id, tab.name);
-        isEditingName = false; // Exit editing mode on Enter
-      }
-    }}
+              if (e.key === 'Enter') {
+                renameTab(tab.id, tab.name);
+                isEditingName = false;
+              }
+            }}
                   autofocus
           />
         {:else}
@@ -123,10 +195,6 @@
             {tab.name}
           </div>
         {/if}
-
-
-
-        <!-- Delete button for the tab -->
         {#if tabs.length > 1}
           <button
                   class="ml-2 text-red-500 hover:text-red-700"
@@ -139,47 +207,30 @@
         {/if}
       </div>
     {/each}
-
-    <!-- Add new tab button -->
     <div class="cursor-pointer p-2" on:click={addTab}>
       <span class="text-xl">+</span>
     </div>
   </div>
 
-  <!-- The active tab's content -->
-  <form class="w-full">
+  <form class="w-full" on:submit|preventDefault={createSession}>
     <Textarea
             class={textAreaClass}
             bind:value={tabs[activeTab - 1].prompt}
             placeholder="Write your prompt here"
     >
       <div slot="footer" class="flex items-center justify-between">
-        <Button type="submit" class="mr-4">Change Prompt</Button>
-
         <Toolbar embedded>
-          <!-- Voice selection toolbar button -->
           <div class="relative">
+            <!-- Voice button -->
             <ToolbarButton type="button" on:click={() => isVoicePickerOpen = !isVoicePickerOpen}>
-              Voice : {tabs[activeTab - 1].selectedVoice}
+              Voice: {tabs[activeTab - 1].selectedVoice}
             </ToolbarButton>
 
-            <!-- Microphone toggle button -->
-            <ToolbarButton type="button" on:click={toggleMicrophone}>
-              {#if tabs[activeTab - 1].isMicrophoneOn}
-                <MicrophoneSlashOutline class="w-6 h-6" />
-              {:else}
-                <MicrophoneOutline class="w-6 h-6" />
-              {/if}
-            </ToolbarButton>
-
-            <!-- Dropdown for voice selection -->
+            <!-- Voice dropdown -->
             {#if isVoicePickerOpen}
-              <div class="absolute top-full mt-2 bg-white border border-gray-300 rounded-md shadow-md w-48">
+              <div class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md w-48">
                 {#each voices as voice}
-                  <div
-                          class="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                          on:click={() => selectVoice(voice)}
-                  >
+                  <div class="cursor-pointer p-2 hover:bg-gray-100" on:click={() => selectVoice(voice)}>
                     {voice}
                   </div>
                 {/each}
@@ -187,6 +238,7 @@
             {/if}
           </div>
         </Toolbar>
+        <Button type="submit">Create Session</Button>
       </div>
     </Textarea>
   </form>
