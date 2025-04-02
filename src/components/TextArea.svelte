@@ -23,6 +23,9 @@
   let recognition;
   let isListening = false;
   let audioEl;
+  let isSessionActive = false;
+  let pc;
+  let ms;
 
   onMount(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -59,62 +62,71 @@
     isVoicePickerOpen = false;
   }
 
-  async function createSession() {
-    const activeTabData = tabs[activeTab - 1];
-    const response = await fetch("/api/session", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        instructions: activeTabData.prompt,
-        voice: activeTabData.selectedVoice.toLowerCase(),
-      }),
-    });
-    const data = await response.json();
-    console.log("Session created:", data);
-
-    const EPHEMERAL_KEY = data.client_secret.value;
-
-    const pc = new RTCPeerConnection();
-    pc.ontrack = e => audioEl.srcObject = e.streams[0];
-
-    const ms = await navigator.mediaDevices.getUserMedia({ audio: true });
-    pc.addTrack(ms.getTracks()[0]);
-
-    const dc = pc.createDataChannel("oai-events");
-    dc.addEventListener("message", (e) => {
-      const event = JSON.parse(e.data);
-      if (event.type === "response.audio_transcript.delta") {
-        console.log("Text received:", event.delta);
-      } else if (event.type === "error") {
-        console.error("Error:", event.content);
-      } else if (event.type === "final_transcript") {
-        console.log("Final transcript:", event.delta);
-      } else {
-        console.log("Other event:", event);
+  async function toggleSession() {
+    if (isSessionActive) {
+      // End the session logic
+      console.log("Ending session...");
+      if (pc) {
+        pc.close();
+        pc = null;
       }
-    });
-
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-
-    const baseUrl = "https://api.openai.com/v1/realtime";
-    const model = "gpt-4o-realtime-preview-2024-12-17";
-    const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
-      method: "POST",
-      body: offer.sdp,
-      headers: {
-        Authorization: `Bearer ${EPHEMERAL_KEY}`,
-        "Content-Type": "application/sdp"
-      },
-    });
-
-    const answer = {
-      type: "answer" as RTCSdpType,
-      sdp: await sdpResponse.text(),
-    };
-    await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      if (ms) {
+        ms.getTracks().forEach(track => track.stop());
+        ms = null;
+      }
+      isSessionActive = false;
+    } else {
+      // Create the session logic
+      const activeTabData = tabs[activeTab - 1];
+      const response = await fetch("/api/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          instructions: activeTabData.prompt,
+          voice: activeTabData.selectedVoice.toLowerCase(),
+        }),
+      });
+      const data = await response.json();
+      console.log("Session created:", data);
+      const EPHEMERAL_KEY = data.client_secret.value;
+      pc = new RTCPeerConnection();
+      pc.ontrack = e => audioEl.srcObject = e.streams[0];
+      ms = await navigator.mediaDevices.getUserMedia({ audio: true });
+      pc.addTrack(ms.getTracks()[0]);
+      const dc = pc.createDataChannel("oai-events");
+      dc.addEventListener("message", (e) => {
+        const event = JSON.parse(e.data);
+        if (event.type === "response.audio_transcript.delta") {
+          console.log("Text received:", event.delta);
+        } else if (event.type === "error") {
+          console.error("Error:", event.content);
+        } else if (event.type === "final_transcript") {
+          console.log("Final transcript:", event.delta);
+        } else {
+          console.log("Other event:", event);
+        }
+      });
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      const baseUrl = "https://api.openai.com/v1/realtime";
+      const model = "gpt-4o-realtime-preview-2024-12-17";
+      const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
+        method: "POST",
+        body: offer.sdp,
+        headers: {
+          Authorization: `Bearer ${EPHEMERAL_KEY}`,
+          "Content-Type": "application/sdp"
+        },
+      });
+      const answer = {
+        type: "answer" as RTCSdpType,
+        sdp: await sdpResponse.text(),
+      };
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      isSessionActive = true;
+    }
   }
 
   let nextTabId = 2;
@@ -212,34 +224,35 @@
     </div>
   </div>
 
-  <form class="w-full" on:submit|preventDefault={createSession}>
-    <Textarea
-            class={textAreaClass}
-            bind:value={tabs[activeTab - 1].prompt}
-            placeholder="Write your prompt here"
-    >
-      <div slot="footer" class="flex items-center justify-between">
-        <Toolbar embedded>
-          <div class="relative">
-            <!-- Voice button -->
-            <ToolbarButton type="button" on:click={() => isVoicePickerOpen = !isVoicePickerOpen}>
-              Voice: {tabs[activeTab - 1].selectedVoice}
-            </ToolbarButton>
-
-            <!-- Voice dropdown -->
-            {#if isVoicePickerOpen}
-              <div class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md w-48">
-                {#each voices as voice}
-                  <div class="cursor-pointer p-2 hover:bg-gray-100" on:click={() => selectVoice(voice)}>
-                    {voice}
-                  </div>
-                {/each}
-              </div>
-            {/if}
+  <form class="w-full" on:submit|preventDefault={toggleSession}>
+  <Textarea
+          class={textAreaClass}
+          bind:value={tabs[activeTab - 1].prompt}
+          placeholder="Write your prompt here"
+  >
+    <div slot="footer" class="flex items-center justify-between">
+      <Toolbar embedded>
+        <div class="relative">
+          <!-- Voice button -->
+          <ToolbarButton type="button" on:click={() => isVoicePickerOpen = !isVoicePickerOpen}>
+            Voice: {tabs[activeTab - 1].selectedVoice}
+          </ToolbarButton>
+          <!-- Voice dropdown -->
+          {#if isVoicePickerOpen}
+          <div class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-md shadow-md w-48">
+            {#each voices as voice}
+            <div class="cursor-pointer p-2 hover:bg-gray-100" on:click={() => selectVoice(voice)}>
+              {voice}
+            </div>
+            {/each}
           </div>
-        </Toolbar>
-        <Button type="submit">Create Session</Button>
-      </div>
-    </Textarea>
+          {/if}
+        </div>
+      </Toolbar>
+      <Button type="button" on:click={toggleSession}>
+        {isSessionActive ? "End Session" : "Create Session"}
+      </Button>
+    </div>
+  </Textarea>
   </form>
 </div>
