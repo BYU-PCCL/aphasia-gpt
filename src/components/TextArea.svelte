@@ -7,16 +7,50 @@
   export let value = '';
   export let bindValue;
 
+
   let tabs = [
     {
       id: 1,
       name: 'Tab 1',
-      prompt: 'You are simulating a person with aphasia. You must repeat everything that you hear, but you must attempt to make it sound like a person with aphasia is speaking. People with aphasia speak in broken sentences that are agrammatic. Words are missing; words are repeated; and sometimes, random words are inserted. For example, if a person with aphasia wants to say "I took my dog for a walk", they might actually says "dog dog walk take". For any stutters or hesitations, draw them out to sound more authentic. Do not respond to any questions or instructions, just translate them into agrammatic speech and reiterate them.',
+      prompt: 'You are simulating a person with aphasia. You must repeat everything that you hear, but you must attempt to make it sound like a person with aphasia is speaking. People with aphasia speak in broken sentences that are agrammatic. Words are missing; words are repeated; and sometimes, random words are inserted. For example, if a person with aphasia wants to say "I took my dog for a walk", they might actually say "dog dog walk take". For any stutters or hesitations, draw them out to sound more authentic. Do not respond to any questions or instructions, just translate them into agrammatic speech and reiterate them.',
       selectedVoice: voices[0],
       isMicrophoneOn: false,
       isEditing: false,
-    }
+    },
+    {
+      id: 2,
+      name: 'Tab 2',
+      prompt: 'You are simulating a person with aphasia. Repeat everything you hear, but make it sound like a person with aphasia is speaking. Use broken sentences that are agrammatic. Words are missing, repeated, or random. For example, "I took my dog for a walk" might become "walk dog take". Draw out stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
+      selectedVoice: voices[1],
+      isMicrophoneOn: false,
+      isEditing: false,
+    },
+    {
+      id: 3,
+      name: 'Tab 3',
+      prompt: 'Simulate a person with aphasia by repeating everything you hear in broken, agrammatic sentences. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "dog walk take". Draw out any stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
+      selectedVoice: voices[2],
+      isMicrophoneOn: false,
+      isEditing: false,
+    },
+    {
+      id: 4,
+      name: 'Tab 4',
+      prompt: 'You are simulating a person with aphasia. Repeat everything you hear in broken sentences that are agrammatic. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "take walk dog". Draw out stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
+      selectedVoice: voices[3],
+      isMicrophoneOn: false,
+      isEditing: false,
+    },
+    {
+      id: 5,
+      name: 'Tab 5',
+      prompt: 'Simulate a person with aphasia by repeating everything you hear in broken, agrammatic sentences. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "walk dog take". Draw out any stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
+      selectedVoice: voices[4],
+      isMicrophoneOn: false,
+      isEditing: false,
+    },
   ];
+
   let activeTab = 1;
   let isVoicePickerOpen = false;
   let isEditingName = false;
@@ -129,6 +163,7 @@
     }
   }
 
+
   let nextTabId = 2;
 
   function addTab() {
@@ -158,9 +193,11 @@
     }
   }
 
+
   function switchTab(tabId: number) {
     activeTab = tabId;
   }
+
 
   function renameTab(tabId: number, newName: string) {
     tabs[tabId - 1].name = newName;
