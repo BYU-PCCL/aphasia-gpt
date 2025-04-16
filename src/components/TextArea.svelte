@@ -97,8 +97,6 @@
           else interim += ev.results[i][0].transcript;
         }
         fullTranscript += final + " ";
-        const tab = tabs.find((t) => t.id === activeTab);
-        if (tab) tab.prompt = fullTranscript + interim;
       };
     }
 
@@ -106,6 +104,11 @@
     audioEl.autoplay = true;
     document.body.appendChild(audioEl);
   });
+
+  function downloadTranscript() {
+    const blob = new Blob([fullTranscript], { type: 'text/plain' });
+    downloadBlob(blob, 'transcript.txt');
+  }
 
   function downloadBlob(blob: Blob, filename: string) {
     const url = URL.createObjectURL(blob);
@@ -208,6 +211,8 @@
     const answer = { type: "answer" as RTCSdpType, sdp: await sdpRes.text() };
     await pc.setRemoteDescription(new RTCSessionDescription(answer));
     isSessionActive = true;
+    if (recognition) recognition.start();
+
   }
 
   function endSession() {
@@ -218,6 +223,8 @@
     aiStream?.getTracks().forEach((t) => t.stop());
     mixedRecorder.stop();
     isSessionActive = false;
+    if (recognition) recognition.stop();
+
   }
 
   function endSessionWithoutDownload() {
@@ -227,6 +234,8 @@
     aiStream?.getTracks().forEach((t) => t.stop());
     isSessionActive = false;
     isStoppingSession = false;
+    if (recognition) recognition.stop();
+
   }
 
   function toggleSession() {
@@ -354,15 +363,18 @@
       </Toolbar>
 
       <div class="flex space-x-2">
-        <Button type="button" on:click={toggleSession}>
-          {isSessionActive ? "End Session & Download" : "Start Session"}
-        </Button>
+  <Button type="button" on:click={toggleSession}>
+    {isSessionActive ? "End Session & Download" : "Start Session"}
+  </Button>
         {#if isSessionActive}
-          <Button type="button" on:click={endSessionWithoutDownload}>
-            End Without Download
-          </Button>
-        {/if}
-      </div>
+    <Button type="button" on:click={endSessionWithoutDownload}>
+      End Without Download
+    </Button>
+  {/if}
+        <Button type="button" on:click={downloadTranscript}>
+    Download Transcript
+  </Button>
+</div>
     </div>
   </Textarea>
 </div>
