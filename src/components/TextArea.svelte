@@ -3,7 +3,7 @@
   import type { MessageType } from "$lib/types/message.ts"
   import { Textarea, Toolbar, ToolbarButton, Button } from "flowbite-svelte";
 
-  let voices = ["alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse"];
+  let voices = ["Alloy", "Ash", "Ballad", "Coral", "Echo", "Sage", "Shimmer", "Verse"];
   export let textAreaClass = "w-full max-w-full p-4";
 
   let tabs = [
