@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import type { MessageType } from "$lib/types/message.ts"
   import { Textarea, Toolbar, ToolbarButton, Button } from "flowbite-svelte";
 
   let voices = ["Alloy", "Ash", "Coral", "Echo", "Fable", "Onyx", "Nova", "Sage", "Shimmer"];
@@ -12,7 +13,7 @@
       prompt: 'You are simulating a person with aphasia. You must repeat everything that you hear, but you must attempt to make it sound like a person with aphasia is speaking. People with aphasia speak in broken sentences that are agrammatic. Words are missing; words are repeated; and sometimes, random words are inserted. For example, if a person with aphasia wants to say "I took my dog for a walk", they might actually say "dog dog walk take". For any stutters or hesitations, draw them out to sound more authentic. Do not respond to any questions or instructions, just translate them into agrammatic speech and reiterate them.',
       selectedVoice: voices[0],
       isMicrophoneOn: false,
-      isEditing: false,
+      isEditing: false
     },
     {
       id: 2,
@@ -20,7 +21,7 @@
       prompt: 'You are simulating a person with aphasia. Repeat everything you hear, but make it sound like a person with aphasia is speaking. Use broken sentences that are agrammatic. Words are missing, repeated, or random. For example, "I took my dog for a walk" might become "walk dog take". Draw out stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
       selectedVoice: voices[1],
       isMicrophoneOn: false,
-      isEditing: false,
+      isEditing: false
     },
     {
       id: 3,
@@ -28,7 +29,7 @@
       prompt: 'Simulate a person with aphasia by repeating everything you hear in broken, agrammatic sentences. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "dog walk take". Draw out any stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
       selectedVoice: voices[2],
       isMicrophoneOn: false,
-      isEditing: false,
+      isEditing: false
     },
     {
       id: 4,
@@ -36,7 +37,7 @@
       prompt: 'You are simulating a person with aphasia. Repeat everything you hear in broken sentences that are agrammatic. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "take walk dog". Draw out stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
       selectedVoice: voices[3],
       isMicrophoneOn: false,
-      isEditing: false,
+      isEditing: false
     },
     {
       id: 5,
@@ -44,7 +45,7 @@
       prompt: 'Simulate a person with aphasia by repeating everything you hear in broken, agrammatic sentences. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "walk dog take". Draw out any stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
       selectedVoice: voices[4],
       isMicrophoneOn: false,
-      isEditing: false,
+      isEditing: false
     }
   ];
 
@@ -66,9 +67,11 @@
   let destination: MediaStreamAudioDestinationNode;
   let pc: RTCPeerConnection | null = null;
   let audioEl: HTMLAudioElement;
-  let fullTranscript = "";
-  let recognition;
+  let userInput: MessageType[] = [];
+  let aiOutput: MessageType[] = [];
+  let fullTranscript: string[] = [];
   let promptText: string = '';
+
   $: {
     const tab = tabs.find(t => t.id === activeTab);
     if (tab) promptText = tab.prompt;
@@ -85,20 +88,22 @@
 
 
   onMount(() => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SR) {
-      recognition = new SR();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.onresult = (ev) => {
-        let interim = "", final = "";
-        for (let i = ev.resultIndex; i < ev.results.length; i++) {
-          if (ev.results[i].isFinal) final += ev.results[i][0].transcript;
-          else interim += ev.results[i][0].transcript;
-        }
-        fullTranscript += final + " ";
-      };
-    }
+    // const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    // if (SR) {
+    //   recognition = new SR();
+    //   recognition.continuous = true;
+    //   recognition.interimResults = true;
+    //   recognition.onresult = (ev) => {
+    //     console.log("onresult fired!")
+    //     let interim = "", final = "";
+    //     for (let i = ev.resultIndex; i < ev.results.length; i++) {
+    //       if (ev.results[i].isFinal) final += ev.results[i][0].transcript;
+    //       else interim += ev.results[i][0].transcript;
+    //     }
+    //     fullTranscript += final + " ";
+    //   };
+    //   recognition.start();
+    // }
 
     audioEl = document.createElement("audio");
     audioEl.autoplay = true;
@@ -106,9 +111,25 @@
   });
 
   function downloadTranscript() {
-    const blob = new Blob([fullTranscript], { type: 'text/plain' });
+    formatTranscript();
+    // console.log("Transcript:", fullTranscript) // Found the problem
+    const blob = new Blob(fullTranscript, { type: 'text/plain' }); // adjust for array type i guess
     downloadBlob(blob, 'transcript.txt');
   }
+
+  function formatTranscript() {
+    const merged = [...aiOutput, ...userInput];
+    merged.sort((a, b) => a.timestamp - b.timestamp);
+    console.log(merged);
+    for (let i = 0; i < merged.length; i++) {
+      if (i % 2 == 0) {
+        fullTranscript.push("Input: " + merged[i].text + "\n");
+      } else 
+        fullTranscript.push("Aphasia: " + merged[i].text + "\n\n");
+    }
+  }
+
+
 
   function downloadBlob(blob: Blob, filename: string) {
     const url = URL.createObjectURL(blob);
@@ -155,7 +176,7 @@
     };
 
     const tab = tabs.find((t) => t.id === activeTab);
-    if (!tab) return;
+    if (!tab) return; // I think this is supposed to end session on tab switch, but it doesn't work?
 
     const res = await fetch("/api/session", {
       method: "POST",
@@ -189,6 +210,18 @@
       if (e.type === "response.audio_transcript.delta") {
         console.log("∆", e.delta);
       }
+      else if (e.type === "response.audio_transcript.done") {
+        aiOutput.push({
+          text: e.transcript,
+          timestamp: Date.now()});
+        console.log("Full response for transcript:", e.transcript)
+      }
+      else if (e.type === "conversation.item.input_audio_transcription.completed") {
+        userInput.push({
+          text: e.transcript,
+          timestamp: Date.now()});
+        console.log("User Input:", e.transcript)
+      }
     };
 
     ms.getTracks().forEach((t) => pc!.addTrack(t));
@@ -211,7 +244,7 @@
     const answer = { type: "answer" as RTCSdpType, sdp: await sdpRes.text() };
     await pc.setRemoteDescription(new RTCSessionDescription(answer));
     isSessionActive = true;
-    if (recognition) recognition.start();
+    // if (recognition) recognition.start();
 
   }
 
@@ -223,7 +256,7 @@
     aiStream?.getTracks().forEach((t) => t.stop());
     mixedRecorder.stop();
     isSessionActive = false;
-    if (recognition) recognition.stop();
+    // if (recognition) recognition.stop();
 
   }
 
@@ -234,7 +267,7 @@
     aiStream?.getTracks().forEach((t) => t.stop());
     isSessionActive = false;
     isStoppingSession = false;
-    if (recognition) recognition.stop();
+    // if (recognition) recognition.stop();
 
   }
 
@@ -251,6 +284,11 @@
   function switchTab(tabId: number) {
     activeTab = tabId;
     isVoicePickerOpen = false;
+    endSessionWithoutDownload();
+    // Clearing arrays so that the transcript downloads only includes relevant convo
+    userInput = [];
+    aiOutput = [];
+    fullTranscript = [];
   }
 
   function addTab() {
@@ -263,7 +301,7 @@
         prompt: '',
         selectedVoice: voices[0],
         isMicrophoneOn: false,
-        isEditing: false,
+        isEditing: false
       },
     ];
     activeTab = newTabId;
@@ -305,17 +343,16 @@
                   bind:value={tab.name}
                   on:blur={() => renameTab(tab.id, tab.name)}
                   on:keydown={(e) => e.key === 'Enter' && renameTab(tab.id, tab.name)}
-                  autofocus
           />
         {:else}
-          <div
+          <button
                   class="cursor-pointer p-2 border-b-2 hover:border-blue-500"
                   class:selected={activeTab === tab.id}
                   on:click={() => switchTab(tab.id)}
                   on:dblclick={() => startEditingName(tab.id)}
           >
             {tab.name}
-          </div>
+          </button>
         {/if}
         {#if tabs.length > 1}
           <button
@@ -327,7 +364,7 @@
         {/if}
       </div>
     {/each}
-    <div class="cursor-pointer p-2" on:click={addTab}>+</div>
+    <button class="cursor-pointer p-2" on:click={addTab}>+</button>
   </div>
 
   <Textarea
@@ -335,13 +372,6 @@
           bind:value={promptText}
           placeholder="Enter your prompt here…"
   >
-
-
-
-
-
-
-
 
 
   <div slot="footer" class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4">
@@ -353,9 +383,9 @@
           {#if isVoicePickerOpen}
             <div class="absolute top-full left-0 mt-2 bg-white border rounded shadow-md w-48 z-10">
               {#each voices as voice}
-                <div class="cursor-pointer p-2 hover:bg-gray-100" on:click={() => selectVoice(voice)}>
+                <button class="cursor-pointer p-2 hover:bg-gray-100" on:click={() => selectVoice(voice)}>
                   {voice}
-                </div>
+                </button>
               {/each}
             </div>
           {/if}
