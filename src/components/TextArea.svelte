@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { MessageType } from "$lib/types/message.ts"
+  import type { MessageType } from "$lib/types/message.ts" // This mmay still be used later, hang onto for now
   import { Textarea, Toolbar, ToolbarButton, Button } from "flowbite-svelte";
 
   let voices = ["Alloy", "Ash", "Ballad", "Coral", "Echo", "Sage", "Shimmer", "Verse"];
@@ -15,8 +15,6 @@
       isMicrophoneOn: false,
       isEditing: false,
       fullTranscript: [] as string[]
-      // userInput: [] as MessageType[],
-      // aiOutput: [] as MessageType[]
     },
     {
       id: 2,
@@ -26,8 +24,6 @@
       isMicrophoneOn: false,
       isEditing: false,
       fullTranscript: [] as string[]
-      // userInput: [] as MessageType[],
-      // aiOutput: [] as MessageType[]
     },
     {
       id: 3,
@@ -37,8 +33,6 @@
       isMicrophoneOn: false,
       isEditing: false,
       fullTranscript: [] as string[]
-      // userInput: [] as MessageType[],
-      // aiOutput: [] as MessageType[]
     },
     {
       id: 4,
@@ -48,8 +42,6 @@
       isMicrophoneOn: false,
       isEditing: false,
       fullTranscript: [] as string[]
-      // userInput: [] as MessageType[],
-      // aiOutput: [] as MessageType[]
     },
     {
       id: 5,
@@ -59,8 +51,6 @@
       isMicrophoneOn: false,
       isEditing: false,
       fullTranscript: [] as string[]
-      // userInput: [] as MessageType[],
-      // aiOutput: [] as MessageType[]
     }
   ];
 
@@ -162,8 +152,7 @@
     };
 
     const tab = tabs.find((t) => t.id === activeTab);
-    console.log(tab);
-    if (!tab) return; // I think this is supposed to end session on tab switch, but it doesn't work?
+    if (!tab) return;
     const res = await fetch("/api/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -197,15 +186,11 @@
         console.log("∆", e.delta);
       }
       else if (e.type === "response.audio_transcript.done") {
-        activeTabData?.fullTranscript.push("Aphasia: " + e.transcript + "\n\n") // {
-          // text: e.transcript,
-          // timestamp: Date.now()});
+        activeTabData?.fullTranscript.push("Aphasia: " + e.transcript + "\n\n")
         console.log("Full response for transcript:", e.transcript)
       }
       else if (e.type === "conversation.item.input_audio_transcription.completed") {
-        activeTabData?.fullTranscript.push("Input: " + e.transcript + "\n") // {
-        //   text: e.transcript,
-        //   timestamp: Date.now()});
+        activeTabData?.fullTranscript.push("Input: " + e.transcript + "\n")
         console.log("User Input:", e.transcript)
       }
     };
@@ -230,7 +215,6 @@
     const answer = { type: "answer" as RTCSdpType, sdp: await sdpRes.text() };
     await pc.setRemoteDescription(new RTCSessionDescription(answer));
     isSessionActive = true;
-    // if (recognition) recognition.start();
 
   }
 
@@ -242,7 +226,6 @@
     aiStream?.getTracks().forEach((t) => t.stop());
     mixedRecorder.stop();
     isSessionActive = false;
-    // if (recognition) recognition.stop();
 
   }
 
@@ -253,7 +236,6 @@
     aiStream?.getTracks().forEach((t) => t.stop());
     isSessionActive = false;
     isStoppingSession = false;
-    // if (recognition) recognition.stop();
 
   }
 
@@ -285,8 +267,6 @@
         isMicrophoneOn: false,
         isEditing: false,
         fullTranscript: [] as string[]
-        // userInput: [] as MessageType[],
-        // aiOutput: [] as MessageType[]
       },
     ];
     activeTab = newTabId;
