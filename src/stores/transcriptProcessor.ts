@@ -23,7 +23,7 @@ function createTranscriptProcessor() {
     const processor = get(transcriptProcessor);
     const transcript = processor.transcript;
     const processingVersion = transcript.version;
-    // console.log(`updateTransforms gets called. Processing transcript: 
+    //    console.log(`updateTransforms gets called. Processing transcript: 
     //   "${transcript.text}", with version number: ${processingVersion}`);
 
     const words = transcript.text;

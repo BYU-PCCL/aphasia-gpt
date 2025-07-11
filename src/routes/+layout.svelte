@@ -14,6 +14,7 @@
   /**
    * Data supplied by server's `load` function
    */
+  
   export let data;
   
   onMount(async () => {

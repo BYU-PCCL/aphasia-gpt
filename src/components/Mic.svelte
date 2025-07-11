@@ -22,7 +22,7 @@
   onDestroy(stopRecording);
 
   // TODO: decide if we want to close everything or just pause the recorder
-  // if assembly ai doesn't care to leave the connection open then just leave it ig.
+  // if assembly ai doesn't care to leave the connection open then just leave it I guess
   async function stopRecording() {
     // get a new token for the next recording
     tokenPromise = getToken();
