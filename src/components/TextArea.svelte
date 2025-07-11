@@ -176,7 +176,7 @@
     };
 
     const tab = tabs.find((t) => t.id === activeTab);
-    if (!tab) return;
+    if (!tab) return; // I think this is supposed to end session on tab switch, but it doesn't work?
 
     const res = await fetch("/api/session", {
       method: "POST",
@@ -284,7 +284,11 @@
   function switchTab(tabId: number) {
     activeTab = tabId;
     isVoicePickerOpen = false;
-    isSessionActive = false;
+    endSessionWithoutDownload();
+    // Clearing arrays so that the transcript downloads only includes relevant convo
+    userInput = [];
+    aiOutput = [];
+    fullTranscript = [];
   }
 
   function addTab() {
