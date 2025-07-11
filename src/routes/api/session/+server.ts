@@ -19,7 +19,11 @@ export async function POST({ request }) {
             body: JSON.stringify({
                 model: "gpt-4o-realtime-preview-2024-12-17",
                 instructions: instructions,
-                voice: voice
+                voice: voice,
+                input_audio_transcription: {
+                    model: "whisper-1",
+                    language: "en", // Set the language to English
+                } 
             }),
         });
 

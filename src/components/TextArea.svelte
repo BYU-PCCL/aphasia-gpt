@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import type { MessageType } from "$lib/types/message.ts"
   import { Textarea, Toolbar, ToolbarButton, Button } from "flowbite-svelte";
 
   let voices = ["Alloy", "Ash", "Coral", "Echo", "Fable", "Onyx", "Nova", "Sage", "Shimmer"];
@@ -66,9 +67,11 @@
   let destination: MediaStreamAudioDestinationNode;
   let pc: RTCPeerConnection | null = null;
   let audioEl: HTMLAudioElement;
-  let fullTranscript = "";
-  let recognition;
+  let userInput: MessageType[] = [];
+  let aiOutput: MessageType[] = [];
+  let fullTranscript: string[] = [];
   let promptText: string = '';
+
   $: {
     const tab = tabs.find(t => t.id === activeTab);
     if (tab) promptText = tab.prompt;
@@ -85,20 +88,22 @@
 
 
   onMount(() => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SR) {
-      recognition = new SR();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.onresult = (ev) => {
-        let interim = "", final = "";
-        for (let i = ev.resultIndex; i < ev.results.length; i++) {
-          if (ev.results[i].isFinal) final += ev.results[i][0].transcript;
-          else interim += ev.results[i][0].transcript;
-        }
-        fullTranscript += final + " ";
-      };
-    }
+    // const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    // if (SR) {
+    //   recognition = new SR();
+    //   recognition.continuous = true;
+    //   recognition.interimResults = true;
+    //   recognition.onresult = (ev) => {
+    //     console.log("onresult fired!")
+    //     let interim = "", final = "";
+    //     for (let i = ev.resultIndex; i < ev.results.length; i++) {
+    //       if (ev.results[i].isFinal) final += ev.results[i][0].transcript;
+    //       else interim += ev.results[i][0].transcript;
+    //     }
+    //     fullTranscript += final + " ";
+    //   };
+    //   recognition.start();
+    // }
 
     audioEl = document.createElement("audio");
     audioEl.autoplay = true;
@@ -106,17 +111,28 @@
   });
 
   function downloadTranscript() {
-    const blob = new Blob([fullTranscript], { type: 'text/plain' });
+    console.log("Transcript function is called")
+    formatTranscript();
+    console.log("Transcript:", fullTranscript) // Found the problem
+    const blob = new Blob(fullTranscript, { type: 'text/plain' }); // adjust for array type i guess
     downloadBlob(blob, 'transcript.txt');
+    console.log("Transcript function is complete")
+  }
+
+  function formatTranscript() {
+    console.log(userInput);
+    console.log(aiOutput);
   }
 
   function downloadBlob(blob: Blob, filename: string) {
+    console.log("Download Blob function is called")
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+    console.log("Download Blob function is complete")
   }
 
   function tryStartRecorder() {
@@ -189,6 +205,18 @@
       if (e.type === "response.audio_transcript.delta") {
         console.log("∆", e.delta);
       }
+      else if (e.type === "response.audio_transcript.done") {
+        aiOutput.push({
+          text: e.transcript,
+          timestamp: Date.now()});
+        console.log("Full response for transcript:", e.transcript)
+      }
+      else if (e.type === "conversation.item.input_audio_transcription.completed") {
+        userInput.push({
+          text: e.transcript,
+          timestamp: Date.now()});
+        console.log("User Input:", e.transcript)
+      }
     };
 
     ms.getTracks().forEach((t) => pc!.addTrack(t));
@@ -211,7 +239,7 @@
     const answer = { type: "answer" as RTCSdpType, sdp: await sdpRes.text() };
     await pc.setRemoteDescription(new RTCSessionDescription(answer));
     isSessionActive = true;
-    if (recognition) recognition.start();
+    // if (recognition) recognition.start();
 
   }
 
@@ -223,7 +251,7 @@
     aiStream?.getTracks().forEach((t) => t.stop());
     mixedRecorder.stop();
     isSessionActive = false;
-    if (recognition) recognition.stop();
+    // if (recognition) recognition.stop();
 
   }
 
@@ -234,7 +262,7 @@
     aiStream?.getTracks().forEach((t) => t.stop());
     isSessionActive = false;
     isStoppingSession = false;
-    if (recognition) recognition.stop();
+    // if (recognition) recognition.stop();
 
   }
 
@@ -335,13 +363,6 @@
           bind:value={promptText}
           placeholder="Enter your prompt here…"
   >
-
-
-
-
-
-
-
 
 
   <div slot="footer" class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4">
