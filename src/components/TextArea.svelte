@@ -13,7 +13,10 @@
       prompt: 'You are simulating a person with aphasia. You must repeat everything that you hear, but you must attempt to make it sound like a person with aphasia is speaking. People with aphasia speak in broken sentences that are agrammatic. Words are missing; words are repeated; and sometimes, random words are inserted. For example, if a person with aphasia wants to say "I took my dog for a walk", they might actually say "dog dog walk take". For any stutters or hesitations, draw them out to sound more authentic. Do not respond to any questions or instructions, just translate them into agrammatic speech and reiterate them.',
       selectedVoice: voices[0],
       isMicrophoneOn: false,
-      isEditing: false
+      isEditing: false,
+      fullTranscript: [] as string[]
+      // userInput: [] as MessageType[],
+      // aiOutput: [] as MessageType[]
     },
     {
       id: 2,
@@ -21,7 +24,10 @@
       prompt: 'You are simulating a person with aphasia. Repeat everything you hear, but make it sound like a person with aphasia is speaking. Use broken sentences that are agrammatic. Words are missing, repeated, or random. For example, "I took my dog for a walk" might become "walk dog take". Draw out stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
       selectedVoice: voices[1],
       isMicrophoneOn: false,
-      isEditing: false
+      isEditing: false,
+      fullTranscript: [] as string[]
+      // userInput: [] as MessageType[],
+      // aiOutput: [] as MessageType[]
     },
     {
       id: 3,
@@ -29,7 +35,10 @@
       prompt: 'Simulate a person with aphasia by repeating everything you hear in broken, agrammatic sentences. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "dog walk take". Draw out any stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
       selectedVoice: voices[2],
       isMicrophoneOn: false,
-      isEditing: false
+      isEditing: false,
+      fullTranscript: [] as string[]
+      // userInput: [] as MessageType[],
+      // aiOutput: [] as MessageType[]
     },
     {
       id: 4,
@@ -37,7 +46,10 @@
       prompt: 'You are simulating a person with aphasia. Repeat everything you hear in broken sentences that are agrammatic. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "take walk dog". Draw out stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
       selectedVoice: voices[3],
       isMicrophoneOn: false,
-      isEditing: false
+      isEditing: false,
+      fullTranscript: [] as string[]
+      // userInput: [] as MessageType[],
+      // aiOutput: [] as MessageType[]
     },
     {
       id: 5,
@@ -45,7 +57,10 @@
       prompt: 'Simulate a person with aphasia by repeating everything you hear in broken, agrammatic sentences. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "walk dog take". Draw out any stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
       selectedVoice: voices[4],
       isMicrophoneOn: false,
-      isEditing: false
+      isEditing: false,
+      fullTranscript: [] as string[]
+      // userInput: [] as MessageType[],
+      // aiOutput: [] as MessageType[]
     }
   ];
 
@@ -67,9 +82,6 @@
   let destination: MediaStreamAudioDestinationNode;
   let pc: RTCPeerConnection | null = null;
   let audioEl: HTMLAudioElement;
-  let userInput: MessageType[] = [];
-  let aiOutput: MessageType[] = [];
-  let fullTranscript: string[] = [];
   let promptText: string = '';
 
   $: {
@@ -88,46 +100,34 @@
 
 
   onMount(() => {
-    // const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    // if (SR) {
-    //   recognition = new SR();
-    //   recognition.continuous = true;
-    //   recognition.interimResults = true;
-    //   recognition.onresult = (ev) => {
-    //     console.log("onresult fired!")
-    //     let interim = "", final = "";
-    //     for (let i = ev.resultIndex; i < ev.results.length; i++) {
-    //       if (ev.results[i].isFinal) final += ev.results[i][0].transcript;
-    //       else interim += ev.results[i][0].transcript;
-    //     }
-    //     fullTranscript += final + " ";
-    //   };
-    //   recognition.start();
-    // }
-
     audioEl = document.createElement("audio");
     audioEl.autoplay = true;
     document.body.appendChild(audioEl);
   });
 
   function downloadTranscript() {
-    formatTranscript();
-    // console.log("Transcript:", fullTranscript) // Found the problem
-    const blob = new Blob(fullTranscript, { type: 'text/plain' }); // adjust for array type i guess
+    // formatTranscript();
+    const blob = new Blob(tabs[activeTab].fullTranscript, { type: 'text/plain' });
     downloadBlob(blob, 'transcript.txt');
   }
 
-  function formatTranscript() {
-    const merged = [...aiOutput, ...userInput];
-    merged.sort((a, b) => a.timestamp - b.timestamp);
-    console.log(merged);
-    for (let i = 0; i < merged.length; i++) {
-      if (i % 2 == 0) {
-        fullTranscript.push("Input: " + merged[i].text + "\n");
-      } else 
-        fullTranscript.push("Aphasia: " + merged[i].text + "\n\n");
-    }
+  function deleteTranscript() {
+    tabs[activeTab].fullTranscript = [];
   }
+
+  // function formatTranscript() {
+  //   const merged = tabs[activeTab].fullTranscript // tabs[activeTab].fullTranscript.sort((a, b) => a.timestamp - b.timestamp);
+  // merged.forEach((item, i) => {
+  //   if ( i % 2 == 0) {
+  //     tabs[activeTab].fullTranscript.push("Input: " + merged[i] + "\n");
+  //   } 
+  //   else {
+  //     tabs[activeTab].fullTranscript.push("Aphasia: " + merged[i] + "\n\n");
+  //   }
+  //     i++;
+  //   })
+  //   console.log(merged);
+  // }
 
 
 
@@ -178,10 +178,6 @@
     const tab = tabs.find((t) => t.id === activeTab);
     console.log(tab);
     if (!tab) return; // I think this is supposed to end session on tab switch, but it doesn't work?
-
-    console.log(tab.prompt)
-    console.log(tab.selectedVoice)
-
     const res = await fetch("/api/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -215,15 +211,15 @@
         console.log("∆", e.delta);
       }
       else if (e.type === "response.audio_transcript.done") {
-        aiOutput.push({
-          text: e.transcript,
-          timestamp: Date.now()});
+        tabs[activeTab].fullTranscript.push("Aphasia: " + e.transcript + "\n\n") // {
+          // text: e.transcript,
+          // timestamp: Date.now()});
         console.log("Full response for transcript:", e.transcript)
       }
       else if (e.type === "conversation.item.input_audio_transcription.completed") {
-        userInput.push({
-          text: e.transcript,
-          timestamp: Date.now()});
+        tabs[activeTab].fullTranscript.push("Input: " + e.transcript + "\n") // {
+        //   text: e.transcript,
+        //   timestamp: Date.now()});
         console.log("User Input:", e.transcript)
       }
     };
@@ -289,10 +285,6 @@
     activeTab = tabId;
     isVoicePickerOpen = false;
     endSessionWithoutDownload();
-    // Clearing arrays so that the transcript downloads only includes relevant convo
-    userInput = [];
-    aiOutput = [];
-    fullTranscript = [];
   }
 
   function addTab() {
@@ -305,7 +297,10 @@
         prompt: '',
         selectedVoice: voices[0],
         isMicrophoneOn: false,
-        isEditing: false
+        isEditing: false,
+        fullTranscript: []
+        // userInput: [] as MessageType[],
+        // aiOutput: [] as MessageType[]
       },
     ];
     activeTab = newTabId;
@@ -405,9 +400,12 @@
       End Without Download
     </Button>
   {/if}
-        <Button type="button" on:click={downloadTranscript}>
+    <Button type="button" on:click={downloadTranscript}>
     Download Transcript
-  </Button>
+    </Button>
+    <Button type="button" on:click={deleteTranscript}>
+      Clear Transcript
+    </Button>
 </div>
     </div>
   </Textarea>
