@@ -120,9 +120,18 @@
   }
 
   function formatTranscript() {
-    console.log(userInput);
-    console.log(aiOutput);
+    const merged = [...aiOutput, ...userInput];
+    merged.sort((a, b) => a.timestamp - b.timestamp);
+    console.log(merged);
+    for (let i = 0; i < merged.length; i++) {
+      if (i % 2 == 0) {
+        fullTranscript.push("Input: " + merged[i].text + "\n");
+      } else 
+        fullTranscript.push("Aphasiafied: " + merged[i].text + "\n");
+    }
   }
+
+
 
   function downloadBlob(blob: Blob, filename: string) {
     console.log("Download Blob function is called")
