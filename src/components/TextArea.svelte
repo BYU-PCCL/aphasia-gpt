@@ -3,7 +3,7 @@
   import type { MessageType } from "$lib/types/message.ts"
   import { Textarea, Toolbar, ToolbarButton, Button } from "flowbite-svelte";
 
-  let voices = ["Alloy", "Ash", "Coral", "Echo", "Fable", "Onyx", "Nova", "Sage", "Shimmer"];
+  let voices = ["alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse"];
   export let textAreaClass = "w-full max-w-full p-4";
 
   let tabs = [
@@ -176,7 +176,11 @@
     };
 
     const tab = tabs.find((t) => t.id === activeTab);
+    console.log(tab);
     if (!tab) return; // I think this is supposed to end session on tab switch, but it doesn't work?
+
+    console.log(tab.prompt)
+    console.log(tab.selectedVoice)
 
     const res = await fetch("/api/session", {
       method: "POST",
