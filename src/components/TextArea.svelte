@@ -106,30 +106,16 @@
   });
 
   function downloadTranscript() {
-    // formatTranscript();
-    const blob = new Blob(tabs[activeTab].fullTranscript, { type: 'text/plain' });
+    if (!activeTabData || !activeTabData.fullTranscript) return;
+    const blob = new Blob(activeTabData?.fullTranscript, { type: 'text/plain' });
     downloadBlob(blob, 'transcript.txt');
   }
 
   function deleteTranscript() {
-    tabs[activeTab].fullTranscript = [];
+    if (activeTabData) {
+      activeTabData.fullTranscript = [];
+    }
   }
-
-  // function formatTranscript() {
-  //   const merged = tabs[activeTab].fullTranscript // tabs[activeTab].fullTranscript.sort((a, b) => a.timestamp - b.timestamp);
-  // merged.forEach((item, i) => {
-  //   if ( i % 2 == 0) {
-  //     tabs[activeTab].fullTranscript.push("Input: " + merged[i] + "\n");
-  //   } 
-  //   else {
-  //     tabs[activeTab].fullTranscript.push("Aphasia: " + merged[i] + "\n\n");
-  //   }
-  //     i++;
-  //   })
-  //   console.log(merged);
-  // }
-
-
 
   function downloadBlob(blob: Blob, filename: string) {
     const url = URL.createObjectURL(blob);
@@ -211,13 +197,13 @@
         console.log("∆", e.delta);
       }
       else if (e.type === "response.audio_transcript.done") {
-        tabs[activeTab].fullTranscript.push("Aphasia: " + e.transcript + "\n\n") // {
+        activeTabData?.fullTranscript.push("Aphasia: " + e.transcript + "\n\n") // {
           // text: e.transcript,
           // timestamp: Date.now()});
         console.log("Full response for transcript:", e.transcript)
       }
       else if (e.type === "conversation.item.input_audio_transcription.completed") {
-        tabs[activeTab].fullTranscript.push("Input: " + e.transcript + "\n") // {
+        activeTabData?.fullTranscript.push("Input: " + e.transcript + "\n") // {
         //   text: e.transcript,
         //   timestamp: Date.now()});
         console.log("User Input:", e.transcript)
@@ -230,15 +216,15 @@
     await pc.setLocalDescription(offer);
 
     const sdpRes = await fetch(
-            "https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17",
-            {
-              method: "POST",
-              body: offer.sdp,
-              headers: {
-                Authorization: `Bearer ${key}`,
-                "Content-Type": "application/sdp",
-              },
-            }
+      "https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17",
+      {
+        method: "POST",
+        body: offer.sdp,
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/sdp",
+        },
+      }
     );
 
     const answer = { type: "answer" as RTCSdpType, sdp: await sdpRes.text() };
@@ -298,12 +284,13 @@
         selectedVoice: voices[0],
         isMicrophoneOn: false,
         isEditing: false,
-        fullTranscript: []
+        fullTranscript: [] as string[]
         // userInput: [] as MessageType[],
         // aiOutput: [] as MessageType[]
       },
     ];
     activeTab = newTabId;
+    endSessionWithoutDownload();
   }
 
   function deleteTab(tabId: number) {
