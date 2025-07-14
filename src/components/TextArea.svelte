@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { MessageType } from "$lib/types/message.ts" // This mmay still be used later, hang onto for now
-  import { Textarea, Dropdown, DropdownItem, DropdownDivider, DropdownHeader, Button, Modal } from "flowbite-svelte";
+  import { Textarea, Dropdown, DropdownItem, Spinner, Button, Modal } from "flowbite-svelte";
   import { AngleDownOutline, AddColumnAfterOutline, PlusOutline } from "flowbite-svelte-icons"
 
   let voices = ["Alloy", "Ash", "Ballad", "Coral", "Echo", "Sage", "Shimmer", "Verse"];
@@ -61,7 +61,9 @@
   let isEditingName = false;
   let isSessionActive = false;
   let isStoppingSession = false;
+  let isSessionStarting = false;
   let hasStartedRecorder = false;
+
 
   let ms: MediaStream | null = null;
   let aiStream: MediaStream | null = null;
@@ -126,6 +128,7 @@
   }
 
   async function startSession() {
+    isSessionStarting = true;
     isStoppingSession = false;
     hasStartedRecorder = false;
     ms = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -216,7 +219,7 @@
     const answer = { type: "answer" as RTCSdpType, sdp: await sdpRes.text() };
     await pc.setRemoteDescription(new RTCSessionDescription(answer));
     isSessionActive = true;
-
+    isSessionStarting = false;
   }
 
   function endSession() {
@@ -354,7 +357,7 @@
 
 
   <div slot="footer" class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4">
-      <Button color="dark" >Select Voice<AngleDownOutline class="ms-2 h-6 w-6 text-white dark:text-white" /></Button>
+      <Button color="dark" >Select Voice<AngleDownOutline class="ms-2 h-5 w-5 text-white dark:text-white" /></Button>
       <Dropdown>
         <div class="grid grid-cols-2">
           {#each voices as voice}
@@ -372,9 +375,15 @@
       </Dropdown>
 
     <div class="flex space-x-2">
+      {#if isSessionStarting}
+      <Button color="blue">
+        <Spinner class="me-3" size="5" color="gray" />Loading...
+      </Button>
+      {:else}
       <Button type="button" color={isSessionActive ? "red" : "blue"} on:click={toggleSession}>
         {isSessionActive ? "End Session" : "Start Session"}
       </Button>
+      {/if}
     </div>
   </div>
   </Textarea>
