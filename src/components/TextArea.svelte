@@ -380,8 +380,8 @@
         <Spinner class="me-3" size="5" color="gray" />Loading...
       </Button>
       {:else}
-      <Button type="button" color={isSessionActive ? "red" : "blue"} on:click={toggleSession}>
-        {isSessionActive ? "End Session" : "Start Session"}
+      <Button type="button" color={isSessionActive ? "yellow" : "blue"} on:click={toggleSession}>
+        {isSessionActive ? "Pause Session" : "Start Session"}
       </Button>
       {/if}
     </div>
@@ -390,7 +390,7 @@
   <Modal outsideclose={false} bind:open={endModal}>
     <div slot="header" class="flex items-center space-x-2">
       <ExclamationCircleOutline class="h-6 w-6 text-red-500" />
-      <h3 class="text-lg font-semibold">Ending Session</h3>
+      <h3 class="text-lg font-semibold">Session Paused</h3>
     </div>
     <p class="mb-4 text-lg">Do you want to download the audio file of this session?</p>
       <Button type="button" color="blue" on:click={() => endSession()}>Yes, Download</Button>
@@ -400,9 +400,9 @@
       <Button type="button" color="blue" on:click={() => downloadTranscript()}>Yes, Download</Button>
       <Button type="button" color="red" on:click={() => deleteTranscript()}>No, Clear Transcript</Button>
     </div>
-    <div class="mt-8 border-t-1">
-      <p class="mt-4 text-md mb-4">Click "Done" to close this modal.</p>
-      <Button color="blue" type="button" on:click={() => endModal = false}>Done</Button>
+    <div class=" flex gap-1 mt-8 border-t-1 pt-3 ">
+      <Button color="green" type="button" on:click={() => endModal = false}>Resume Session</Button>
+      <Button color="red" type="button" on:click={() => endModal = false}>End Session</Button>
     </div>
   </Modal>
 </div>
