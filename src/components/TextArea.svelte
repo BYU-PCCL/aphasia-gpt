@@ -5,7 +5,6 @@
   import { AngleDownOutline } from "flowbite-svelte-icons"
 
   let voices = ["Alloy", "Ash", "Ballad", "Coral", "Echo", "Sage", "Shimmer", "Verse"];
-  export let textAreaClass = "w-full max-w-full p-4";
 
   let tabs = [
     {
@@ -336,7 +335,7 @@
   </div>
 
   <Textarea
-          class={textAreaClass}
+          class="w-auto max-w-4xl p-3"
           bind:value={promptText}
           placeholder="Enter your prompt here…"
   >
@@ -360,22 +359,22 @@
         </div>
       </Dropdown>
 
-      <div class="flex space-x-2">
-  <Button type="button" on:click={toggleSession}>
-    {isSessionActive ? "End Session & Download" : "Start Session"}
-  </Button>
-        {#if isSessionActive}
-    <Button type="button" on:click={endSessionWithoutDownload}>
-      End Without Download
-    </Button>
-  {/if}
-    <Button type="button" on:click={downloadTranscript}>
-    Download Transcript
-    </Button>
-    <Button type="button" on:click={deleteTranscript}>
-      Clear Transcript
-    </Button>
-</div>
+    <div class="flex space-x-2">
+      <Button type="button" on:click={toggleSession}>
+        {isSessionActive ? "End Session & Download" : "Start Session"}
+      </Button>
+            {#if isSessionActive}
+        <Button type="button" on:click={endSessionWithoutDownload}>
+          End Without Download
+        </Button>
+      {/if}
+        <Button type="button" on:click={downloadTranscript}>
+        Download Transcript
+        </Button>
+        <Button type="button" on:click={deleteTranscript}>
+          Clear Transcript
+        </Button>
     </div>
+  </div>
   </Textarea>
 </div>
