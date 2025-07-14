@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { MessageType } from "$lib/types/message.ts" // This mmay still be used later, hang onto for now
-  import { Textarea, Dropdown, DropdownItem, DropdownDivider, DropdownHeader, Button } from "flowbite-svelte";
+  import { Textarea, Dropdown, DropdownItem, DropdownDivider, DropdownHeader, Button, Modal } from "flowbite-svelte";
   import { AngleDownOutline } from "flowbite-svelte-icons"
 
   let voices = ["Alloy", "Ash", "Ballad", "Coral", "Echo", "Sage", "Shimmer", "Verse"];
@@ -54,6 +54,7 @@
     }
   ];
 
+  let endModal = false;
   let activeTab = 1;
   let nextTabId = 6;
   let isVoicePickerOpen = false;
@@ -240,7 +241,8 @@
   }
 
   function toggleSession() {
-    isSessionActive ? endSession() : startSession();
+    isSessionActive ? endModal = true : startSession(); // Start session or reveal end modal
+
   }
 
   function selectVoice(voice: string) {
@@ -335,7 +337,7 @@
   </div>
 
   <Textarea
-          class="w-auto max-w-4xl p-3"
+          class="w-auto max-w-4xl min-w-xl p-3"
           bind:value={promptText}
           placeholder="Enter your prompt here…"
   >
@@ -361,20 +363,23 @@
 
     <div class="flex space-x-2">
       <Button type="button" on:click={toggleSession}>
-        {isSessionActive ? "End Session & Download" : "Start Session"}
+        {isSessionActive ? "End Session" : "Start Session"}
       </Button>
-            {#if isSessionActive}
-        <Button type="button" on:click={endSessionWithoutDownload}>
-          End Without Download
-        </Button>
-      {/if}
-        <Button type="button" on:click={downloadTranscript}>
-        Download Transcript
-        </Button>
-        <Button type="button" on:click={deleteTranscript}>
-          Clear Transcript
-        </Button>
     </div>
   </div>
   </Textarea>
+  <Modal title="Ending Session" outsideclose={false} bind:open={endModal}>
+    <p class="mb-4 text-md">Do you want to download the audio file of this session?</p>
+      <Button type="button" on:click={() => endSession()}>Yes, Download</Button>
+      <Button type="button" on:click={() => endSessionWithoutDownload()}>No, Clear Audio</Button>
+    <p class="mt-4 text-md">Do you want to download the transcript of this session?</p>
+    <div>
+      <Button type="button" on:click={() => downloadTranscript()}>Yes, Download</Button>
+      <Button type="button" on:click={() => deleteTranscript()}>No, Clear Transcript</Button>
+    </div>
+    <div class="mt-8 border-t-1">
+      <p class="mt-4 text-md mb-4">Click "Done" to close this modal.</p>
+      <Button type="button" on:click={() => endModal = false}>Done</Button>
+    </div>
+  </Modal>
 </div>
