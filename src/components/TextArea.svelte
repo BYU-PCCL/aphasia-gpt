@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import type { MessageType } from "$lib/types/message.ts" // This mmay still be used later, hang onto for now
   import { Textarea, Dropdown, DropdownItem, DropdownDivider, DropdownHeader, Button, Modal } from "flowbite-svelte";
-  import { AngleDownOutline } from "flowbite-svelte-icons"
+  import { AngleDownOutline, AddColumnAfterOutline, PlusOutline } from "flowbite-svelte-icons"
 
   let voices = ["Alloy", "Ash", "Ballad", "Coral", "Echo", "Sage", "Shimmer", "Verse"];
 
@@ -313,15 +313,24 @@
                   on:blur={() => renameTab(tab.id, tab.name)}
                   on:keydown={(e) => e.key === 'Enter' && renameTab(tab.id, tab.name)}
           />
-        {:else}
+        {:else if activeTab === tab.id}
           <button
-                  class="cursor-pointer p-2 border-b-2 hover:border-blue-500"
+                  class="cursor-pointer p-2 border-b-2 border-blue-500"
                   class:selected={activeTab === tab.id}
                   on:click={() => switchTab(tab.id)}
                   on:dblclick={() => startEditingName(tab.id)}
           >
             {tab.name}
           </button>
+        {:else}
+          <button
+                    class="cursor-pointer p-2 border-b-2 hover:border-blue-500"
+                    class:selected={activeTab === tab.id}
+                    on:click={() => switchTab(tab.id)}
+                    on:dblclick={() => startEditingName(tab.id)}
+            >
+              {tab.name}
+            </button>
         {/if}
         {#if tabs.length > 1}
           <button
@@ -333,7 +342,7 @@
         {/if}
       </div>
     {/each}
-    <button class="cursor-pointer p-2" on:click={addTab}>+</button>
+    <button class="cursor-pointer p-2" on:click={addTab}><PlusOutline class="h-5 w-5 hover:text-blue-500" /></button>
   </div>
 
   <Textarea
