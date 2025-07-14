@@ -344,21 +344,19 @@
 
   <div slot="footer" class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4">
       <Button>Select Voice<AngleDownOutline class="ms-2 h-6 w-6 text-white dark:text-white" /></Button>
-      <Dropdown simple>
-        <div class="flex">
-          <div class="absolute top-full left-0 mt-2 bg-white rounded shadow-md w-48 z-10">
-            {#each voices as voice}
-              {#if voice === activeTabData?.selectedVoice}
-              <DropdownItem class="bg-orange-300 cursor-pointer p-2 hover:bg-orange-400" on:click={() => selectVoice(voice)}>
-                {voice}
-              </DropdownItem>
-              {:else}
-              <DropdownItem class="cursor-pointer p-2 hover:bg-gray-100" on:click={() => selectVoice(voice)}>
-                {voice}
-              </DropdownItem>
-              {/if}
-            {/each}
-          </div>
+      <Dropdown>
+        <div class="grid grid-cols-2">
+          {#each voices as voice}
+            {#if voice === activeTabData?.selectedVoice}
+            <DropdownItem class="bg-orange-300 cursor-pointer p-2 hover:bg-orange-400 rounded-sm" on:click={() => selectVoice(voice)}>
+              {voice}
+            </DropdownItem>
+            {:else}
+            <DropdownItem class="cursor-pointer p-2 hover:bg-gray-100 rounded-sm" on:click={() => selectVoice(voice)}>
+              {voice}
+            </DropdownItem>
+            {/if}
+          {/each}
         </div>
       </Dropdown>
 
