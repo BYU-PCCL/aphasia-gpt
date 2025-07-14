@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { MessageType } from "$lib/types/message.ts" // This mmay still be used later, hang onto for now
-  import { Textarea, Toolbar, ToolbarButton, Button } from "flowbite-svelte";
+  import { Textarea, Dropdown, DropdownItem, DropdownDivider, DropdownHeader, Button } from "flowbite-svelte";
+  import { AngleDownOutline } from "flowbite-svelte-icons"
 
   let voices = ["Alloy", "Ash", "Ballad", "Coral", "Echo", "Sage", "Shimmer", "Verse"];
-  export let textAreaClass = "w-full max-w-full p-4";
 
   let tabs = [
     {
@@ -245,13 +245,14 @@
 
   function selectVoice(voice: string) {
     const tab = tabs.find((t) => t.id === activeTab);
+    console.log("Current voice", tab?.selectedVoice)
     if (tab) tab.selectedVoice = voice;
-    isVoicePickerOpen = false;
+    console.log("Voice changed to", tab?.selectedVoice)
+    tabs = [...tabs] // Rassigning the ary to add reactivity
   }
 
   function switchTab(tabId: number) {
     activeTab = tabId;
-    isVoicePickerOpen = false;
     endSessionWithoutDownload();
   }
 
@@ -334,46 +335,46 @@
   </div>
 
   <Textarea
-          class={textAreaClass}
+          class="w-auto max-w-4xl p-3"
           bind:value={promptText}
           placeholder="Enter your prompt here…"
   >
 
 
   <div slot="footer" class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4">
-      <Toolbar embedded>
-        <div class="relative">
-          <ToolbarButton on:click={() => isVoicePickerOpen = !isVoicePickerOpen}>
-            Voice: {activeTabData?.selectedVoice}
-          </ToolbarButton>
-          {#if isVoicePickerOpen}
-            <div class="absolute top-full left-0 mt-2 bg-white border rounded shadow-md w-48 z-10">
-              {#each voices as voice}
-                <button class="cursor-pointer p-2 hover:bg-gray-100" on:click={() => selectVoice(voice)}>
-                  {voice}
-                </button>
-              {/each}
-            </div>
-          {/if}
+      <Button>Select Voice<AngleDownOutline class="ms-2 h-6 w-6 text-white dark:text-white" /></Button>
+      <Dropdown>
+        <div class="grid grid-cols-2">
+          {#each voices as voice}
+            {#if voice === activeTabData?.selectedVoice}
+            <DropdownItem class="bg-orange-300 cursor-pointer p-2 hover:bg-orange-400 rounded-sm" on:click={() => selectVoice(voice)}>
+              {voice}
+            </DropdownItem>
+            {:else}
+            <DropdownItem class="cursor-pointer p-2 hover:bg-gray-100 rounded-sm" on:click={() => selectVoice(voice)}>
+              {voice}
+            </DropdownItem>
+            {/if}
+          {/each}
         </div>
-      </Toolbar>
+      </Dropdown>
 
-      <div class="flex space-x-2">
-  <Button type="button" on:click={toggleSession}>
-    {isSessionActive ? "End Session & Download" : "Start Session"}
-  </Button>
-        {#if isSessionActive}
-    <Button type="button" on:click={endSessionWithoutDownload}>
-      End Without Download
-    </Button>
-  {/if}
-    <Button type="button" on:click={downloadTranscript}>
-    Download Transcript
-    </Button>
-    <Button type="button" on:click={deleteTranscript}>
-      Clear Transcript
-    </Button>
-</div>
+    <div class="flex space-x-2">
+      <Button type="button" on:click={toggleSession}>
+        {isSessionActive ? "End Session & Download" : "Start Session"}
+      </Button>
+            {#if isSessionActive}
+        <Button type="button" on:click={endSessionWithoutDownload}>
+          End Without Download
+        </Button>
+      {/if}
+        <Button type="button" on:click={downloadTranscript}>
+        Download Transcript
+        </Button>
+        <Button type="button" on:click={deleteTranscript}>
+          Clear Transcript
+        </Button>
     </div>
+  </div>
   </Textarea>
 </div>
