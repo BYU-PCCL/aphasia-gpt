@@ -339,6 +339,7 @@
   <Textarea
           class="w-auto max-w-4xl min-w-xl p-3"
           bind:value={promptText}
+          rows={8}
           placeholder="Enter your prompt here…"
   >
 
