@@ -302,7 +302,7 @@
 </script>
 
 <div class="flex flex-col items-center justify-start mt-4 px-4">
-  <div class="flex space-x-4 mb-4">
+  <div class="overflow-x-auto flex space-x-4 mb-4">
     {#each tabs as tab}
       <div class="flex items-center">
         {#if activeTab === tab.id && tab.isEditing}
@@ -342,11 +342,11 @@
         {/if}
       </div>
     {/each}
-    <button class="cursor-pointer p-2" on:click={addTab}><PlusOutline class="h-5 w-5 hover:text-blue-500" /></button>
+    <button class="cursor-pointer p-2 hover:text-blue-500 text-xl" on:click={addTab}>+</button>
   </div>
-
+  
   <Textarea
-          class="w-auto max-w-4xl min-w-xl p-3"
+          class="md:w-2xl p-3"
           bind:value={promptText}
           rows={8}
           placeholder="Enter your prompt here…"
@@ -354,7 +354,7 @@
 
 
   <div slot="footer" class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4">
-      <Button>Select Voice<AngleDownOutline class="ms-2 h-6 w-6 text-white dark:text-white" /></Button>
+      <Button color="dark" >Select Voice<AngleDownOutline class="ms-2 h-6 w-6 text-white dark:text-white" /></Button>
       <Dropdown>
         <div class="grid grid-cols-2">
           {#each voices as voice}
@@ -372,24 +372,24 @@
       </Dropdown>
 
     <div class="flex space-x-2">
-      <Button type="button" on:click={toggleSession}>
+      <Button type="button" color={isSessionActive ? "red" : "blue"} on:click={toggleSession}>
         {isSessionActive ? "End Session" : "Start Session"}
       </Button>
     </div>
   </div>
   </Textarea>
   <Modal title="Ending Session" outsideclose={false} bind:open={endModal}>
-    <p class="mb-4 text-md">Do you want to download the audio file of this session?</p>
-      <Button type="button" on:click={() => endSession()}>Yes, Download</Button>
-      <Button type="button" on:click={() => endSessionWithoutDownload()}>No, Clear Audio</Button>
-    <p class="mt-4 text-md">Do you want to download the transcript of this session?</p>
+    <p class="mb-4 text-lg">Do you want to download the audio file of this session?</p>
+      <Button type="button" color="blue" on:click={() => endSession()}>Yes, Download</Button>
+      <Button type="button" color="red"  on:click={() => endSessionWithoutDownload()}>No, Clear Audio</Button>
+    <p class="mt-4 text-lg">Do you want to download the transcript of this session?</p>
     <div>
-      <Button type="button" on:click={() => downloadTranscript()}>Yes, Download</Button>
-      <Button type="button" on:click={() => deleteTranscript()}>No, Clear Transcript</Button>
+      <Button type="button" color="blue" on:click={() => downloadTranscript()}>Yes, Download</Button>
+      <Button type="button" color="red" on:click={() => deleteTranscript()}>No, Clear Transcript</Button>
     </div>
     <div class="mt-8 border-t-1">
       <p class="mt-4 text-md mb-4">Click "Done" to close this modal.</p>
-      <Button type="button" on:click={() => endModal = false}>Done</Button>
+      <Button color="blue" type="button" on:click={() => endModal = false}>Done</Button>
     </div>
   </Modal>
 </div>
