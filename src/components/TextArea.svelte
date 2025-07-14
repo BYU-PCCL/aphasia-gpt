@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import type { MessageType } from "$lib/types/message.ts" // This mmay still be used later, hang onto for now
   import { Textarea, Dropdown, DropdownItem, Spinner, Button, Modal } from "flowbite-svelte";
-  import { AngleDownOutline, AddColumnAfterOutline, PlusOutline } from "flowbite-svelte-icons"
+  import { AngleDownOutline, ExclamationCircleOutline} from "flowbite-svelte-icons"
 
   let voices = ["Alloy", "Ash", "Ballad", "Coral", "Echo", "Sage", "Shimmer", "Verse"];
 
@@ -387,7 +387,11 @@
     </div>
   </div>
   </Textarea>
-  <Modal title="Ending Session" outsideclose={false} bind:open={endModal}>
+  <Modal outsideclose={false} bind:open={endModal}>
+    <div slot="header" class="flex items-center space-x-2">
+      <ExclamationCircleOutline class="h-6 w-6 text-red-500" />
+      <h3 class="text-lg font-semibold">Ending Session</h3>
+    </div>
     <p class="mb-4 text-lg">Do you want to download the audio file of this session?</p>
       <Button type="button" color="blue" on:click={() => endSession()}>Yes, Download</Button>
       <Button type="button" color="red"  on:click={() => endSessionWithoutDownload()}>No, Clear Audio</Button>
