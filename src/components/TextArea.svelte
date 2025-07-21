@@ -228,7 +228,7 @@
     pc?.close();
     ms?.getTracks().forEach((t) => t.stop());
     aiStream?.getTracks().forEach((t) => t.stop());
-    mixedRecorder.stop();
+    mixedRecorder.stop(); // This will trigger the onStop event and download the conversation
     isSessionActive = false;
 
   }
@@ -241,6 +241,18 @@
     isSessionActive = false;
     isStoppingSession = false;
 
+  }
+  
+  function pauseRecorder() {
+    if (!isSessionActive) return;
+    mixedRecorder.pause();
+    ms?.getTracks().forEach((t) => t.enabled = false);
+  }
+
+  function resumeRecorder() {
+    if (!isSessionActive) return;
+    mixedRecorder.resume();
+    ms?.getTracks().forEach((t) => t.enabled = true);
   }
 
   function toggleSession() {
@@ -380,7 +392,7 @@
         <Spinner class="me-3" size="5" color="gray" />Loading...
       </Button>
       {:else}
-      <Button type="button" color={isSessionActive ? "yellow" : "blue"} on:click={toggleSession}>
+      <Button type="button" color={isSessionActive ? "yellow" : "blue"} on:click={() => {toggleSession(), pauseRecorder()}}>
         {isSessionActive ? "Pause Session" : "Start Session"}
       </Button>
       {/if}
@@ -401,7 +413,7 @@
       <Button type="button" color="red" on:click={() => deleteTranscript()}>No, Clear Transcript</Button>
     </div>
     <div class=" flex gap-1 mt-8 border-t-1 pt-3 ">
-      <Button color="green" type="button" on:click={() => endModal = false}>Resume Session</Button>
+      <Button color="green" type="button" on:click={() => {endModal = false; resumeRecorder()}}>Resume Session</Button>
       <Button color="red" type="button" on:click={() => endModal = false}>End Session</Button>
     </div>
   </Modal>
