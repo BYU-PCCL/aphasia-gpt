@@ -145,15 +145,16 @@
     });
 
     mixedRecorder.ondataavailable = (e) => {
+      console.log("Data available", e.data);
       if (e.data.size > 0) mixedChunks.push(e.data);
     };
 
-    mixedRecorder.onstop = () => {
-      if (!isStoppingSession || mixedChunks.length === 0) return;
-      const blob = new Blob(mixedChunks, { type: "audio/webm;codecs=opus" });
-      downloadBlob(blob, "conversation.webm");
-      isStoppingSession = false;
-    };
+    // mixedRecorder.onstop = () => {
+    //   if (!isStoppingSession || mixedChunks.length === 0) return;
+    //   const blob = new Blob(mixedChunks, { type: "audio/webm;codecs=opus" });
+    //   downloadBlob(blob, "conversation.webm");
+    //   isStoppingSession = false;
+    // };
 
     const tab = tabs.find((t) => t.id === activeTab);
     if (!tab) return;
@@ -228,9 +229,7 @@
     pc?.close();
     ms?.getTracks().forEach((t) => t.stop());
     aiStream?.getTracks().forEach((t) => t.stop());
-    mixedRecorder.stop(); // This will trigger the onStop event and download the conversation
     isSessionActive = false;
-
   }
 
   function endSessionWithoutDownload() {
@@ -240,19 +239,40 @@
     aiStream?.getTracks().forEach((t) => t.stop());
     isSessionActive = false;
     isStoppingSession = false;
+  }
 
+  function downloadAudio() {
+    if (!mixedRecorder) return;
+
+    const handleData = (e: BlobEvent) => {
+      if (e.data.size > 0) {
+        const blob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
+        downloadBlob(blob, `session-${activeTab}.webm`);
+      }
+      mixedRecorder.removeEventListener("dataavailable", handleData);
+    };
+
+    mixedRecorder.addEventListener("dataavailable", handleData);
+    mixedRecorder.requestData(); // Triggers one more dataavailable event
+  }
+
+  function clearAudio() {
+    // Implement some way for the audio to be refreshed without clearing all the tracks and requireing the session to be restarted
+    if (!mixedRecorder) return;
   }
   
   function pauseRecorder() {
     if (!isSessionActive) return;
     mixedRecorder.pause();
     ms?.getTracks().forEach((t) => t.enabled = false);
+    aiStream?.getTracks().forEach((t) => t.enabled = false);
   }
 
   function resumeRecorder() {
     if (!isSessionActive) return;
     mixedRecorder.resume();
     ms?.getTracks().forEach((t) => t.enabled = true);
+    aiStream?.getTracks().forEach((t) => t.enabled = true);
   }
 
   function toggleSession() {
@@ -405,8 +425,8 @@
       <h3 class="text-lg font-semibold">Session Paused</h3>
     </div>
     <p class="mb-4 text-lg">Do you want to download the audio file of this session?</p>
-      <Button type="button" color="blue" on:click={() => endSession()}>Yes, Download</Button>
-      <Button type="button" color="red"  on:click={() => endSessionWithoutDownload()}>No, Clear Audio</Button>
+      <Button type="button" color="blue" on:click={() => downloadAudio()}>Yes, Download</Button>
+      <Button type="button" color="red"  on:click={() => clearAudio()}>No, Clear Audio</Button>
     <p class="mt-4 text-lg">Do you want to download the transcript of this session?</p>
     <div>
       <Button type="button" color="blue" on:click={() => downloadTranscript()}>Yes, Download</Button>
@@ -414,7 +434,7 @@
     </div>
     <div class=" flex gap-1 mt-8 border-t-1 pt-3 ">
       <Button color="green" type="button" on:click={() => {endModal = false; resumeRecorder()}}>Resume Session</Button>
-      <Button color="red" type="button" on:click={() => endModal = false}>End Session</Button>
+      <Button color="red" type="button" on:click={() => {endModal = false; endSession()}}>End Session</Button>
     </div>
   </Modal>
 </div>
