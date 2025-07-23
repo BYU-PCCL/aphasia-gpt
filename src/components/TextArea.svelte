@@ -62,7 +62,9 @@
   let isSessionActive = false;
   let isStoppingSession = false;
   let isSessionStarting = false;
+  let isDataDownloaded = false;
   let hasStartedRecorder = false;
+  let clearAudioHistory = false;
 
 
   let ms: MediaStream | null = null;
@@ -102,6 +104,7 @@
     if (!activeTabData || !activeTabData.fullTranscript) return;
     const blob = new Blob(activeTabData?.fullTranscript, { type: 'text/plain' });
     downloadBlob(blob, 'transcript.txt');
+    isDataDownloaded = true;
   }
 
   function deleteTranscript() {
@@ -145,8 +148,20 @@
     });
 
     mixedRecorder.ondataavailable = (e) => {
-      console.log("Data available", e.data);
-      if (e.data.size > 0) mixedChunks.push(e.data);
+      console.log("Data available:", e.data);
+      if (clearAudioHistory) {
+        mixedChunks = [];
+        clearAudioHistory = false;
+        console.log("Audio Cleared");
+        return;
+      }
+      if (e.data.size > 0) {
+        const blob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
+        downloadBlob(blob, `session-${activeTab}.webm`);
+        mixedChunks = []; // Clear chunks after download
+        console.log("Audio downloaded");
+      }
+      
     };
 
     // mixedRecorder.onstop = () => {
@@ -191,12 +206,8 @@
         console.log("∆", e.delta);
       }
       else if (e.type === "response.audio_transcript.done") {
-        activeTabData?.fullTranscript.push("Aphasia: " + e.transcript + "\n\n")
+        activeTabData?.fullTranscript.push(e.transcript + "\n")
         console.log("Full response for transcript:", e.transcript)
-      }
-      else if (e.type === "conversation.item.input_audio_transcription.completed") {
-        activeTabData?.fullTranscript.push("Input: " + e.transcript + "\n")
-        console.log("User Input:", e.transcript)
       }
     };
 
@@ -230,6 +241,7 @@
     ms?.getTracks().forEach((t) => t.stop());
     aiStream?.getTracks().forEach((t) => t.stop());
     isSessionActive = false;
+    isDataDownloaded = false;
   }
 
   function endSessionWithoutDownload() {
@@ -243,22 +255,13 @@
 
   function downloadAudio() {
     if (!mixedRecorder) return;
-
-    const handleData = (e: BlobEvent) => {
-      if (e.data.size > 0) {
-        const blob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
-        downloadBlob(blob, `session-${activeTab}.webm`);
-      }
-      mixedRecorder.removeEventListener("dataavailable", handleData);
-    };
-
-    mixedRecorder.addEventListener("dataavailable", handleData);
-    mixedRecorder.requestData(); // Triggers one more dataavailable event
+    mixedRecorder.requestData(); // Triggers one dataavailable event
+    isDataDownloaded = true; // Set flag to indicate data has been downloaded
   }
 
   function clearAudio() {
-    // Implement some way for the audio to be refreshed without clearing all the tracks and requireing the session to be restarted
-    if (!mixedRecorder) return;
+    clearAudioHistory = true;
+    mixedRecorder.requestData(); // Triggers one dataavailable event
   }
   
   function pauseRecorder() {
@@ -282,10 +285,10 @@
 
   function selectVoice(voice: string) {
     const tab = tabs.find((t) => t.id === activeTab);
-    console.log("Current voice", tab?.selectedVoice)
+    //console.log("Current voice", tab?.selectedVoice)
     if (tab) tab.selectedVoice = voice;
-    console.log("Voice changed to", tab?.selectedVoice)
-    tabs = [...tabs] // Rassigning the ary to add reactivity
+    //console.log("Voice changed to", tab?.selectedVoice)
+    tabs = [...tabs] // Reassigning the array to add reactivity
   }
 
   function switchTab(tabId: number) {
@@ -433,7 +436,7 @@
       <Button type="button" color="red" on:click={() => deleteTranscript()}>No, Clear Transcript</Button>
     </div>
     <div class=" flex gap-1 mt-8 border-t-1 pt-3 ">
-      <Button color="green" type="button" on:click={() => {endModal = false; resumeRecorder()}}>Resume Session</Button>
+      <Button color="green" type="button" disabled={isDataDownloaded} on:click={() => {endModal = false; resumeRecorder()}}>Resume Session</Button>
       <Button color="red" type="button" on:click={() => {endModal = false; endSession()}}>End Session</Button>
     </div>
   </Modal>
