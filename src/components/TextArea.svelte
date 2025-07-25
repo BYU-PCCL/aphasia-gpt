@@ -71,7 +71,11 @@
   let aiStream: MediaStream | null = null;
   let mixedStream: MediaStream | null = null;
   let mixedRecorder: MediaRecorder;
+  let userRecorder: MediaRecorder;
+  let aiRecorder: MediaRecorder;
   let mixedChunks: Blob[] = [];
+  let userChunks: Blob[]  = [];
+  let aiChunks: Blob[] = [];
 
   let audioCtx: AudioContext;
   let destination: MediaStreamAudioDestinationNode;
@@ -136,14 +140,20 @@
     hasStartedRecorder = false;
     ms = await navigator.mediaDevices.getUserMedia({ audio: true });
 
+    // Establish main audio context
     audioCtx = new AudioContext();
     destination = audioCtx.createMediaStreamDestination();
     mixedStream = destination.stream;
 
+    //Attach user input mic to audio context
     const micSource = audioCtx.createMediaStreamSource(ms);
     micSource.connect(destination);
 
     mixedRecorder = new MediaRecorder(mixedStream, {
+      mimeType: "audio/webm;codecs=opus",
+    });
+
+    userRecorder = new MediaRecorder(ms, {
       mimeType: "audio/webm;codecs=opus",
     });
 
@@ -161,14 +171,20 @@
         mixedChunks = []; // Clear chunks after download
         console.log("Audio downloaded");
       }
-      
     };
 
-    // mixedRecorder.onstop = () => {
-    //   if (!isStoppingSession || mixedChunks.length === 0) return;
-    //   const blob = new Blob(mixedChunks, { type: "audio/webm;codecs=opus" });
-    //   downloadBlob(blob, "conversation.webm");
-    //   isStoppingSession = false;
+    userRecorder.ondataavailable = (e) => {
+      const userAudioBlob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
+      console.log("User audio chunks:", userAudioBlob);
+      downloadBlob(userAudioBlob, `user-audio-${activeTab}.webm`);
+      userChunks = []; // Clear chunks after download
+    }
+
+    // userRecorder.ondataavailable = (e) => {
+    //   console.log("ondataavialable")
+    //   if (e.data.size > 0) {
+    //     userChunks.push(e.data);
+    //   }
     // };
 
     const tab = tabs.find((t) => t.id === activeTab);
@@ -193,8 +209,28 @@
       if (stream.getAudioTracks().length) {
         aiStream = stream;
         audioEl.srcObject = aiStream;
+
+        aiRecorder = new MediaRecorder(aiStream, {
+          mimeType: "audio/webm;codecs=opus",
+        });
+
+        aiRecorder.ondataavailable = (e) => {
+          console.log("AI audio chunks:", e.data);
+          if (e.data.size > 0) {
+            const aphasiaAudioBlob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
+            downloadBlob(aphasiaAudioBlob, `aphasia-audio-${activeTab}.webm`);
+            aiChunks = []; // Clear chunks after download
+          }
+        }
+
         const aiSource = audioCtx.createMediaStreamSource(aiStream);
         aiSource.connect(destination);
+
+        // Start all recorders
+        userRecorder.start();
+        console.log("User recorder state:", userRecorder.state);
+        aiRecorder.start();
+        console.log("AI recorder state:", aiRecorder.state);
         tryStartRecorder();
       }
     };
@@ -238,6 +274,8 @@
     if (!isSessionActive) return;
     isStoppingSession = true;
     pc?.close();
+    userRecorder?.stop();
+    aiRecorder?.stop();
     ms?.getTracks().forEach((t) => t.stop());
     aiStream?.getTracks().forEach((t) => t.stop());
     isSessionActive = false;
@@ -259,6 +297,18 @@
     isDataDownloaded = true; // Set flag to indicate data has been downloaded
   }
 
+  function downloadUserAudio() {
+    if (!userRecorder) return;
+    userRecorder.requestData(); // Triggers one dataavailable event
+    isDataDownloaded = true;
+  }
+
+  function downloadAphasiaAudio() {
+    if (!aiRecorder) return;
+    aiRecorder.requestData(); // Triggers one dataavailable event
+    isDataDownloaded = true;
+  }
+
   function clearAudio() {
     clearAudioHistory = true;
     mixedRecorder.requestData(); // Triggers one dataavailable event
@@ -267,6 +317,8 @@
   function pauseRecorder() {
     if (!isSessionActive) return;
     mixedRecorder.pause();
+    userRecorder.pause();
+    aiRecorder.pause();
     ms?.getTracks().forEach((t) => t.enabled = false);
     aiStream?.getTracks().forEach((t) => t.enabled = false);
   }
@@ -274,6 +326,8 @@
   function resumeRecorder() {
     if (!isSessionActive) return;
     mixedRecorder.resume();
+    userRecorder.resume();
+    aiRecorder.resume();
     ms?.getTracks().forEach((t) => t.enabled = true);
     aiStream?.getTracks().forEach((t) => t.enabled = true);
   }
@@ -427,9 +481,10 @@
       <ExclamationCircleOutline class="h-6 w-6 text-red-500" />
       <h3 class="text-lg font-semibold">Session Paused</h3>
     </div>
-    <p class="mb-4 text-lg">Do you want to download the audio file of this session?</p>
-      <Button type="button" color="blue" on:click={() => downloadAudio()}>Yes, Download</Button>
-      <Button type="button" color="red"  on:click={() => clearAudio()}>No, Clear Audio</Button>
+    <p class="mb-4 text-lg">Select the audio to download</p>
+      <Button type="button" color="blue" on:click={() => downloadUserAudio()}>User Only</Button>
+      <Button type="button" color="green"  on:click={() => downloadAphasiaAudio()}>Aphasia Only</Button>
+      <Button type="button" color="red"  on:click={() => downloadAudio()}>Combined Tracks</Button>
     <p class="mt-4 text-lg">Do you want to download the transcript of this session?</p>
     <div>
       <Button type="button" color="blue" on:click={() => downloadTranscript()}>Yes, Download</Button>
