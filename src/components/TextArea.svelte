@@ -85,12 +85,12 @@
 
   $: {
     const tab = tabs.find(t => t.id === activeTab);
-    if (tab) promptText = tab.prompt;
+    if (tab) promptText = tab.prompt; // This ensures promptText is always in sync with the active tab's prompt, but it could also be redundant?
   }
 
   $: {
     const tab = tabs.find(t => t.id === activeTab);
-    if (tab) tab.prompt = promptText;
+    if (tab) tab.prompt = promptText; // updates the tabs prompt whenever promptText changes
   }
 
 
