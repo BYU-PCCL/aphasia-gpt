@@ -88,9 +88,9 @@
     if (tab) promptText = tab.prompt;
   }
 
-  function updatePrompt(val: string) {
+  $: {
     const tab = tabs.find(t => t.id === activeTab);
-    if (tab) tab.prompt = val;
+    if (tab) tab.prompt = promptText;
   }
 
 
@@ -174,6 +174,10 @@
     };
 
     userRecorder.ondataavailable = (e) => {
+      if (isStoppingSession) {
+        console.log("Session is stopping, not processing User audio data.");
+        return;
+      }
       const userAudioBlob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
       console.log("User audio chunks:", userAudioBlob);
       downloadBlob(userAudioBlob, `user-audio-${activeTab}.webm`);
@@ -189,6 +193,7 @@
 
     const tab = tabs.find((t) => t.id === activeTab);
     if (!tab) return;
+    console.log("Instructions for session:", tab.prompt);
     const res = await fetch("/api/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -215,6 +220,10 @@
         });
 
         aiRecorder.ondataavailable = (e) => {
+          if (isStoppingSession) {
+            console.log("Session is stopping, not processing AI audio data.");
+            return;
+          }
           console.log("AI audio chunks:", e.data);
           if (e.data.size > 0) {
             const aphasiaAudioBlob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
@@ -282,14 +291,14 @@
     isDataDownloaded = false;
   }
 
-  function endSessionWithoutDownload() {
-    if (!isSessionActive) return;
-    pc?.close();
-    ms?.getTracks().forEach((t) => t.stop());
-    aiStream?.getTracks().forEach((t) => t.stop());
-    isSessionActive = false;
-    isStoppingSession = false;
-  }
+  // function endSessionWithoutDownload() {
+  //   if (!isSessionActive) return;
+  //   pc?.close();
+  //   ms?.getTracks().forEach((t) => t.stop());
+  //   aiStream?.getTracks().forEach((t) => t.stop());
+  //   isSessionActive = false;
+  //   isStoppingSession = false;
+  // }
 
   function downloadAudio() {
     if (!mixedRecorder) return;
@@ -347,7 +356,7 @@
 
   function switchTab(tabId: number) {
     activeTab = tabId;
-    endSessionWithoutDownload();
+    endSession();
   }
 
   function addTab() {
@@ -365,7 +374,7 @@
       },
     ];
     activeTab = newTabId;
-    endSessionWithoutDownload();
+    endSession();
   }
 
   function deleteTab(tabId: number) {
