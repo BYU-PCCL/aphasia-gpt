@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import type { MessageType } from "$lib/types/message.ts" // This mmay still be used later, hang onto for now
-  import { Textarea, Dropdown, DropdownItem, DropdownDivider, DropdownHeader, Button } from "flowbite-svelte";
-  import { AngleDownOutline } from "flowbite-svelte-icons"
+  import { Textarea, Dropdown, DropdownItem, Spinner, Button, Modal } from "flowbite-svelte";
+  import { AngleDownOutline, ExclamationCircleOutline} from "flowbite-svelte-icons"
 
   let voices = ["Alloy", "Ash", "Ballad", "Coral", "Echo", "Sage", "Shimmer", "Verse"];
 
@@ -54,19 +54,28 @@
     }
   ];
 
+  let endModal = false;
   let activeTab = 1;
   let nextTabId = 6;
   let isVoicePickerOpen = false;
   let isEditingName = false;
   let isSessionActive = false;
   let isStoppingSession = false;
+  let isSessionStarting = false;
+  let isDataDownloaded = false;
   let hasStartedRecorder = false;
+  let clearAudioHistory = false;
+
 
   let ms: MediaStream | null = null;
   let aiStream: MediaStream | null = null;
   let mixedStream: MediaStream | null = null;
   let mixedRecorder: MediaRecorder;
+  let userRecorder: MediaRecorder;
+  let aiRecorder: MediaRecorder;
   let mixedChunks: Blob[] = [];
+  let userChunks: Blob[]  = [];
+  let aiChunks: Blob[] = [];
 
   let audioCtx: AudioContext;
   let destination: MediaStreamAudioDestinationNode;
@@ -99,6 +108,7 @@
     if (!activeTabData || !activeTabData.fullTranscript) return;
     const blob = new Blob(activeTabData?.fullTranscript, { type: 'text/plain' });
     downloadBlob(blob, 'transcript.txt');
+    isDataDownloaded = true;
   }
 
   function deleteTranscript() {
@@ -125,14 +135,17 @@
   }
 
   async function startSession() {
+    isSessionStarting = true;
     isStoppingSession = false;
     hasStartedRecorder = false;
     ms = await navigator.mediaDevices.getUserMedia({ audio: true });
 
+    // Establish main audio context
     audioCtx = new AudioContext();
     destination = audioCtx.createMediaStreamDestination();
     mixedStream = destination.stream;
 
+    //Attach user input mic to audio context
     const micSource = audioCtx.createMediaStreamSource(ms);
     micSource.connect(destination);
 
@@ -140,16 +153,39 @@
       mimeType: "audio/webm;codecs=opus",
     });
 
+    userRecorder = new MediaRecorder(ms, {
+      mimeType: "audio/webm;codecs=opus",
+    });
+
     mixedRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) mixedChunks.push(e.data);
+      console.log("Data available:", e.data);
+      if (clearAudioHistory) {
+        mixedChunks = [];
+        clearAudioHistory = false;
+        console.log("Audio Cleared");
+        return;
+      }
+      if (e.data.size > 0) {
+        const blob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
+        downloadBlob(blob, `session-${activeTab}.webm`);
+        mixedChunks = []; // Clear chunks after download
+        console.log("Audio downloaded");
+      }
     };
 
-    mixedRecorder.onstop = () => {
-      if (!isStoppingSession || mixedChunks.length === 0) return;
-      const blob = new Blob(mixedChunks, { type: "audio/webm;codecs=opus" });
-      downloadBlob(blob, "conversation.webm");
-      isStoppingSession = false;
-    };
+    userRecorder.ondataavailable = (e) => {
+      const userAudioBlob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
+      console.log("User audio chunks:", userAudioBlob);
+      downloadBlob(userAudioBlob, `user-audio-${activeTab}.webm`);
+      userChunks = []; // Clear chunks after download
+    }
+
+    // userRecorder.ondataavailable = (e) => {
+    //   console.log("ondataavialable")
+    //   if (e.data.size > 0) {
+    //     userChunks.push(e.data);
+    //   }
+    // };
 
     const tab = tabs.find((t) => t.id === activeTab);
     if (!tab) return;
@@ -173,8 +209,28 @@
       if (stream.getAudioTracks().length) {
         aiStream = stream;
         audioEl.srcObject = aiStream;
+
+        aiRecorder = new MediaRecorder(aiStream, {
+          mimeType: "audio/webm;codecs=opus",
+        });
+
+        aiRecorder.ondataavailable = (e) => {
+          console.log("AI audio chunks:", e.data);
+          if (e.data.size > 0) {
+            const aphasiaAudioBlob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
+            downloadBlob(aphasiaAudioBlob, `aphasia-audio-${activeTab}.webm`);
+            aiChunks = []; // Clear chunks after download
+          }
+        }
+
         const aiSource = audioCtx.createMediaStreamSource(aiStream);
         aiSource.connect(destination);
+
+        // Start all recorders
+        userRecorder.start();
+        console.log("User recorder state:", userRecorder.state);
+        aiRecorder.start();
+        console.log("AI recorder state:", aiRecorder.state);
         tryStartRecorder();
       }
     };
@@ -186,12 +242,8 @@
         console.log("∆", e.delta);
       }
       else if (e.type === "response.audio_transcript.done") {
-        activeTabData?.fullTranscript.push("Aphasia: " + e.transcript + "\n\n")
+        activeTabData?.fullTranscript.push(e.transcript + "\n")
         console.log("Full response for transcript:", e.transcript)
-      }
-      else if (e.type === "conversation.item.input_audio_transcription.completed") {
-        activeTabData?.fullTranscript.push("Input: " + e.transcript + "\n")
-        console.log("User Input:", e.transcript)
       }
     };
 
@@ -215,18 +267,19 @@
     const answer = { type: "answer" as RTCSdpType, sdp: await sdpRes.text() };
     await pc.setRemoteDescription(new RTCSessionDescription(answer));
     isSessionActive = true;
-
+    isSessionStarting = false;
   }
 
   function endSession() {
     if (!isSessionActive) return;
     isStoppingSession = true;
     pc?.close();
+    userRecorder?.stop();
+    aiRecorder?.stop();
     ms?.getTracks().forEach((t) => t.stop());
     aiStream?.getTracks().forEach((t) => t.stop());
-    mixedRecorder.stop();
     isSessionActive = false;
-
+    isDataDownloaded = false;
   }
 
   function endSessionWithoutDownload() {
@@ -236,19 +289,60 @@
     aiStream?.getTracks().forEach((t) => t.stop());
     isSessionActive = false;
     isStoppingSession = false;
+  }
 
+  function downloadAudio() {
+    if (!mixedRecorder) return;
+    mixedRecorder.requestData(); // Triggers one dataavailable event
+    isDataDownloaded = true; // Set flag to indicate data has been downloaded
+  }
+
+  function downloadUserAudio() {
+    if (!userRecorder) return;
+    userRecorder.requestData(); // Triggers one dataavailable event
+    isDataDownloaded = true;
+  }
+
+  function downloadAphasiaAudio() {
+    if (!aiRecorder) return;
+    aiRecorder.requestData(); // Triggers one dataavailable event
+    isDataDownloaded = true;
+  }
+
+  function clearAudio() {
+    clearAudioHistory = true;
+    mixedRecorder.requestData(); // Triggers one dataavailable event
+  }
+  
+  function pauseRecorder() {
+    if (!isSessionActive) return;
+    mixedRecorder.pause();
+    userRecorder.pause();
+    aiRecorder.pause();
+    ms?.getTracks().forEach((t) => t.enabled = false);
+    aiStream?.getTracks().forEach((t) => t.enabled = false);
+  }
+
+  function resumeRecorder() {
+    if (!isSessionActive) return;
+    mixedRecorder.resume();
+    userRecorder.resume();
+    aiRecorder.resume();
+    ms?.getTracks().forEach((t) => t.enabled = true);
+    aiStream?.getTracks().forEach((t) => t.enabled = true);
   }
 
   function toggleSession() {
-    isSessionActive ? endSession() : startSession();
+    isSessionActive ? endModal = true : startSession(); // Start session or reveal end modal
+
   }
 
   function selectVoice(voice: string) {
     const tab = tabs.find((t) => t.id === activeTab);
-    console.log("Current voice", tab?.selectedVoice)
+    //console.log("Current voice", tab?.selectedVoice)
     if (tab) tab.selectedVoice = voice;
-    console.log("Voice changed to", tab?.selectedVoice)
-    tabs = [...tabs] // Rassigning the ary to add reactivity
+    //console.log("Voice changed to", tab?.selectedVoice)
+    tabs = [...tabs] // Reassigning the array to add reactivity
   }
 
   function switchTab(tabId: number) {
@@ -300,7 +394,7 @@
 </script>
 
 <div class="flex flex-col items-center justify-start mt-4 px-4">
-  <div class="flex space-x-4 mb-4">
+  <div class="overflow-x-auto flex space-x-4 mb-4">
     {#each tabs as tab}
       <div class="flex items-center">
         {#if activeTab === tab.id && tab.isEditing}
@@ -311,15 +405,24 @@
                   on:blur={() => renameTab(tab.id, tab.name)}
                   on:keydown={(e) => e.key === 'Enter' && renameTab(tab.id, tab.name)}
           />
-        {:else}
+        {:else if activeTab === tab.id}
           <button
-                  class="cursor-pointer p-2 border-b-2 hover:border-blue-500"
+                  class="cursor-pointer p-2 border-b-2 border-blue-500"
                   class:selected={activeTab === tab.id}
                   on:click={() => switchTab(tab.id)}
                   on:dblclick={() => startEditingName(tab.id)}
           >
             {tab.name}
           </button>
+        {:else}
+          <button
+                    class="cursor-pointer p-2 border-b-2 hover:border-blue-500"
+                    class:selected={activeTab === tab.id}
+                    on:click={() => switchTab(tab.id)}
+                    on:dblclick={() => startEditingName(tab.id)}
+            >
+              {tab.name}
+            </button>
         {/if}
         {#if tabs.length > 1}
           <button
@@ -331,18 +434,19 @@
         {/if}
       </div>
     {/each}
-    <button class="cursor-pointer p-2" on:click={addTab}>+</button>
+    <button class="cursor-pointer p-2 hover:text-blue-500 text-xl" on:click={addTab}>+</button>
   </div>
-
+  
   <Textarea
-          class="w-auto max-w-4xl p-3"
+          class="md:w-2xl p-3"
           bind:value={promptText}
+          rows={8}
           placeholder="Enter your prompt here…"
   >
 
 
   <div slot="footer" class="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4">
-      <Button>Select Voice<AngleDownOutline class="ms-2 h-6 w-6 text-white dark:text-white" /></Button>
+      <Button color="dark" >Select Voice<AngleDownOutline class="ms-2 h-5 w-5 text-white dark:text-white" /></Button>
       <Dropdown>
         <div class="grid grid-cols-2">
           {#each voices as voice}
@@ -360,21 +464,35 @@
       </Dropdown>
 
     <div class="flex space-x-2">
-      <Button type="button" on:click={toggleSession}>
-        {isSessionActive ? "End Session & Download" : "Start Session"}
+      {#if isSessionStarting}
+      <Button color="blue">
+        <Spinner class="me-3" size="5" color="gray" />Loading...
       </Button>
-            {#if isSessionActive}
-        <Button type="button" on:click={endSessionWithoutDownload}>
-          End Without Download
-        </Button>
+      {:else}
+      <Button type="button" color={isSessionActive ? "yellow" : "blue"} on:click={() => {toggleSession(), pauseRecorder()}}>
+        {isSessionActive ? "Pause Session" : "Start Session"}
+      </Button>
       {/if}
-        <Button type="button" on:click={downloadTranscript}>
-        Download Transcript
-        </Button>
-        <Button type="button" on:click={deleteTranscript}>
-          Clear Transcript
-        </Button>
     </div>
   </div>
   </Textarea>
+  <Modal outsideclose={false} bind:open={endModal}>
+    <div slot="header" class="flex items-center space-x-2">
+      <ExclamationCircleOutline class="h-6 w-6 text-red-500" />
+      <h3 class="text-lg font-semibold">Session Paused</h3>
+    </div>
+    <p class="mb-4 text-lg">Select the audio to download</p>
+      <Button type="button" color="blue" on:click={() => downloadUserAudio()}>User Only</Button>
+      <Button type="button" color="green"  on:click={() => downloadAphasiaAudio()}>Aphasia Only</Button>
+      <Button type="button" color="red"  on:click={() => downloadAudio()}>Combined Tracks</Button>
+    <p class="mt-4 text-lg">Do you want to download the transcript of this session?</p>
+    <div>
+      <Button type="button" color="blue" on:click={() => downloadTranscript()}>Yes, Download</Button>
+      <Button type="button" color="red" on:click={() => deleteTranscript()}>No, Clear Transcript</Button>
+    </div>
+    <div class=" flex gap-1 mt-8 border-t-1 pt-3 ">
+      <Button color="green" type="button" disabled={isDataDownloaded} on:click={() => {endModal = false; resumeRecorder()}}>Resume Session</Button>
+      <Button color="red" type="button" on:click={() => {endModal = false; endSession()}}>End Session</Button>
+    </div>
+  </Modal>
 </div>
