@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { broca1, broca2 } from "../stores/prompts";
   import type { MessageType } from "$lib/types/message.ts" // This mmay still be used later, hang onto for now
   import { Textarea, Dropdown, DropdownItem, Spinner, Button, Modal } from "flowbite-svelte";
   import { AngleDownOutline, ExclamationCircleOutline} from "flowbite-svelte-icons"
@@ -37,7 +38,7 @@
     {
       id: 4,
       name: "Tab 4",
-      prompt: 'You are simulating a person with aphasia. Repeat everything you hear in broken sentences that are agrammatic. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "take walk dog". Draw out stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
+      prompt: broca2,
       selectedVoice: voices[3],
       isMicrophoneOn: false,
       isEditing: false,
@@ -46,7 +47,7 @@
     {
       id: 5,
       name: "Tab 5",
-      prompt: 'Simulate a person with aphasia by repeating everything you hear in broken, agrammatic sentences. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "walk dog take". Draw out any stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
+      prompt: broca1,
       selectedVoice: voices[4],
       isMicrophoneOn: false,
       isEditing: false,
@@ -85,12 +86,12 @@
 
   $: {
     const tab = tabs.find(t => t.id === activeTab);
-    if (tab) promptText = tab.prompt;
+    if (tab) promptText = tab.prompt; // This ensures promptText is always in sync with the active tab's prompt, but it could also be redundant?
   }
 
-  function updatePrompt(val: string) {
+  $: {
     const tab = tabs.find(t => t.id === activeTab);
-    if (tab) tab.prompt = val;
+    if (tab) tab.prompt = promptText; // updates the tabs prompt whenever promptText changes
   }
 
 
@@ -174,6 +175,10 @@
     };
 
     userRecorder.ondataavailable = (e) => {
+      if (isStoppingSession) {
+        console.log("Session is stopping, not processing User audio data.");
+        return;
+      }
       const userAudioBlob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
       console.log("User audio chunks:", userAudioBlob);
       downloadBlob(userAudioBlob, `user-audio-${activeTab}.webm`);
@@ -189,6 +194,7 @@
 
     const tab = tabs.find((t) => t.id === activeTab);
     if (!tab) return;
+    console.log("Instructions for session:", tab.prompt);
     const res = await fetch("/api/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -215,6 +221,10 @@
         });
 
         aiRecorder.ondataavailable = (e) => {
+          if (isStoppingSession) {
+            console.log("Session is stopping, not processing AI audio data.");
+            return;
+          }
           console.log("AI audio chunks:", e.data);
           if (e.data.size > 0) {
             const aphasiaAudioBlob = new Blob([e.data], { type: "audio/webm;codecs=opus" });
@@ -282,14 +292,14 @@
     isDataDownloaded = false;
   }
 
-  function endSessionWithoutDownload() {
-    if (!isSessionActive) return;
-    pc?.close();
-    ms?.getTracks().forEach((t) => t.stop());
-    aiStream?.getTracks().forEach((t) => t.stop());
-    isSessionActive = false;
-    isStoppingSession = false;
-  }
+  // function endSessionWithoutDownload() {
+  //   if (!isSessionActive) return;
+  //   pc?.close();
+  //   ms?.getTracks().forEach((t) => t.stop());
+  //   aiStream?.getTracks().forEach((t) => t.stop());
+  //   isSessionActive = false;
+  //   isStoppingSession = false;
+  // }
 
   function downloadAudio() {
     if (!mixedRecorder) return;
@@ -347,7 +357,7 @@
 
   function switchTab(tabId: number) {
     activeTab = tabId;
-    endSessionWithoutDownload();
+    endSession();
   }
 
   function addTab() {
@@ -365,7 +375,7 @@
       },
     ];
     activeTab = newTabId;
-    endSessionWithoutDownload();
+    endSession();
   }
 
   function deleteTab(tabId: number) {
