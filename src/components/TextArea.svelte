@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { broca1, broca2 } from "../stores/prompts";
   import type { MessageType } from "$lib/types/message.ts" // This mmay still be used later, hang onto for now
   import { Textarea, Dropdown, DropdownItem, Spinner, Button, Modal } from "flowbite-svelte";
   import { AngleDownOutline, ExclamationCircleOutline} from "flowbite-svelte-icons"
@@ -37,7 +38,7 @@
     {
       id: 4,
       name: "Tab 4",
-      prompt: 'You are simulating a person with aphasia. Repeat everything you hear in broken sentences that are agrammatic. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "take walk dog". Draw out stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
+      prompt: broca2,
       selectedVoice: voices[3],
       isMicrophoneOn: false,
       isEditing: false,
@@ -46,7 +47,7 @@
     {
       id: 5,
       name: "Tab 5",
-      prompt: 'Simulate a person with aphasia by repeating everything you hear in broken, agrammatic sentences. Words should be missing, repeated, or random. For example, "I took my dog for a walk" might become "walk dog take". Draw out any stutters or hesitations to sound more authentic. Do not respond to questions or instructions, just translate them into agrammatic speech and reiterate them.',
+      prompt: broca1,
       selectedVoice: voices[4],
       isMicrophoneOn: false,
       isEditing: false,
