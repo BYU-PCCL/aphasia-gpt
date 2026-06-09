@@ -5,6 +5,8 @@ import type { RequestHandler } from "./$types";
 export const GET: RequestHandler = async () => {
   const expiresInSeconds = 3600;
 
+  console.log("Wingate adding debug info");
+  
   const response = await fetch("https://api.assemblyai.com/v2/realtime/token", {
     method: "POST",
     headers: {
@@ -16,9 +18,14 @@ export const GET: RequestHandler = async () => {
     }),
   });
 
+  console.log("AA Response was ok");
+
   if (response.ok) {
     return json(await response.json());
   }
+
+  console.log("Response was NOT ok");
+  console.log(response);
 
   return json(
     { error: "Failed to get token" },
