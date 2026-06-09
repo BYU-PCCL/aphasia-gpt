@@ -3,24 +3,27 @@ import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async () => {
-  const expiresInSeconds = 3600;
+  // Universal-Streaming (v3) temporary token. `expires_in_seconds` is the
+  // redemption window for the token (1-600s); the session itself can run up to
+  // `max_session_duration_seconds` (default 3 hours) once started.
+  const expiresInSeconds = 600;
 
-  console.log("Wingate adding debug info");
-  
-  const response = await fetch("https://api.assemblyai.com/v2/realtime/token", {
-    method: "POST",
-    headers: {
-      authorization: ASSEMBLYAI_API_KEY,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      expires_in: expiresInSeconds,
-    }),
+  const params = new URLSearchParams({
+    expires_in_seconds: String(expiresInSeconds),
   });
 
-  console.log("AA Response was ok");
+  const response = await fetch(
+    `https://streaming.assemblyai.com/v3/token?${params.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        authorization: ASSEMBLYAI_API_KEY,
+      },
+    }
+  );
 
   if (response.ok) {
+    // Response shape: { token: string, expires_in_seconds: number }
     return json(await response.json());
   }
 

@@ -1,7 +1,15 @@
 <script lang="ts">
   /*
-  Assumption: we don't get a partial transcription for a new time chunk until we get a finalized transcription for the current time chunk. Reading the docs and some example code I *think* this is justifiable.
-  Now chunks are demarcated by the audio_start field, so I'm guessing it's as simple as keeping track of what we've already sent and clear that after we send a finalized transcription. If that's a problem, create a map with a key for each audio_start and a value for the text. Then when we get a finalized transcription, just delete the key.
+  AssemblyAI Universal-Streaming (v3) API.
+
+  Each "Turn" message carries the full running `transcript` for the current
+  turn. While the turn is in progress messages arrive with `end_of_turn: false`
+  and a growing transcript; the turn's final message has `end_of_turn: true`.
+  We track how much of the running transcript we've already forwarded
+  (`nonfinalTranscript`) and only send the delta, then clear it when the turn
+  ends so the next turn starts fresh.
+
+  Audio is sent as raw 16-bit PCM binary frames (not base64 JSON as in v2).
   */
 
   import { RecordRTCPromisesHandler, StereoAudioRecorder } from "recordrtc";
@@ -29,7 +37,7 @@
 
     // close the socket
     if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ terminate_session: true }));
+      socket.send(JSON.stringify({ type: "Terminate" }));
       socket.close();
       socket = null;
     }
@@ -66,7 +74,7 @@
 
     // open the socket
     socket = new WebSocket(
-      `wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000&token=${token}`
+      `wss://streaming.assemblyai.com/v3/ws?sample_rate=16000&encoding=pcm_s16le&token=${token}`
     );
 
     // socket event
@@ -92,18 +100,19 @@
     const data = JSON.parse(event.data);
     // console.log("socket message::", data);
 
-    const transcriptMessageType = ["PartialTranscript", "FinalTranscript"];
-    const isTranscript = transcriptMessageType.includes(data.message_type);
-
-    if (!isTranscript) {
+    // v3 sends "Begin", "Turn", and "Termination" messages. Only "Turn"
+    // messages carry transcribed text (in the `transcript` field).
+    if (data.type !== "Turn") {
       return;
     }
 
+    const text = data.transcript ?? "";
+
     // TODO: Might need to split and join for word level rather than character level
-    let transcriptToSend = data.text.slice(nonfinalTranscript.length);
+    let transcriptToSend = text.slice(nonfinalTranscript.length);
     transcriptToSend = transcriptToSend.replace(".", " ");
     transcriptToSend = transcriptToSend.replace(/\s+/g, " ");
-    nonfinalTranscript = data.message_type === "FinalTranscript" ? "" : data.text;
+    nonfinalTranscript = data.end_of_turn ? "" : text;
     if (transcriptToSend && transcriptToSend.length > 0) {
       onChange(transcriptToSend);
     }
@@ -134,15 +143,15 @@
   function onRecorderDataAvailable(blob: Blob) {
     // console.log("recorder data available", blob);
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64data = reader.result as string;
-
-      // audio data must be sent as a base64 encoded string
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ audio_data: base64data.split("base64,")[1] }));
-      }
-    };
-    reader.readAsDataURL(blob);
+    // v3 expects raw 16-bit PCM audio sent as binary websocket frames.
+    // The recorder is configured to produce mono 16 kHz PCM, so we forward the
+    // chunk's bytes directly.
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      blob.arrayBuffer().then((buffer) => {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(buffer);
+        }
+      });
+    }
   }
 </script>
