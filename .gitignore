@@ -13,3 +13,6 @@ admin.json
 /admin.config
 /admin
 admin
+
+# editor backups (can contain .env secrets)
+*~

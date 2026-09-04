@@ -204,9 +204,24 @@
       }),
     });
 
-    const {
-      client_secret: { value: key },
-    } = await res.json();
+    const sessionData = await res.json();
+    console.log("Session response status:", res.status, "body:", sessionData);
+
+    // GA returns the ephemeral key at the top level as `value`.
+    // The removed beta endpoint nested it under `client_secret.value`.
+    if (!res.ok || !sessionData?.value) {
+      console.error("Failed to create realtime session:", sessionData);
+      alert(
+        "Could not start the session. The realtime API rejected the request — " +
+          "check the browser console and server logs for the OpenAI error details."
+      );
+      isSessionStarting = false;
+      return;
+    }
+
+    const key = sessionData.value;
+    const sessionModel = sessionData?.session?.model;
+    console.log("Realtime session model:", sessionModel);
 
     pc = new RTCPeerConnection();
 
@@ -248,12 +263,24 @@
     const dc = pc.createDataChannel("oai-events");
     dc.onmessage = (ev) => {
       const e = JSON.parse(ev.data);
-      if (e.type === "response.audio_transcript.delta") {
+      // GA renamed these events (response.audio_transcript.* ->
+      // response.output_audio_transcript.*). Both are accepted so the handler
+      // keeps working if a session is pinned to an older model.
+      if (
+        e.type === "response.output_audio_transcript.delta" ||
+        e.type === "response.audio_transcript.delta"
+      ) {
         console.log("∆", e.delta);
       }
-      else if (e.type === "response.audio_transcript.done") {
+      else if (
+        e.type === "response.output_audio_transcript.done" ||
+        e.type === "response.audio_transcript.done"
+      ) {
         activeTabData?.fullTranscript.push(e.transcript + "\n")
         console.log("Full response for transcript:", e.transcript)
+      }
+      else if (e.type === "error") {
+        console.error("Realtime session error:", e.error ?? e);
       }
     };
 
@@ -262,17 +289,24 @@
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
-    const sdpRes = await fetch(
-      "https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17",
-      {
-        method: "POST",
-        body: offer.sdp,
-        headers: {
-          Authorization: `Bearer ${key}`,
-          "Content-Type": "application/sdp",
-        },
-      }
-    );
+    // GA exchanges SDP at /v1/realtime/calls. No ?model= query param: the model
+    // is already baked into the session that minted this ephemeral key.
+    const sdpRes = await fetch("https://api.openai.com/v1/realtime/calls", {
+      method: "POST",
+      body: offer.sdp,
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/sdp",
+      },
+    });
+
+    if (!sdpRes.ok) {
+      const errText = await sdpRes.text();
+      console.error("SDP exchange failed:", sdpRes.status, errText);
+      alert("Could not connect audio to the realtime API. See the console for details.");
+      isSessionStarting = false;
+      return;
+    }
 
     const answer = { type: "answer" as RTCSdpType, sdp: await sdpRes.text() };
     await pc.setRemoteDescription(new RTCSessionDescription(answer));
