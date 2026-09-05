@@ -14,7 +14,7 @@
 
 <!-- @component A dismissable modal -->
 
-<div class="absolute w-[100vw] h-[100vh] top-0 z-50 flex justify-center items-center bg-black/30">
+<div class="fixed inset-0 z-50 flex justify-center items-center bg-black/30">
   <div class="relative max-h-[80vh] sm:max-w-lg md:max-w-2xl lg:max-w-4xl bg-white rounded-md flex flex-col">
     <button class="absolute top-1 md:top-3 right-1 md:right-3 rounded-md p-2" on:click={toggleVisibility} title="Close" aria-label="Close" >
       <i class="material-icons" aria-hidden="true">close</i>

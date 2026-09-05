@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
     import type { EditProfileDbData } from '@/lib/types/EditProfile';
     import { userName } from '@/stores/user';
     import { onMount } from 'svelte';
@@ -43,7 +42,6 @@
         event.preventDefault();
         await sendDataToBackend();
         toggleEditProfile(); // Close the popup on submit
-        await goto('/');
     }
     
     async function sendDataToBackend(){

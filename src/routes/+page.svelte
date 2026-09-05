@@ -17,6 +17,7 @@
   import { onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import EditTranscript from "@/components/EditTranscript.svelte";
+  import ModeNav from "@/components/ModeNav.svelte";
 
 
   // import {aphasiaType1} from "@/routes/api/gpt/+server"
@@ -297,7 +298,7 @@ function handleClickOutside(event: MouseEvent | TouchEvent) {
   <main>
     
     <header class="flex justify-between items-center px-2 md:px-4 py-2 mb-8">
-      <h1 class="block font-bold text-lg sm:text-2xl">Aphasia GPT</h1>
+      <ModeNav />
       <div class="flex items-center">
         {#if $userName}
           <div class="text-sm sm:text-base mr-1 md:mr-3">Hi {$userName} 👋</div>
